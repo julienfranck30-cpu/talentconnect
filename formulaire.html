@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TalentConnect — Créer ma campagne</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body class="form-body">
+
+<nav class="nav nav-form">
+  <a href="index.html" class="nav-logo"><span class="star">✦</span> TalentConnect</a>
+  <div class="nav-rating"><span class="stars-txt">★ 4.8</span><span class="rating-count">sur +100 avis</span></div>
+</nav>
+
+<div class="form-shell">
+
+  <!-- PROGRESS BAR -->
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+
+  <!-- ÉTAPE 1 — Coordonnées -->
+  <div class="step-panel active" id="step-1">
+    <p class="step-label">Étape 1 sur 6</p>
+    <h2 class="step-title">Tes coordonnées <span class="req">*</span></h2>
+    <p class="step-sub">L'IA enverra tes candidatures depuis ces informations.</p>
+    <div class="field-line">
+      <label>Prénom <span class="req">*</span></label>
+      <input type="text" id="s1-prenom" placeholder="Julie" autocomplete="given-name"/>
+    </div>
+    <div class="field-line">
+      <label>Nom <span class="req">*</span></label>
+      <input type="text" id="s1-nom" placeholder="Martin" autocomplete="family-name"/>
+    </div>
+    <div class="field-line">
+      <label>Numéro de téléphone <span class="req">*</span></label>
+      <div class="phone-wrap">
+        <div class="phone-flag">🇫🇷 &nbsp;+33</div>
+        <input type="tel" id="s1-tel" placeholder="06 12 34 56 78"/>
+      </div>
+    </div>
+    <div class="field-line">
+      <label>E-mail <span class="req">*</span></label>
+      <input type="email" id="s1-email" placeholder="nom@exemple.com" autocomplete="email"/>
+    </div>
+    <div class="err" id="err-1"></div>
+    <button class="btn-ok" onclick="nextStep(1)">Ok ✓</button>
+  </div>
+
+  <!-- ÉTAPE 2 — Poste visé -->
+  <div class="step-panel" id="step-2">
+    <p class="step-label">Étape 2 sur 6</p>
+    <h2 class="step-title">Quel poste vises-tu ?</h2>
+    <p class="step-sub">Choisis le type de poste que tu recherches.</p>
+    <div class="chips-grid" id="chips-poste">
+      <div class="chip" onclick="selectChip(this,'poste')">Acheteur / Approvisionneur</div>
+      <div class="chip" onclick="selectChip(this,'poste')">Gestionnaire de stock</div>
+      <div class="chip" onclick="selectChip(this,'poste')">Responsable logistique</div>
+      <div class="chip" onclick="selectChip(this,'poste')">Commercial terrain</div>
+      <div class="chip" onclick="selectChip(this,'poste')">Technicien atelier</div>
+      <div class="chip" onclick="selectChip(this,'poste')">Assistant(e) RH</div>
+      <div class="chip" onclick="selectChip(this,'poste')">Contrôleur de gestion</div>
+      <div class="chip" onclick="selectChip(this,'poste')">Chef de projet</div>
+    </div>
+    <div class="field-line" style="margin-top:16px">
+      <label>Ou précise un poste spécifique</label>
+      <input type="text" id="s2-poste-custom" placeholder="Ex : Chargé(e) de sourcing"/>
+    </div>
+    <div class="err" id="err-2"></div>
+    <div class="nav-btns">
+      <button class="btn-back" onclick="prevStep(2)">← Retour</button>
+      <button class="btn-ok" onclick="nextStep(2)">Ok ✓</button>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 3 — Secteur -->
+  <div class="step-panel" id="step-3">
+    <p class="step-label">Étape 3 sur 6</p>
+    <h2 class="step-title">Dans quel secteur ?</h2>
+    <p class="step-sub">Sélectionne un ou plusieurs secteurs d'activité.</p>
+    <div class="chips-grid" id="chips-secteur">
+      <div class="chip multi" onclick="toggleChip(this)">Distribution / Négoce</div>
+      <div class="chip multi" onclick="toggleChip(this)">Industrie</div>
+      <div class="chip multi" onclick="toggleChip(this)">Automobile</div>
+      <div class="chip multi" onclick="toggleChip(this)">BTP / Construction</div>
+      <div class="chip multi" onclick="toggleChip(this)">Logistique / Transport</div>
+      <div class="chip multi" onclick="toggleChip(this)">Agroalimentaire</div>
+      <div class="chip multi" onclick="toggleChip(this)">Retail / Commerce</div>
+      <div class="chip multi" onclick="toggleChip(this)">Services B2B</div>
+      <div class="chip multi" onclick="toggleChip(this)">Tech / Numérique</div>
+      <div class="chip multi" onclick="toggleChip(this)">Santé / Pharma</div>
+    </div>
+    <div class="err" id="err-3"></div>
+    <div class="nav-btns">
+      <button class="btn-back" onclick="prevStep(3)">← Retour</button>
+      <button class="btn-ok" onclick="nextStep(3)">Ok ✓</button>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 4 — Zone géo -->
+  <div class="step-panel" id="step-4">
+    <p class="step-label">Étape 4 sur 6</p>
+    <h2 class="step-title">Quelle zone géographique ?</h2>
+    <p class="step-sub">On ciblera les entreprises dans cette zone.</p>
+    <div class="field-line">
+      <label>Ville ou région principale <span class="req">*</span></label>
+      <input type="text" id="s4-ville" placeholder="Ex : Lyon, Rhône-Alpes, Paris..."/>
+    </div>
+    <div class="field-line">
+      <label>Rayon de recherche</label>
+      <div class="chips-grid" id="chips-rayon" style="margin-top:8px">
+        <div class="chip" onclick="selectChip(this,'rayon')">20 km</div>
+        <div class="chip" onclick="selectChip(this,'rayon')">50 km</div>
+        <div class="chip selected" onclick="selectChip(this,'rayon')">100 km</div>
+        <div class="chip" onclick="selectChip(this,'rayon')">France entière</div>
+      </div>
+    </div>
+    <div class="field-line">
+      <label>Type de contrat recherché</label>
+      <div class="chips-grid" id="chips-contrat" style="margin-top:8px">
+        <div class="chip multi" onclick="toggleChip(this)">CDI</div>
+        <div class="chip multi" onclick="toggleChip(this)">CDD</div>
+        <div class="chip multi" onclick="toggleChip(this)">Alternance</div>
+        <div class="chip multi" onclick="toggleChip(this)">Stage</div>
+        <div class="chip multi" onclick="toggleChip(this)">Freelance</div>
+      </div>
+    </div>
+    <div class="err" id="err-4"></div>
+    <div class="nav-btns">
+      <button class="btn-back" onclick="prevStep(4)">← Retour</button>
+      <button class="btn-ok" onclick="nextStep(4)">Ok ✓</button>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 5 — CV + motivation -->
+  <div class="step-panel" id="step-5">
+    <p class="step-label">Étape 5 sur 6</p>
+    <h2 class="step-title">Ton CV et ta présentation</h2>
+    <p class="step-sub">On les utilisera pour personnaliser chaque candidature.</p>
+    <div class="field-line">
+      <label>Importe ton CV (PDF)</label>
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('cv-input').click()">
+        <span class="upload-up">↑</span>
+        <div>
+          <div id="upload-label" style="font-size:14px;color:#888880">Cliquer pour importer</div>
+          <div style="font-size:11px;color:#555550;margin-top:2px">PDF · 5 Mo max</div>
+        </div>
+      </div>
+      <input type="file" id="cv-input" accept=".pdf" style="display:none"/>
+    </div>
+    <div class="field-line">
+      <label>Message de motivation (optionnel)</label>
+      <textarea id="s5-msg" rows="4" placeholder="Résume ton profil en 2-3 phrases. L'IA s'en inspirera pour personnaliser tes candidatures..."></textarea>
+    </div>
+    <div class="err" id="err-5"></div>
+    <div class="nav-btns">
+      <button class="btn-back" onclick="prevStep(5)">← Retour</button>
+      <button class="btn-ok" onclick="nextStep(5)">Ok ✓</button>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 6 — Récap + Paiement -->
+  <div class="step-panel" id="step-6">
+    <p class="step-label">Étape 6 sur 6</p>
+    <h2 class="step-title">Lance ta campagne <span class="grad">✦</span></h2>
+    <p class="step-sub">Vérifie tes informations et choisis ton offre.</p>
+
+    <div class="recap-card" id="recap-card"></div>
+
+    <div class="pricing-grid">
+      <div class="price-card" onclick="selectPlan(this,'starter')">
+        <div class="plan-badge">Starter</div>
+        <div class="plan-price">29€</div>
+        <div class="plan-desc">50 candidatures ciblées</div>
+        <ul class="plan-features">
+          <li>✓ Ciblage IA des entreprises</li>
+          <li>✓ CV + lettre personnalisée</li>
+          <li>✓ Rapport d'envoi</li>
+        </ul>
+      </div>
+      <div class="price-card featured" onclick="selectPlan(this,'pro')">
+        <div class="plan-badge-top">⚡ Recommandé</div>
+        <div class="plan-badge">Pro</div>
+        <div class="plan-price">59€</div>
+        <div class="plan-desc">150 candidatures ciblées</div>
+        <ul class="plan-features">
+          <li>✓ Tout Starter inclus</li>
+          <li>✓ Relances automatiques</li>
+          <li>✓ Suivi en temps réel</li>
+        </ul>
+      </div>
+      <div class="price-card" onclick="selectPlan(this,'max')">
+        <div class="plan-badge">Max</div>
+        <div class="plan-price">99€</div>
+        <div class="plan-desc">300 candidatures ciblées</div>
+        <ul class="plan-features">
+          <li>✓ Tout Pro inclus</li>
+          <li>✓ Appel coaching 30 min</li>
+          <li>✓ Garantie entretien</li>
+        </ul>
+      </div>
+    </div>
+
+    <label class="rgpd-row" style="margin-top:20px">
+      <input type="checkbox" id="f-rgpd"/>
+      <span>J'accepte le traitement de mes données personnelles (RGPD — 2 ans max). <span class="req">*</span></span>
+    </label>
+    <div class="err" id="err-6"></div>
+    <div class="nav-btns">
+      <button class="btn-back" onclick="prevStep(6)">← Retour</button>
+      <button class="btn-primary-lg" style="flex:1" onclick="submitCampagne()">Payer et lancer ma campagne →</button>
+    </div>
+  </div>
+
+  <!-- SUCCÈS -->
+  <div class="step-panel" id="step-success">
+    <div class="success-wrap">
+      <div class="success-star">✦</div>
+      <h2 class="step-title" style="margin-bottom:10px">Campagne lancée !</h2>
+      <p class="step-sub" id="success-msg"></p>
+      <div class="success-steps">
+        <div class="success-step">📨 &nbsp;Envoi des candidatures dans les 24h</div>
+        <div class="success-step">📊 &nbsp;Rapport détaillé envoyé par email</div>
+        <div class="success-step">📞 &nbsp;Les entreprises te contactent directement</div>
+      </div>
+      <a href="index.html" class="btn-ok" style="display:inline-block;margin-top:2rem;text-decoration:none">Retour à l'accueil</a>
+    </div>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

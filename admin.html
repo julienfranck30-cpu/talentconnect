@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TalentConnect — Espace RH</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<div id="login-screen" class="login-screen">
+  <div class="login-box">
+    <div class="nav-logo" style="justify-content:center;margin-bottom:2rem"><span class="star">✦</span> TalentConnect</div>
+    <h2 class="step-title" style="text-align:center;margin-bottom:6px">Espace RH</h2>
+    <p class="step-sub" style="text-align:center;margin-bottom:1.75rem">Accès réservé aux recruteurs</p>
+    <div class="field-line"><label>Identifiant</label><input type="text" id="l-user" placeholder="admin" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <div class="field-line"><label>Mot de passe</label><input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <div class="err" id="l-err" style="display:none">Identifiants incorrects</div>
+    <button class="btn-ok" style="width:100%;margin-top:6px" onclick="doLogin()">Se connecter →</button>
+    <p style="font-size:11px;color:#555550;text-align:center;margin-top:14px">Démo : admin / admin123</p>
+  </div>
+</div>
+
+<div id="dashboard-screen" style="display:none">
+  <nav class="nav">
+    <div class="nav-logo"><span class="star">✦</span> TalentConnect</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span class="badge-rh">Espace RH</span>
+      <button class="btn-back" onclick="doLogout()">Déconnexion</button>
+    </div>
+  </nav>
+  <div class="admin-main">
+    <div class="admin-header">
+      <div>
+        <h1 class="admin-title">Candidatures <span class="grad">reçues</span></h1>
+        <p class="step-sub">Gérez et suivez toutes les campagnes</p>
+      </div>
+      <button class="btn-danger" onclick="clearAll()">Tout effacer</button>
+    </div>
+    <div class="stats-row" id="stats-row"></div>
+    <div class="table-card">
+      <div class="empty-state" id="empty-state" style="display:none">
+        <div style="font-size:28px;opacity:.3;margin-bottom:12px">✦</div>
+        <p style="font-size:14px;color:#888880;margin-bottom:16px">Aucune candidature pour l'instant.</p>
+        <a href="index.html" class="btn-back" style="text-decoration:none">Voir le site →</a>
+      </div>
+      <div id="table-wrap">
+        <table><thead><tr><th>Candidat</th><th>Poste</th><th>Secteurs</th><th>Zone</th><th>Offre</th><th>Date</th><th>Statut</th></tr></thead>
+        <tbody id="table-body"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-name" id="m-nom"></div><div style="font-size:12px;color:#888880;margin-top:3px" id="m-poste"></div></div>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div id="m-fields"></div>
+    <div class="modal-section-title">Message de motivation</div>
+    <div class="modal-msg" id="m-msg"></div>
+    <div class="modal-actions">
+      <button class="btn-retain" onclick="setStatut('Retenu')">✓ Retenir</button>
+      <button class="btn-reject" onclick="setStatut('Refusé')">✕ Refuser</button>
+      <button class="btn-pending" onclick="setStatut('En attente')">↺ En attente</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
