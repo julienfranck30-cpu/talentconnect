@@ -1,9 +1,4 @@
 {
   "cleanUrls": true,
-  "trailingSlash": false,
-  "functions": {
-    "api/webhook.js": {
-      "maxDuration": 30
-    }
-  }
+  "trailingSlash": false
 }
