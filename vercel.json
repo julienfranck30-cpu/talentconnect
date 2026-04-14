@@ -2,8 +2,7 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "functions": {
-    "api/webhook-stripe.js": {
-      "memory": 256,
+    "api/webhook.js": {
       "maxDuration": 30
     }
   }

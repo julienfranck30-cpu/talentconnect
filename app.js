@@ -158,6 +158,7 @@ if(document.getElementById('step-1')){
         rayon:    formData.rayon,
         contrats: formData.contrats,
         cv:       formData.cv,
+        cv_url:   formData.cvUrl || null,
         plan:     planInfo.label,
         message:  formData.message,
         statut:   'En attente paiement'
