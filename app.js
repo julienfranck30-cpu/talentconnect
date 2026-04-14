@@ -1,9 +1,16 @@
-/* ── TalentConnect V3 — app.js (Supabase) ── */
+/* ── TalentConnect V4 — Supabase + Stripe Payment Links ── */
 
 const SUPABASE_URL = 'https://ihhqwukfkztwdhxfvsvf.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_AKWSkS_jE-R1PnMWSI408g_5QqV8iPJ';
 
-// Init Supabase client (chargé via CDN dans le HTML)
+// Stripe Payment Links — à remplacer par tes vrais liens après création dans Stripe
+// Pour créer : Stripe Dashboard → Payment Links → Créer un lien
+const STRIPE_LINKS = {
+  starter: 'https://buy.stripe.com/4gM28q9mM5ED47xcitdnW00',
+  pro:     'https://buy.stripe.com/4gM28q9mM5ED47xcitdnW00',
+  max:     'https://buy.stripe.com/4gM28q9mM5ED47xcitdnW00'
+};
+
 let sb;
 function getClient(){
   if(!sb) sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -17,9 +24,9 @@ const TOTAL_STEPS = 6;
 function fmtDate(iso){ return new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}); }
 function badgeCls(s){ return s==='Retenu'?'badge-retained':s==='Refusé'?'badge-rejected':'badge-pending'; }
 
-/* ════════════════════════════════════
-   FORMULAIRE MULTI-ÉTAPES (formulaire.html)
-════════════════════════════════════ */
+/* ════════════════════════════
+   FORMULAIRE (formulaire.html)
+════════════════════════════ */
 if(document.getElementById('step-1')){
 
   let currentStep = 1;
@@ -129,13 +136,19 @@ if(document.getElementById('step-1')){
     }
 
     const btn = document.querySelector('#step-6 .btn-primary-lg');
-    btn.textContent = 'Envoi en cours...';
+    btn.textContent = 'Enregistrement...';
     btn.disabled = true;
 
-    const plans = { starter:'29€ – 50 candidatures', pro:'59€ – 150 candidatures', max:'99€ – 300 candidatures' };
+    const plans = {
+      starter: { label: '29€ – 50 candidatures', price: 29 },
+      pro:     { label: '59€ – 150 candidatures', price: 59 },
+      max:     { label: '99€ – 300 candidatures', price: 99 }
+    };
+    const planInfo = plans[formData.plan] || plans.pro;
 
     try {
-      const { error } = await getClient().from('candidatures').insert([{
+      // 1. Sauvegarde dans Supabase
+      const { data, error } = await getClient().from('candidatures').insert([{
         nom:      formData.prenom + ' ' + formData.nom,
         email:    formData.email,
         tel:      formData.tel,
@@ -145,31 +158,44 @@ if(document.getElementById('step-1')){
         rayon:    formData.rayon,
         contrats: formData.contrats,
         cv:       formData.cv,
-        plan:     plans[formData.plan] || formData.plan,
+        plan:     planInfo.label,
         message:  formData.message,
-        statut:   'En attente'
-      }]);
+        statut:   'En attente paiement'
+      }]).select();
 
       if(error) throw error;
 
+      // 2. Affiche succès + bouton paiement Stripe
       document.getElementById('step-6').classList.remove('active');
       document.getElementById('step-success').classList.add('active');
       document.getElementById('success-msg').textContent =
-        `Merci ${formData.prenom} ! Ta campagne "${plans[formData.plan]}" est enregistrée.`;
+        `Merci ${formData.prenom} ! Ta campagne "${planInfo.label}" est enregistrée.`;
       document.getElementById('progress-bar').style.width = '100%';
+
+      // 3. Bouton vers Stripe Payment Link
+      const stripeUrl = STRIPE_LINKS[formData.plan];
+      const emailParam = encodeURIComponent(formData.email);
+      const finalUrl = `${stripeUrl}?prefilled_email=${emailParam}`;
+
+      document.getElementById('payment-btn-wrap').innerHTML = `
+        <a href="${finalUrl}" class="btn-primary-lg" style="display:inline-block;text-decoration:none">
+          💳 &nbsp;Payer ${planInfo.price}€ maintenant →
+        </a>
+        <p style="font-size:11px;color:#555550;margin-top:10px">Paiement sécurisé · Stripe · CB, Apple Pay, Google Pay</p>`;
+
       window.scrollTo({top:0,behavior:'smooth'});
 
     } catch(e) {
-      err.textContent = 'Erreur lors de l\'envoi : ' + (e.message || 'Réessaie.');
+      err.textContent = 'Erreur : ' + (e.message || 'Réessaie.');
       btn.textContent = 'Payer et lancer ma campagne →';
       btn.disabled = false;
     }
   };
 }
 
-/* ════════════════════════════════════
+/* ════════════════════════════
    ADMIN (admin.html)
-════════════════════════════════════ */
+════════════════════════════ */
 if(document.getElementById('login-screen')){
 
   let currentId = null;
@@ -208,26 +234,27 @@ if(document.getElementById('login-screen')){
   }
 
   async function renderDash(){
-    document.getElementById('table-body').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#555550;padding:2rem">Chargement...</td></tr>';
+    document.getElementById('table-body').innerHTML =
+      '<tr><td colspan="7" style="text-align:center;color:#555550;padding:2rem">Chargement...</td></tr>';
 
     const { data, error } = await getClient()
-      .from('candidatures')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .from('candidatures').select('*').order('created_at', { ascending: false });
 
     if(error){
-      document.getElementById('table-body').innerHTML = `<tr><td colspan="7" style="color:#F87171;padding:1rem">Erreur : ${error.message}</td></tr>`;
+      document.getElementById('table-body').innerHTML =
+        `<tr><td colspan="7" style="color:#F87171;padding:1rem">Erreur : ${error.message}</td></tr>`;
       return;
     }
 
     const total   = data.length;
-    const attente = data.filter(c=>c.statut==='En attente').length;
+    const attente = data.filter(c=>c.statut==='En attente'||c.statut==='En attente paiement').length;
     const retenus = data.filter(c=>c.statut==='Retenu').length;
+    const payes   = data.filter(c=>c.statut==='Payé').length;
 
     document.getElementById('stats-row').innerHTML = `
       <div class="stat-card"><div class="stat-label">Total</div><div class="stat-val">${total}</div></div>
       <div class="stat-card"><div class="stat-label">En attente</div><div class="stat-val">${attente}</div></div>
-      <div class="stat-card"><div class="stat-label">Retenus</div><div class="stat-val">${retenus}</div></div>`;
+      <div class="stat-card"><div class="stat-label">Payés</div><div class="stat-val" style="color:#34D399">${payes}</div></div>`;
 
     if(!data.length){
       document.getElementById('table-wrap').style.display='none';
@@ -241,7 +268,7 @@ if(document.getElementById('login-screen')){
       <tr onclick="openDetail('${c.id}')">
         <td><strong>${c.nom}</strong><br><span style="font-size:11px;color:#777770">${c.email}</span></td>
         <td>${c.poste||'—'}</td>
-        <td style="color:#777770;font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.secteurs||'—'}</td>
+        <td style="color:#777770;font-size:11px">${c.secteurs||'—'}</td>
         <td style="color:#777770">${c.ville||'—'}</td>
         <td><span style="font-size:11px;color:#8B5CF6;font-weight:600">${c.plan||'—'}</span></td>
         <td style="color:#777770">${fmtDate(c.created_at)}</td>

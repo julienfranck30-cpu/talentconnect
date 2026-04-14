@@ -122,33 +122,47 @@
     <div class="nav-btns"><button class="btn-back" onclick="prevStep(5)">← Retour</button><button class="btn-ok" onclick="nextStep(5)">Ok ✓</button></div>
   </div>
 
-  <!-- ÉTAPE 6 -->
+  <!-- ÉTAPE 6 — PAIEMENT -->
   <div class="step-panel" id="step-6">
     <p class="step-label">Étape 6 sur 6</p>
     <h2 class="step-title">Lance ta campagne <span class="grad">✦</span></h2>
     <p class="step-sub">Vérifie tes informations et choisis ton offre.</p>
     <div class="recap-card" id="recap-card"></div>
+
     <div class="pricing-grid">
       <div class="price-card" onclick="selectPlan(this,'starter')">
         <div class="plan-badge">Starter</div>
         <div class="plan-price">29€</div>
         <div class="plan-desc">50 candidatures ciblées</div>
-        <ul class="plan-features"><li>✓ Ciblage IA des entreprises</li><li>✓ CV + lettre personnalisée</li><li>✓ Rapport d'envoi</li></ul>
+        <ul class="plan-features">
+          <li>✓ Ciblage IA des entreprises</li>
+          <li>✓ CV + lettre personnalisée</li>
+          <li>✓ Rapport d'envoi</li>
+        </ul>
       </div>
       <div class="price-card featured" onclick="selectPlan(this,'pro')">
         <div class="plan-badge-top">⚡ Recommandé</div>
         <div class="plan-badge">Pro</div>
         <div class="plan-price">59€</div>
         <div class="plan-desc">150 candidatures ciblées</div>
-        <ul class="plan-features"><li>✓ Tout Starter inclus</li><li>✓ Relances automatiques</li><li>✓ Suivi en temps réel</li></ul>
+        <ul class="plan-features">
+          <li>✓ Tout Starter inclus</li>
+          <li>✓ Relances automatiques</li>
+          <li>✓ Suivi en temps réel</li>
+        </ul>
       </div>
       <div class="price-card" onclick="selectPlan(this,'max')">
         <div class="plan-badge">Max</div>
         <div class="plan-price">99€</div>
         <div class="plan-desc">300 candidatures ciblées</div>
-        <ul class="plan-features"><li>✓ Tout Pro inclus</li><li>✓ Appel coaching 30 min</li><li>✓ Garantie entretien</li></ul>
+        <ul class="plan-features">
+          <li>✓ Tout Pro inclus</li>
+          <li>✓ Appel coaching 30 min</li>
+          <li>✓ Garantie entretien</li>
+        </ul>
       </div>
     </div>
+
     <label class="rgpd-row" style="margin-top:20px">
       <input type="checkbox" id="f-rgpd"/>
       <span>J'accepte le traitement de mes données personnelles (RGPD — 2 ans max). <span class="req">*</span></span>
@@ -164,14 +178,15 @@
   <div class="step-panel" id="step-success">
     <div class="success-wrap">
       <div class="success-star">✦</div>
-      <h2 class="step-title" style="margin-bottom:10px">Campagne lancée !</h2>
+      <h2 class="step-title" style="margin-bottom:10px">Campagne enregistrée !</h2>
       <p class="step-sub" id="success-msg"></p>
-      <div class="success-steps">
-        <div class="success-step">📨 &nbsp;Envoi des candidatures dans les 24h</div>
-        <div class="success-step">📊 &nbsp;Rapport détaillé envoyé par email</div>
+      <p style="font-size:13px;color:#555550;margin-top:8px">Tu vas être redirigé vers le paiement sécurisé Stripe...</p>
+      <div class="success-steps" style="margin-top:1.5rem">
+        <div class="success-step">💳 &nbsp;Paiement sécurisé via Stripe</div>
+        <div class="success-step">📨 &nbsp;Envoi des candidatures dans les 24h après paiement</div>
         <div class="success-step">📞 &nbsp;Les entreprises te contactent directement</div>
       </div>
-      <a href="index.html" class="btn-ok" style="display:inline-block;margin-top:2rem;text-decoration:none">Retour à l'accueil</a>
+      <div id="payment-btn-wrap" style="margin-top:2rem"></div>
     </div>
   </div>
 </div>
