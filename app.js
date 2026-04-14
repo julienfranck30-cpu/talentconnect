@@ -6,9 +6,9 @@ const SUPABASE_KEY = 'sb_publishable_AKWSkS_jE-R1PnMWSI408g_5QqV8iPJ';
 // Stripe Payment Links — à remplacer par tes vrais liens après création dans Stripe
 // Pour créer : Stripe Dashboard → Payment Links → Créer un lien
 const STRIPE_LINKS = {
-  starter: 'https://buy.stripe.com/4gM28q9mM5ED47xcitdnW00',
-  pro:     'https://buy.stripe.com/4gM28q9mM5ED47xcitdnW00',
-  max:     'https://buy.stripe.com/4gM28q9mM5ED47xcitdnW00'
+  starter: 'https://buy.stripe.com/eVq8wO7eE1on47xaaldnW01',
+  pro:     'https://buy.stripe.com/3cIaEW0Qg2sreMb4Q1dnW02',
+  max:     'https://buy.stripe.com/9B614m42s9UT8nNgyJdnW03'
 };
 
 let sb;
