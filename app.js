@@ -124,8 +124,20 @@ if(document.getElementById('step-1')){
     if(this.files[0]){
       document.getElementById('upload-zone').classList.add('has-file');
       document.getElementById('upload-label').textContent = '✓ ' + this.files[0].name;
+      formData.cvFile = this.files[0];
     }
   });
+
+  async function uploadCVToCloudinary(file) {
+    try {
+      const fd = new FormData();
+      fd.append('cv', file);
+      const res = await fetch('/api/upload-cv', { method: 'POST', body: fd });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.url || null;
+    } catch { return null; }
+  }
 
   window.submitCampagne = async function(){
     const err = document.getElementById('err-6');
@@ -136,8 +148,15 @@ if(document.getElementById('step-1')){
     }
 
     const btn = document.querySelector('#step-6 .btn-primary-lg');
-    btn.textContent = 'Enregistrement...';
     btn.disabled = true;
+
+    if(formData.cvFile) {
+      btn.textContent = 'Upload du CV...';
+      const cvUrl = await uploadCVToCloudinary(formData.cvFile);
+      if(cvUrl) formData.cvUrl = cvUrl;
+    }
+
+    btn.textContent = 'Enregistrement...';
 
     const plans = {
       starter: { label: '29€ – 50 candidatures', price: 29 },
