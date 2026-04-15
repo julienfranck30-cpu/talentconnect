@@ -2,6 +2,9 @@
   "name": "talentconnect",
   "version": "1.0.0",
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.0"
+    "@supabase/supabase-js": "^2.39.0",
+    "cloudinary": "^1.41.3",
+    "formidable": "^2.1.2",
+    "stripe": "^14.0.0"
   }
 }
