@@ -48,7 +48,9 @@ async function findCompanies(secteur, ville, limit) {
         }
       }
     }
-  } catch(e) { console.error('Pappers error:', e.message); }
+  } catch(e) {
+    console.error('Pappers error:', e.message);
+  }
   return companies;
 }
 
@@ -61,9 +63,14 @@ async function searchEmails(domain) {
     if (data.data && data.data.emails) {
       return data.data.emails
         .filter(e => e.confidence > 70)
-        .map(e => ({ email: e.value, name: `${e.first_name || ''} ${e.last_name || ''}`.trim() }));
+        .map(e => ({
+          email: e.value,
+          name: `${e.first_name || ''} ${e.last_name || ''}`.trim()
+        }));
     }
-  } catch(e) { console.error('Hunter error:', e.message); }
+  } catch(e) {
+    console.error('Hunter error:', e.message);
+  }
   return [];
 }
 
@@ -77,15 +84,19 @@ async function sendCandidature(to, toName, company, candidat) {
       <p>Actuellement en recherche dans le secteur <strong>${candidat.secteurs}</strong>, région <strong>${candidat.ville}</strong>.</p>
       <p>Je reste disponible pour un entretien.</p>
       <br/>
-      <p>Cordialement,<br/><strong>${candidat.nom}</strong><br/>
-      📧 ${candidat.email}<br/>
-      📞 ${candidat.tel || 'Non renseigné'}</p>
+      <p>Cordialement,<br/>
+      <strong>${candidat.nom}</strong><br/>
+      ${candidat.email}<br/>
+      ${candidat.tel || 'Non renseigné'}</p>
     </div>`;
 
-   try {
+  try {
     const res = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'api-key': BREVO_KEY },
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': BREVO_KEY
+      },
       body: JSON.stringify({
         sender: { name: candidat.nom, email: 'noreply@talentconnect-gold.vercel.app' },
         to: [{ email: to, name: toName || company }],
@@ -99,9 +110,12 @@ async function sendCandidature(to, toName, company, candidat) {
     console.error('Brevo error:', e.message);
     return false;
   }
+}
 
 module.exports = async (req, res) => {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
   let event;
   try {
@@ -128,7 +142,8 @@ module.exports = async (req, res) => {
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SECRET);
   const { data: candidatures, error } = await sb
-    .from('candidatures').select('*')
+    .from('candidatures')
+    .select('*')
     .eq('email', customerEmail)
     .order('created_at', { ascending: false })
     .limit(1);
@@ -144,7 +159,9 @@ module.exports = async (req, res) => {
 
   console.log(`Processing ${candidat.nom} — ${volume} envois`);
 
-  await sb.from('candidatures').update({ statut: "En cours d'envoi" }).eq('id', candidat.id);
+  await sb.from('candidatures')
+    .update({ statut: "En cours d'envoi" })
+    .eq('id', candidat.id);
 
   let totalSent = 0;
 
