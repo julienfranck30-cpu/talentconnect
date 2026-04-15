@@ -1,4 +1,4 @@
-// api/api/webhook-stripe.js
+// api/api/webhook.js
 // Vercel Serverless Function
 // Déclenché automatiquement par Stripe après chaque paiement confirmé
 
