@@ -130,9 +130,12 @@ module.exports = async (req, res) => {
     return res.status(200).json({ received: true, ignored: true });
   }
 
-  const customerEmail = event.data?.object?.customer_email ||
-                        event.data?.object?.receipt_email ||
-                        event.data?.object?.charges?.data?.[0]?.billing_details?.email;
+const obj = event.data?.object;
+const customerEmail = 
+  obj?.customer_details?.email ||
+  obj?.customer_email ||
+  obj?.receipt_email ||
+  obj?.charges?.data?.[0]?.billing_details?.email;
 
   if (!customerEmail) {
     console.log('No email found in Stripe event');
