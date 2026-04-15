@@ -76,24 +76,32 @@ async function findCompanies(secteur, ville, limit) {
 }
 
 // Envoi d'un email de candidature via Brevo
-async function sendCandidature(to, toName, company, candidat) {
-  const subject = `Candidature spontanée – ${candidat.poste} | ${candidat.nom}`;
-  const htmlContent = `
-    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#333">
-      <p>Madame, Monsieur,</p>
-      <p>Je me permets de vous adresser ma candidature spontanée pour un poste de <strong>${candidat.poste}</strong> au sein de <strong>${company}</strong>.</p>
-      ${candidat.message ? `<p>${candidat.message}</p>` : ''}
-      <p>Fort(e) d'une expérience dans le secteur <strong>${candidat.secteurs}</strong>, je suis actuellement en recherche d'opportunités dans la région de <strong>${candidat.ville}</strong> (rayon ${candidat.rayon}).</p>
-      <p>Je serais ravi(e) de vous présenter mon parcours lors d'un entretien.</p>
-      <p>Dans l'attente de votre retour, je reste disponible par email ou téléphone.</p>
-      <br/>
-      <p>Cordialement,</p>
-      <p><strong>${candidat.nom}</strong><br/>
-      📧 ${candidat.email}<br/>
-      📞 ${candidat.tel || 'Non renseigné'}</p>
-      <hr style="border:none;border-top:1px solid #eee;margin:20px 0"/>
-      <p style="font-size:11px;color:#999">Ce message a été envoyé via TalentConnect · talentconnect-gold.vercel.app</p>
-    </div>`;
+async function findCompanies(secteur, ville, limit) {
+  const keywords = SECTEUR_KEYWORDS[secteur] || [secteur.toLowerCase()];
+  const keyword = keywords[0];
+  const companies = [];
+
+  try {
+    const params = new URLSearchParams({
+      api_token: process.env.PAPPERS_API_KEY,
+      q: keyword,
+      siege: ville.split(',')[0].trim(),
+      par_page: Math.min(limit, 10),
+      page: 1
+    });
+    const res = await fetch(`https://api.pappers.fr/v2/recherche?${params}`);
+    const data = await res.json();
+    if (data.resultats) {
+      for (const co of data.resultats) {
+        if (co.nom_domaine) {
+          companies.push({ name: co.nom_entreprise, domain: co.nom_domaine });
+        }
+      }
+    }
+  } catch(e) { console.error('Pappers error:', e.message); }
+
+  return companies;
+}
 
   const res = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
