@@ -82,19 +82,23 @@ async function sendCandidature(to, toName, company, candidat) {
       📞 ${candidat.tel || 'Non renseigné'}</p>
     </div>`;
 
-  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'api-key': BREVO_KEY },
-    body: JSON.stringify({
-      sender: { name: candidat.nom, email: 'noreply@talentconnect-gold.vercel.app' },
-      to: [{ email: to, name: toName || company }],
-      replyTo: { email: candidat.email, name: candidat.nom },
-      subject,
-      htmlContent,
-    }),
-  });
-  return res.ok;
-}
+   try {
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'api-key': BREVO_KEY },
+      body: JSON.stringify({
+        sender: { name: candidat.nom, email: 'noreply@talentconnect-gold.vercel.app' },
+        to: [{ email: to, name: toName || company }],
+        replyTo: { email: candidat.email, name: candidat.nom },
+        subject,
+        htmlContent,
+      }),
+    });
+    return res.ok;
+  } catch(e) {
+    console.error('Brevo error:', e.message);
+    return false;
+  }
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
