@@ -6,19 +6,6 @@ const SUPABASE_SECRET = process.env.SUPABASE_SECRET_KEY;
 const HUNTER_KEY      = process.env.HUNTER_API_KEY;
 const BREVO_KEY       = process.env.BREVO_API_KEY;
 
-const SECTEUR_KEYWORDS = {
-  'Distribution / Négoce': 'distribution',
-  'Industrie':             'industrie',
-  'Automobile':            'automobile',
-  'BTP / Construction':    'construction',
-  'Logistique / Transport':'logistique',
-  'Agroalimentaire':       'agroalimentaire',
-  'Retail / Commerce':     'commerce',
-  'Services B2B':          'services',
-  'Tech / Numérique':      'tech',
-  'Santé / Pharma':        'sante',
-};
-
 const PLAN_VOLUMES = { '29€': 50, '59€': 150, '99€': 300 };
 
 function getPlanVolume(plan) {
@@ -29,29 +16,81 @@ function getPlanVolume(plan) {
 }
 
 async function findCompanies(secteur, ville, limit) {
-  const keyword = SECTEUR_KEYWORDS[secteur] || secteur.toLowerCase();
-  const companies = [];
-  try {
-    const params = new URLSearchParams({
-      api_token: process.env.PAPPERS_API_KEY,
-      q: keyword,
-      siege: ville.split(',')[0].trim(),
-      par_page: Math.min(limit, 10),
-      page: 1
-    });
-    const res = await fetch(`https://api.pappers.fr/v2/recherche?${params}`);
-    const data = await res.json();
-    if (data.resultats) {
-      for (const co of data.resultats) {
-        if (co.nom_domaine) {
-          companies.push({ name: co.nom_entreprise, domain: co.nom_domaine });
-        }
-      }
-    }
-  } catch(e) {
-    console.error('Pappers error:', e.message);
-  }
-  return companies;
+  const DOMAINES_PAR_SECTEUR = {
+    'Distribution / Négoce': [
+      { name: 'Sysco France', domain: 'sysco.fr' },
+      { name: 'Metro France', domain: 'metro.fr' },
+      { name: 'Pomona', domain: 'pomona.fr' },
+      { name: 'Transgourmet', domain: 'transgourmet.fr' },
+      { name: 'Pro à Pro', domain: 'proapro.fr' },
+    ],
+    'Industrie': [
+      { name: 'Schneider Electric', domain: 'se.com' },
+      { name: 'Saint-Gobain', domain: 'saint-gobain.com' },
+      { name: 'Faurecia', domain: 'faurecia.com' },
+      { name: 'Legrand', domain: 'legrand.fr' },
+      { name: 'Plastic Omnium', domain: 'plasticomnium.com' },
+    ],
+    'Automobile': [
+      { name: 'Renault', domain: 'renault.fr' },
+      { name: 'PSA Group', domain: 'stellantis.com' },
+      { name: 'Norauto', domain: 'norauto.fr' },
+      { name: 'Midas', domain: 'midas.fr' },
+      { name: 'Speedy', domain: 'speedy.fr' },
+    ],
+    'BTP / Construction': [
+      { name: 'Vinci Construction', domain: 'vinci-construction.fr' },
+      { name: 'Bouygues Construction', domain: 'bouygues-construction.com' },
+      { name: 'Eiffage', domain: 'eiffage.com' },
+      { name: 'NGE', domain: 'nge.fr' },
+      { name: 'Spie Batignolles', domain: 'spiebatignolles.fr' },
+    ],
+    'Logistique / Transport': [
+      { name: 'Geodis', domain: 'geodis.com' },
+      { name: 'XPO Logistics', domain: 'xpo.com' },
+      { name: 'DB Schenker', domain: 'dbschenker.com' },
+      { name: 'Kuehne Nagel', domain: 'kuehne-nagel.com' },
+      { name: 'ID Logistics', domain: 'id-logistics.com' },
+    ],
+    'Agroalimentaire': [
+      { name: 'Danone', domain: 'danone.com' },
+      { name: 'Lactalis', domain: 'lactalis.fr' },
+      { name: 'Bigard', domain: 'bigard.fr' },
+      { name: 'Savencia', domain: 'savencia.com' },
+      { name: 'Bonduelle', domain: 'bonduelle.fr' },
+    ],
+    'Retail / Commerce': [
+      { name: 'Carrefour', domain: 'carrefour.fr' },
+      { name: 'Leroy Merlin', domain: 'leroymerlin.fr' },
+      { name: 'Decathlon', domain: 'decathlon.fr' },
+      { name: 'Fnac Darty', domain: 'fnacdarty.com' },
+      { name: 'Maisons du Monde', domain: 'maisonsdumonde.com' },
+    ],
+    'Services B2B': [
+      { name: 'Sodexo', domain: 'sodexo.com' },
+      { name: 'Edenred', domain: 'edenred.fr' },
+      { name: 'Manpower', domain: 'manpower.fr' },
+      { name: 'Adecco', domain: 'adecco.fr' },
+      { name: 'Randstad', domain: 'randstad.fr' },
+    ],
+    'Tech / Numérique': [
+      { name: 'Capgemini', domain: 'capgemini.com' },
+      { name: 'Sopra Steria', domain: 'soprasteria.com' },
+      { name: 'Atos', domain: 'atos.net' },
+      { name: 'CGI', domain: 'cgi.com' },
+      { name: 'Wavestone', domain: 'wavestone.com' },
+    ],
+    'Santé / Pharma': [
+      { name: 'Sanofi', domain: 'sanofi.com' },
+      { name: 'Pierre Fabre', domain: 'pierre-fabre.com' },
+      { name: 'Ipsen', domain: 'ipsen.com' },
+      { name: 'Servier', domain: 'servier.fr' },
+      { name: 'Biomérieux', domain: 'biomerieux.fr' },
+    ],
+  };
+
+  const liste = DOMAINES_PAR_SECTEUR[secteur] || [];
+  return liste.slice(0, limit);
 }
 
 async function searchEmails(domain) {
