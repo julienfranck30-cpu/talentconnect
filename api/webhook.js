@@ -54,26 +54,6 @@ async function searchEmails(domain) {
   return [];
 }
 
-// Recherche d'entreprises via Hunter.io Company Search
-async function findCompanies(secteur, ville, limit) {
-  const keywords = SECTEUR_KEYWORDS[secteur] || [secteur.toLowerCase()];
-  const keyword = keywords[0];
-  const companies = [];
-
-  try {
-    // Hunter.io ne fait pas de recherche géo directe, on utilise des domaines connus
-    // En production, coupler avec une API INSEE/Pappers pour trouver les domaines
-    const res = await fetch(
-      `https://api.hunter.io/v2/companies/search?keyword=${keyword}&country=fr&api_key=${HUNTER_KEY}&limit=${Math.min(limit, 10)}`
-    );
-    const data = await res.json();
-    if (data.data && data.data.companies) {
-      companies.push(...data.data.companies.slice(0, limit));
-    }
-  } catch(e) { console.error('Hunter companies error:', e.message); }
-
-  return companies;
-}
 
 // Envoi d'un email de candidature via Brevo
 async function findCompanies(secteur, ville, limit) {
