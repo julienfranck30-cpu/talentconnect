@@ -26,7 +26,6 @@ async function findCompanies(secteur, ville, limit) {
       { name: 'Brake France', domain: 'brake.fr' },
       { name: 'Promocash', domain: 'promocash.fr' },
       { name: 'Davigel', domain: 'davigel.fr' },
-      { name: 'Episaveurs', domain: 'episaveurs.fr' },
       { name: 'Agrial', domain: 'agrial.fr' },
       { name: 'Schiever', domain: 'schiever.fr' },
       { name: 'Euralis', domain: 'euralis.fr' },
@@ -36,10 +35,8 @@ async function findCompanies(secteur, ville, limit) {
       { name: 'Soufflet', domain: 'soufflet.com' },
       { name: 'Limagrain', domain: 'limagrain.com' },
       { name: 'Terrena', domain: 'terrena.fr' },
-      { name: 'Coopérative U', domain: 'magasins-u.com' },
       { name: 'Biocoop', domain: 'biocoop.fr' },
       { name: 'Rungis Express', domain: 'rungisexpress.com' },
-      { name: 'Coop Atlantique', domain: 'coopatlantique.fr' },
       { name: 'Leclerc', domain: 'e.leclerc' },
       { name: 'Intermarché', domain: 'intermarche.com' },
       { name: 'Lidl France', domain: 'lidl.fr' },
@@ -48,10 +45,8 @@ async function findCompanies(secteur, ville, limit) {
       { name: 'Thiriet', domain: 'thiriet.com' },
       { name: 'Labeyrie', domain: 'labeyrie.fr' },
       { name: 'Galec', domain: 'galec.fr' },
-      { name: 'ITM', domain: 'itm.fr' },
       { name: 'Nicolas', domain: 'nicolas.com' },
       { name: 'Maïsadour', domain: 'maisadour.com' },
-      { name: 'Terres du Sud', domain: 'terresdusud.fr' },
       { name: 'Arterris', domain: 'arterris.fr' },
     ],
     'Industrie': [
@@ -75,7 +70,6 @@ async function findCompanies(secteur, ville, limit) {
       { name: 'Naval Group', domain: 'naval-group.com' },
       { name: 'Forvia', domain: 'forvia.com' },
       { name: 'Knauf', domain: 'knauf.fr' },
-      { name: 'Rockwool', domain: 'rockwool.com' },
       { name: 'Sika', domain: 'sika.fr' },
       { name: 'Lafarge', domain: 'lafarge.fr' },
       { name: 'Holcim', domain: 'holcim.fr' },
@@ -86,10 +80,6 @@ async function findCompanies(secteur, ville, limit) {
       { name: 'SKF France', domain: 'skf.com' },
       { name: 'Bosch France', domain: 'bosch.fr' },
       { name: 'Siemens France', domain: 'siemens.fr' },
-      { name: 'Schaeffler', domain: 'schaeffler.fr' },
-      { name: 'Mecachrome', domain: 'mecachrome.com' },
-      { name: 'Figeac Aéro', domain: 'figeac-aero.com' },
-      { name: 'Stelia Aerospace', domain: 'stelia.com' },
     ],
     'Automobile': [
       { name: 'Renault', domain: 'renault.fr' },
@@ -240,7 +230,7 @@ async function findCompanies(secteur, ville, limit) {
       { name: 'Sephora', domain: 'sephora.fr' },
       { name: 'Nocibé', domain: 'nocibe.fr' },
       { name: 'Yves Rocher', domain: 'yves-rocher.fr' },
-      { name: 'L\'Occitane', domain: 'loccitane.com' },
+      { name: "L'Occitane", domain: 'loccitane.com' },
       { name: 'Cultura', domain: 'cultura.com' },
       { name: 'Joué Club', domain: 'joueclub.fr' },
       { name: 'King Jouet', domain: 'king-jouet.com' },
@@ -423,7 +413,7 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: 'Invalid JSON' });
   }
 
-  if (event.type !== 'checkout.session.completed' && event.type !== 'payment_intent.succeeded') {
+  if (event.type !== 'checkout.session.completed') {
     return res.status(200).json({ received: true, ignored: true });
   }
 
