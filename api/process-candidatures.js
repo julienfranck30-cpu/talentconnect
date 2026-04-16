@@ -599,20 +599,44 @@ async function sendCandidature(to, toName, company, secteur, candidat) {
       ${candidat.tel || ''}
     </div>`;
 
+  // Télécharge le CV depuis Cloudinary et convertit en base64
+  let attachments = [];
+  if (candidat.cv_url) {
+    try {
+      const cvRes = await fetch(candidat.cv_url);
+      const cvBuffer = await cvRes.arrayBuffer();
+      const cvBase64 = Buffer.from(cvBuffer).toString('base64');
+      const cvNom = candidat.cv || 'CV.pdf';
+      attachments = [{
+        content: cvBase64,
+        name: cvNom,
+        type: 'application/pdf'
+      }];
+    } catch(e) {
+      console.error('CV download error:', e.message);
+    }
+  }
+
   try {
+    const body = {
+      sender: { name: candidat.nom, email: 'julienfranck30@gmail.com' },
+      to: [{ email: to, name: toName || company }],
+      replyTo: { email: candidat.email, name: candidat.nom },
+      subject: `Candidature spontanée – ${candidat.poste} | ${candidat.nom}`,
+      htmlContent,
+    };
+
+    if (attachments.length > 0) {
+      body.attachment = attachments;
+    }
+
     const res = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'api-key': BREVO_KEY
       },
-      body: JSON.stringify({
-        sender: { name: candidat.nom, email: 'julienfranck30@gmail.com' },
-        to: [{ email: to, name: toName || company }],
-        replyTo: { email: candidat.email, name: candidat.nom },
-        subject: `Candidature spontanée – ${candidat.poste} | ${candidat.nom}`,
-        htmlContent,
-      }),
+      body: JSON.stringify(body),
     });
     return res.ok;
   } catch(e) {
