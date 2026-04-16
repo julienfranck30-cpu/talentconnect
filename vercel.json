@@ -1,8 +1,4 @@
 {
-  "crons": [
-    {
-      "path": "/api/process-candidatures",
-      "schedule": "* * * * *"
-    }
-  ]
+  "cleanUrls": true,
+  "trailingSlash": false
 }

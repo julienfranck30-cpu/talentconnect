@@ -3,6 +3,8 @@
 const SUPABASE_URL = 'https://ihhqwukfkztwdhxfvsvf.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_AKWSkS_jE-R1PnMWSI408g_5QqV8iPJ';
 
+// Stripe Payment Links — à remplacer par tes vrais liens après création dans Stripe
+// Pour créer : Stripe Dashboard → Payment Links → Créer un lien
 const STRIPE_LINKS = {
   starter: 'https://buy.stripe.com/eVq8wO7eE1on47xaaldnW01',
   pro:     'https://buy.stripe.com/3cIaEW0Qg2sreMb4Q1dnW02',
@@ -68,10 +70,8 @@ if(document.getElementById('step-1')){
       if(!formData.poste){ err.textContent='Sélectionne ou précise un poste.'; return; }
     }
     if(from===3){
-      const custom = document.getElementById('s3-secteur-custom').value.trim();
       const s = getSelectedChips('chips-secteur');
-      if(custom) s.push(custom);
-      if(!s.length){ err.textContent='Sélectionne ou précise au moins un secteur.'; return; }
+      if(!s.length){ err.textContent='Sélectionne au moins un secteur.'; return; }
       formData.secteurs = s.join(', ');
     }
     if(from===4){
@@ -166,6 +166,7 @@ if(document.getElementById('step-1')){
     const planInfo = plans[formData.plan] || plans.pro;
 
     try {
+      // 1. Sauvegarde dans Supabase
       const { data, error } = await getClient().from('candidatures').insert([{
         nom:      formData.prenom + ' ' + formData.nom,
         email:    formData.email,
@@ -184,12 +185,14 @@ if(document.getElementById('step-1')){
 
       if(error) throw error;
 
+      // 2. Affiche succès + bouton paiement Stripe
       document.getElementById('step-6').classList.remove('active');
       document.getElementById('step-success').classList.add('active');
       document.getElementById('success-msg').textContent =
         `Merci ${formData.prenom} ! Ta campagne "${planInfo.label}" est enregistrée.`;
       document.getElementById('progress-bar').style.width = '100%';
 
+      // 3. Bouton vers Stripe Payment Link
       const stripeUrl = STRIPE_LINKS[formData.plan];
       const emailParam = encodeURIComponent(formData.email);
       const finalUrl = `${stripeUrl}?prefilled_email=${emailParam}`;
@@ -265,6 +268,7 @@ if(document.getElementById('login-screen')){
 
     const total   = data.length;
     const attente = data.filter(c=>c.statut==='En attente'||c.statut==='En attente paiement').length;
+    const retenus = data.filter(c=>c.statut==='Retenu').length;
     const payes   = data.filter(c=>c.statut==='Payé').length;
 
     document.getElementById('stats-row').innerHTML = `
@@ -305,7 +309,7 @@ if(document.getElementById('login-screen')){
       <div class="modal-field"><span class="field-key">Secteurs</span><span class="field-val">${data.secteurs||'—'}</span></div>
       <div class="modal-field"><span class="field-key">Zone</span><span class="field-val">${data.ville||'—'} · ${data.rayon||''}</span></div>
       <div class="modal-field"><span class="field-key">Contrats</span><span class="field-val">${data.contrats||'—'}</span></div>
-      <div class="modal-field"><span class="field-key">CV</span><span class="field-val">${data.cv_url ? `<a href="${data.cv_url}" target="_blank" style="color:#8B5CF6">Télécharger CV</a>` : 'Non joint'}</span></div>
+      <div class="modal-field"><span class="field-key">CV</span><span class="field-val">${data.cv||'Non joint'}</span></div>
       <div class="modal-field"><span class="field-key">Offre</span><span class="field-val" style="color:#8B5CF6">${data.plan||'—'}</span></div>
       <div class="modal-field"><span class="field-key">Statut</span><span class="field-val"><span class="badge ${badgeCls(data.statut)}">${data.statut}</span></span></div>`;
     document.getElementById('modal-overlay').classList.add('open');
