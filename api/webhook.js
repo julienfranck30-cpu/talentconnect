@@ -54,8 +54,8 @@ async function sendConfirmationEmail(candidat) {
         </ol>
 
         <p style="font-size:13px;color:#888;margin-top:24px">
-          Une question ? Réponds directement à cet email ou contacte-nous sur 
-          <a href="mailto:support@talentconnect-gold.vercel.app" style="color:#6366f1">support@talentconnect-gold.vercel.app</a>
+          Une question ? Réponds directement à cet email ou contacte-nous sur
+          <a href="mailto:julienfranck30@gmail.com" style="color:#6366f1">julienfranck30@gmail.com</a>
         </p>
       </div>
       <div style="background:#f9f9f9;padding:16px;text-align:center;font-size:11px;color:#aaa">
@@ -71,7 +71,7 @@ async function sendConfirmationEmail(candidat) {
         'api-key': BREVO_KEY
       },
       body: JSON.stringify({
-        sender: { name: 'TalentConnect', email: 'noreply@talentconnect-gold.vercel.app' },
+        sender: { name: 'TalentConnect', email: 'julienfranck30@gmail.com' },
         to: [{ email: candidat.email, name: candidat.nom }],
         subject: `✦ Ta campagne est lancée — ${planInfo.volume} candidatures en cours d'envoi`,
         htmlContent,
