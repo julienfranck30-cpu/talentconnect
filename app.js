@@ -144,6 +144,11 @@ if(document.getElementById('step-1')){
         return null;
       }
       console.log('Upload CV succès:', data.url);
+      // Sauvegarde aussi le texte extrait
+      if (data.cvTexte) {
+        formData.cvTexte = data.cvTexte;
+        console.log('CV texte récupéré:', data.cvTexte.slice(0, 80) + '...');
+      }
       return data.url;
     } catch(e) {
       console.error('Upload CV exception:', e.message);
@@ -171,6 +176,7 @@ if(document.getElementById('step-1')){
       } else {
         console.warn('cvUrl est null — le CV ne sera pas joint');
       }
+      }
     }
 
     btn.textContent = 'Enregistrement...';
@@ -194,6 +200,7 @@ if(document.getElementById('step-1')){
         contrats: formData.contrats,
         cv:       formData.cv,
         cv_url:   formData.cvUrl || null,
+        cv_texte: formData.cvTexte || null,
         plan:     planInfo.label,
         message:  formData.message,
         statut:   'En attente paiement'
