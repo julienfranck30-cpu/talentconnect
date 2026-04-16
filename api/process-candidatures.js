@@ -5,7 +5,7 @@ const SUPABASE_URL    = process.env.SUPABASE_URL;
 const SUPABASE_SECRET = process.env.SUPABASE_SECRET_KEY;
 const HUNTER_KEY      = process.env.HUNTER_API_KEY;
 const BREVO_KEY       = process.env.BREVO_API_KEY;
-const ANTHROPIC_KEY   = process.env.ANTHROPIC_API_KEY;
+const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
 const PLAN_VOLUMES = { '29€': 50, '59€': 150, '99€': 300 };
 
@@ -560,19 +560,7 @@ async function generateLettre(candidat, company, secteur, contactName) {
       ? `\nINFORMATIONS TIRÉES DU CV DU CANDIDAT :\n${candidat.cv_texte}\n`
       : '';
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5',
-        max_tokens: 600,
-        messages: [{
-          role: 'user',
-          content: `Écris un email de candidature spontanée professionnel en français.
+    const prompt = `Écris un email de candidature spontanée professionnel en français.
 
 MODÈLE DE RÉFÉRENCE (adapte ce style exactement) :
 "Bonjour monsieur Meyer, Étudiant en Master 2 Achat et Approvisionnement à l'ECEMA Lyon, je suis à la recherche d'une alternance de 2 ans au rythme de 1 semaine de cours / 3 semaines en entreprise. Fort d'une expérience significative dans la gestion des achats et des stocks, je suis convaincu que mes compétences en digitalisation des processus, négociation avec les fournisseurs et optimisation des coûts pourraient être un atout pour votre entreprise. Mon parcours m'a permis de développer une approche rigoureuse et proactive face aux défis logistiques. Je serais honoré de contribuer à l'efficacité de [Entreprise] en apportant des solutions adaptées à vos besoins en approvisionnement. Je serais ravi de vous rencontrer pour discuter plus en détail de ma candidature. Vous trouverez mon CV en pièce jointe. Le coût de cette alternance serait réduit pour votre société grâce au plan d'aide à l'apprentissage. Votre OPCO prendra en charge tout ou partie des frais de scolarité ainsi qu'une part de mon salaire à hauteur de 5000€. Au plaisir de discuter avec vous prochainement, Julien Franck Guiongue +33 7 81 43 88 83"
@@ -602,13 +590,19 @@ INSTRUCTIONS STRICTES :
 - Si alternance : inclus la phrase OPCO/5000€ telle quelle
 - Termine par le nom complet + téléphone du candidat
 - 180-220 mots maximum
-- Réponds UNIQUEMENT avec le corps du message, sans objet`
-        }]
+- Réponds UNIQUEMENT avec le corps du message, sans objet`;
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 600, temperature: 0.7 }
       })
     });
     const data = await response.json();
-    console.log('Claude response:', JSON.stringify(data).slice(0, 200));
-    return data.content?.[0]?.text || null;
+    console.log('Gemini response:', JSON.stringify(data).slice(0, 200));
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
   } catch(e) {
     console.error('Claude error:', e.message);
     return null;
