@@ -55,38 +55,31 @@ function extraireFormation(cvTexte, nomCandidat) {
   return null;
 }
 
-function extraireCompetences(cvTexte, nomCandidat) {
-  if (!cvTexte) return ['gestion administrative', 'travail en équipe', 'rigueur et organisation'];
+function extraireCompetences(cvTexte, nomCandidat, poste) {
+  if (!cvTexte) return ['gestion administrative', 'travail en équipe', 'rigueur et sens du détail'];
 
   const cvLower = cvTexte.toLowerCase();
+  const posteLower = (poste || '').toLowerCase();
 
-  // Compétences techniques par domaine — cherchées dans le CV
-  const toutesCompetences = [
-    // Comptabilité / Finance
-    { mot: 'comptabilité', label: 'comptabilité' },
-    { mot: 'rapprochement bancaire', label: 'rapprochements bancaires' },
-    { mot: 'déclaration fiscale', label: 'déclarations fiscales' },
-    { mot: 'états financiers', label: 'états financiers' },
-    { mot: 'audit', label: 'audit' },
-    { mot: 'trésorerie', label: 'gestion de trésorerie' },
-    { mot: 'facturation', label: 'gestion de la facturation' },
-    { mot: 'sage', label: 'logiciel Sage' },
-    { mot: 'erp', label: 'ERP' },
-    // Achats / Logistique
-    { mot: 'approvisionnement', label: 'approvisionnement' },
-    { mot: 'supply chain', label: 'supply chain' },
-    { mot: 'négociation', label: 'négociation fournisseurs' },
-    { mot: 'stock', label: 'gestion des stocks' },
-    { mot: 'achats', label: 'gestion des achats' },
-    // RH
-    { mot: 'recrutement', label: 'recrutement' },
-    { mot: 'paie', label: 'gestion de la paie' },
-    { mot: 'formation', label: 'gestion de la formation' },
-    // Marketing / Commercial
-    { mot: 'marketing', label: 'marketing' },
-    { mot: 'commercial', label: 'développement commercial' },
-    { mot: 'crm', label: 'CRM' },
-    // Général
+  // Compétences prioritaires selon le poste visé
+  const competencesParPoste = {
+    'rh': ['recrutement', 'paie', 'formation', 'droit social', 'onboarding', 'sirh'],
+    'recrutement': ['recrutement', 'sourcing', 'entretien', 'chasse de tête', 'linkedin', 'assessment'],
+    'comptab': ['comptabilité', 'rapprochement bancaire', 'déclaration fiscale', 'états financiers', 'sage', 'facturation'],
+    'financ': ['finance', 'trésorerie', 'budget', 'contrôle de gestion', 'reporting', 'audit'],
+    'achat': ['approvisionnement', 'négociation', 'appel d\'offres', 'fournisseur', 'sourcing', 'supply chain'],
+    'logistique': ['logistique', 'stock', 'entrepôt', 'transport', 'expédition', 'lean'],
+    'marketing': ['marketing', 'communication', 'réseaux sociaux', 'seo', 'campagne', 'crm'],
+    'commercial': ['vente', 'négociation', 'prospection', 'crm', 'développement commercial'],
+    'data': ['sql', 'python', 'excel', 'power bi', 'analyse de données', 'reporting'],
+    'projet': ['gestion de projet', 'planning', 'agile', 'scrum', 'coordination', 'budget'],
+    'production': ['production', 'lean', 'qualité', 'maintenance', 'iso', 'amélioration continue'],
+    'sourcing': ['sourcing', 'appel d\'offres', 'panel fournisseurs', 'négociation', 'qualification'],
+    'paie': ['paie', 'charges sociales', 'dads', 'sirh', 'bulletin de salaire', 'cotisations'],
+  };
+
+  // Compétences générales
+  const generales = [
     { mot: 'gestion de projet', label: 'gestion de projet' },
     { mot: 'excel', label: 'Excel' },
     { mot: 'pack office', label: 'Pack Office' },
@@ -94,14 +87,30 @@ function extraireCompetences(cvTexte, nomCandidat) {
     { mot: 'communication', label: 'communication' },
     { mot: 'organisation', label: 'organisation' },
     { mot: 'rigueur', label: 'rigueur' },
-    { mot: 'adaptabilité', label: 'adaptabilité' },
     { mot: 'autonomie', label: 'autonomie' },
+    { mot: 'adaptabilité', label: 'adaptabilité' },
+    { mot: 'travail en équipe', label: 'travail en équipe' },
     { mot: 'discrétion', label: 'discrétion' },
+    { mot: 'gestion', label: 'gestion administrative' },
   ];
 
   const trouvees = [];
-  for (const comp of toutesCompetences) {
-    if (cvLower.includes(comp.mot) && trouvees.length < 3) {
+
+  // Cherche d'abord les compétences liées au poste
+  for (const [key, comps] of Object.entries(competencesParPoste)) {
+    if (posteLower.includes(key)) {
+      for (const comp of comps) {
+        if (cvLower.includes(comp) && trouvees.length < 3) {
+          trouvees.push(comp.charAt(0).toUpperCase() + comp.slice(1));
+        }
+      }
+      if (trouvees.length >= 2) break;
+    }
+  }
+
+  // Complète avec générales si besoin
+  for (const comp of generales) {
+    if (cvLower.includes(comp.mot) && trouvees.length < 3 && !trouvees.includes(comp.label)) {
       trouvees.push(comp.label);
     }
   }
@@ -212,17 +221,24 @@ function generateLettre(candidat, company, secteur, contactName) {
   const cvTexte = candidat.cv_texte || '';
   const nomCandidat = candidat.nom || '';
 
-  const competences = extraireCompetences(cvTexte, nomCandidat);
+  const competences = extraireCompetences(cvTexte, nomCandidat, candidat.poste);
   const situation = extraireSituation(cvTexte, nomCandidat, contrat);
   const descriptionEntreprise = getDescriptionEntreprise(company);
-  const missions = getMissions(company, candidat.poste);
+  const missionText = getMissions(company, candidat.poste);
+  const missionPrefix = missionText.match(/^[aeiouéèêëàâîïôùûü]/i) ? "d'" : "de ";
+  const missions = missionPrefix + missionText;
 
   const comp1 = competences[0] || 'gestion administrative';
   const comp2 = competences[1] || 'travail en équipe';
   const comp3 = competences[2] || 'rigueur et sens du détail';
 
-  // Accords selon le genre
-  const rigoureux = accordGenre(genre, 'Rigoureux', 'Rigoureuse', 'Rigoureux(se)');
+  // Adapte le poste selon le genre (enlève les parenthèses)
+  let posteAffiche = candidat.poste || '';
+  if (genre === 'M') {
+    posteAffiche = posteAffiche.replace(/\(e\)/g, '').replace(/\(e\s/g, ' ').trim();
+  } else if (genre === 'F') {
+    posteAffiche = posteAffiche.replace(/\(e\)/g, 'e').replace(/\(e\s/g, 'e ').trim();
+  }
   const pret = accordGenre(genre, 'prêt', 'prête', 'prêt(e)');
   const ravi = accordGenre(genre, 'ravi', 'ravie', 'ravi(e)');
   const dote = accordGenre(genre, 'doté', 'dotée', 'doté(e)');
@@ -244,11 +260,11 @@ ${company}
 
 À ${candidat.ville || 'Lyon'}, le ${today}
 
-Objet : Candidature spontanée – ${contrat} – ${candidat.poste}
+Objet : Candidature spontanée – ${contrat} – ${posteAffiche}
 
 ${salutation}
 
-C'est avec un grand intérêt que je suis l'évolution de ${company}, notamment pour ${descriptionEntreprise}. Souhaitant mettre mes compétences au service d'une structure de référence, je vous adresse ma candidature spontanée pour un poste de ${candidat.poste}.
+C'est avec un grand intérêt que je suis l'évolution de ${company}, notamment pour ${descriptionEntreprise}. Souhaitant mettre mes compétences au service d'une structure de référence, je vous adresse ma candidature spontanée pour un poste de ${posteAffiche}.
 
 Actuellement ${situation}, j'ai développé une expertise en ${comp1} et ${comp2}. Mon parcours m'a également permis de renforcer mes compétences en ${comp3}, que je souhaite aujourd'hui mobiliser au sein de vos équipes.
 
