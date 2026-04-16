@@ -5,7 +5,7 @@ const SUPABASE_URL    = process.env.SUPABASE_URL;
 const SUPABASE_SECRET = process.env.SUPABASE_SECRET_KEY;
 const HUNTER_KEY      = process.env.HUNTER_API_KEY;
 const BREVO_KEY       = process.env.BREVO_API_KEY;
-const GEMINI_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_KEY      = process.env.GEMINI_API_KEY;
 
 const PLAN_VOLUMES = { '29€': 50, '59€': 150, '99€': 300 };
 
@@ -359,16 +359,11 @@ const DOMAINES_PAR_SECTEUR = {
     { name: 'Areas', domain: 'areas.com' },
     { name: 'Newrest', domain: 'newrest.eu' },
     { name: 'Api Restauration', domain: 'api-restauration.com' },
-    { name: 'Sodexo', domain: 'sodexo.com' },
     { name: 'Elior', domain: 'elior.com' },
-    { name: 'Dupont Restauration', domain: 'dupont-restauration.fr' },
     { name: 'Ibis', domain: 'ibis.com' },
     { name: 'Novotel', domain: 'novotel.com' },
     { name: 'Mercure', domain: 'mercure.com' },
     { name: 'Hyatt France', domain: 'hyatt.com' },
-    { name: 'Quick', domain: 'quick.fr' },
-    { name: 'Pizza Hut France', domain: 'pizzahut.fr' },
-    { name: 'Hippopotamus', domain: 'hippopotamus.fr' },
   ],
   'Éducation / Formation': [
     { name: 'Groupe IGS', domain: 'groupe-igs.fr' },
@@ -377,52 +372,10 @@ const DOMAINES_PAR_SECTEUR = {
     { name: 'SKEMA', domain: 'skema.edu' },
     { name: 'EDHEC', domain: 'edhec.edu' },
     { name: 'EM Lyon', domain: 'emlyon.com' },
-    { name: 'Grenoble École de Management', domain: 'grenoble-em.com' },
     { name: 'Cesi', domain: 'cesi.fr' },
     { name: 'Afpa', domain: 'afpa.fr' },
     { name: 'OpenClassrooms', domain: 'openclassrooms.com' },
-    { name: 'Studi', domain: 'studi.fr' },
     { name: 'Cegos', domain: 'cegos.fr' },
-    { name: 'Demos', domain: 'demos.fr' },
-    { name: 'Comundi', domain: 'comundi.fr' },
-    { name: 'EFE Formation', domain: 'efe.fr' },
-    { name: 'Pigier', domain: 'pigier.com' },
-    { name: 'Abilways', domain: 'abilways.fr' },
-    { name: 'ISM', domain: 'ism.fr' },
-    { name: 'Formaposte', domain: 'formaposte.fr' },
-    { name: 'Groupe Sup de Co', domain: 'supdeco.fr' },
-    { name: 'HEC Paris', domain: 'hec.edu' },
-    { name: 'ESSEC', domain: 'essec.edu' },
-    { name: 'ESCP', domain: 'escp.eu' },
-    { name: 'CCI Formation', domain: 'cci.fr' },
-    { name: 'Ionis Education', domain: 'ionis-education-group.com' },
-  ],
-  'Médias / Communication': [
-    { name: 'TF1 Group', domain: 'tf1.fr' },
-    { name: 'France Télévisions', domain: 'francetelevisions.fr' },
-    { name: 'M6 Group', domain: 'm6.fr' },
-    { name: 'Canal+', domain: 'canalplus.com' },
-    { name: 'Radio France', domain: 'radiofrance.fr' },
-    { name: 'RTL Group', domain: 'rtl.fr' },
-    { name: 'Le Monde', domain: 'lemonde.fr' },
-    { name: 'Le Figaro', domain: 'lefigaro.fr' },
-    { name: 'Publicis', domain: 'publicisgroupe.com' },
-    { name: 'Havas', domain: 'havas.com' },
-    { name: 'BETC', domain: 'betc.com' },
-    { name: 'Ogilvy France', domain: 'ogilvy.com' },
-    { name: 'McCann France', domain: 'mccann.fr' },
-    { name: 'DDB Paris', domain: 'ddb.fr' },
-    { name: 'TBWA France', domain: 'tbwa.fr' },
-    { name: 'Kantar France', domain: 'kantar.com' },
-    { name: 'Ipsos France', domain: 'ipsos.fr' },
-    { name: 'Nielsen France', domain: 'nielsen.com' },
-    { name: 'Médiamétrie', domain: 'mediametrie.fr' },
-    { name: 'Prisma Media', domain: 'prismamedia.com' },
-    { name: 'Europe 1', domain: 'europe1.fr' },
-    { name: 'Libération', domain: 'liberation.fr' },
-    { name: 'Leo Burnett', domain: 'leoburnett.fr' },
-    { name: 'Grey Paris', domain: 'grey.com' },
-    { name: "L'Express", domain: 'lexpress.fr' },
   ],
   'Énergie / Environnement': [
     { name: 'EDF', domain: 'edf.fr' },
@@ -431,52 +384,22 @@ const DOMAINES_PAR_SECTEUR = {
     { name: 'Veolia', domain: 'veolia.fr' },
     { name: 'Suez', domain: 'suez.com' },
     { name: 'Enedis', domain: 'enedis.fr' },
-    { name: 'GRTgaz', domain: 'grtgaz.com' },
-    { name: 'GRDF', domain: 'grdf.fr' },
-    { name: 'RTE', domain: 'rte-france.com' },
     { name: 'Voltalia', domain: 'voltalia.com' },
     { name: 'Neoen', domain: 'neoen.com' },
-    { name: 'Akuo Energy', domain: 'akuo.energy' },
-    { name: 'Boralex', domain: 'boralex.com' },
-    { name: 'Engie Green', domain: 'engie-green.fr' },
-    { name: 'EDF Renouvelables', domain: 'edf-renouvelables.com' },
     { name: 'Paprec', domain: 'paprec.com' },
-    { name: 'Séché Environnement', domain: 'groupe-seche.com' },
-    { name: 'Saur', domain: 'saur.fr' },
     { name: 'Dalkia', domain: 'dalkia.fr' },
-    { name: 'Idex', domain: 'idex.fr' },
-    { name: 'Storengy', domain: 'storengy.com' },
-    { name: 'Valorem', domain: 'valorem.fr' },
-    { name: 'Vattenfall France', domain: 'vattenfall.fr' },
-    { name: 'Lyonnaise des Eaux', domain: 'lyonnaise-des-eaux.fr' },
-    { name: 'Veolia Eau', domain: 'veolia.fr' },
   ],
   'Ressources Humaines': [
     { name: 'Manpower', domain: 'manpower.fr' },
     { name: 'Adecco', domain: 'adecco.fr' },
     { name: 'Randstad', domain: 'randstad.fr' },
     { name: 'Michael Page', domain: 'michaelpage.fr' },
-    { name: 'Robert Half', domain: 'roberthalf.fr' },
     { name: 'Hays France', domain: 'hays.fr' },
-    { name: 'Page Personnel', domain: 'pagepersonnel.fr' },
     { name: 'Fed Group', domain: 'fedgroup.fr' },
     { name: 'Expectra', domain: 'expectra.fr' },
-    { name: 'Korn Ferry', domain: 'kornferry.com' },
-    { name: 'Spencer Stuart', domain: 'spencerstuart.com' },
-    { name: 'Altedia', domain: 'altedia.fr' },
-    { name: 'BPI Group', domain: 'bpigroup.fr' },
-    { name: 'Cegos', domain: 'cegos.fr' },
-    { name: 'Mercer France', domain: 'mercer.fr' },
-    { name: 'Aon Hewitt', domain: 'aon.fr' },
-    { name: 'Adequat', domain: 'adequat-emploi.com' },
     { name: 'Synergie', domain: 'synergie.fr' },
     { name: 'Proman', domain: 'proman.fr' },
     { name: 'Groupe Crit', domain: 'groupecrit.fr' },
-    { name: 'Ayming', domain: 'ayming.fr' },
-    { name: 'Towers Watson', domain: 'willistowerswatson.com' },
-    { name: 'Egon Zehnder', domain: 'egonzehnder.com' },
-    { name: 'Odgers Berndtson', domain: 'odgersberndtson.com' },
-    { name: 'Badenoch & Clark', domain: 'badenochandclark.fr' },
   ],
   'Conseil / Audit': [
     { name: 'Deloitte France', domain: 'deloitte.fr' },
@@ -485,25 +408,10 @@ const DOMAINES_PAR_SECTEUR = {
     { name: 'EY France', domain: 'ey.com' },
     { name: 'McKinsey France', domain: 'mckinsey.com' },
     { name: 'BCG France', domain: 'bcg.com' },
-    { name: 'Bain France', domain: 'bain.com' },
-    { name: 'Roland Berger', domain: 'rolandberger.com' },
-    { name: 'Oliver Wyman', domain: 'oliverwyman.com' },
-    { name: 'AT Kearney', domain: 'kearney.com' },
     { name: 'Mazars', domain: 'mazars.fr' },
     { name: 'Grant Thornton', domain: 'grantthornton.fr' },
-    { name: 'BDO France', domain: 'bdo.fr' },
-    { name: 'Accuracy', domain: 'accuracy.com' },
-    { name: 'Eight Advisory', domain: 'eight-advisory.com' },
-    { name: 'Sia Partners', domain: 'sia-partners.com' },
-    { name: 'Colombus Consulting', domain: 'colombus-consulting.com' },
-    { name: 'Onepoint', domain: 'groupeonepoint.com' },
     { name: 'Wavestone', domain: 'wavestone.com' },
-    { name: 'Kurt Salmon', domain: 'kurtsalmon.com' },
-    { name: 'Devoteam', domain: 'devoteam.com' },
-    { name: 'Solucom', domain: 'solucom.fr' },
-    { name: 'Ailancy', domain: 'ailancy.com' },
-    { name: 'Advolis', domain: 'advolis.com' },
-    { name: 'Vertuo Conseil', domain: 'vertuo-conseil.fr' },
+    { name: 'Sia Partners', domain: 'sia-partners.com' },
   ],
 };
 
@@ -540,71 +448,80 @@ async function searchEmails(domain) {
 async function generateLettre(candidat, company, secteur, contactName) {
   try {
     const prenom = contactName ? contactName.split(' ')[0] : null;
-    const salutation = prenom ? `Bonjour ${prenom},` : 'Madame, Monsieur,';
-
-    // Détermine le type de contrat pour adapter la lettre
+    const salutation = prenom ? `Madame, Monsieur ${prenom},` : 'Madame, Monsieur,';
     const contrat = candidat.contrats || 'CDI';
     const isAlternance = contrat.toLowerCase().includes('alternance');
     const isStage = contrat.toLowerCase().includes('stage');
-
-    let contratPhrase = '';
-    if (isAlternance) {
-      contratPhrase = `je suis à la recherche d'une alternance de 2 ans au rythme de 1 semaine de cours / 3 semaines en entreprise. Le coût de cette alternance serait réduit pour votre société grâce au plan d'aide à l'apprentissage. Votre OPCO prendra en charge tout ou partie des frais de scolarité ainsi qu'une part de mon salaire à hauteur de 5000€.`;
-    } else if (isStage) {
-      contratPhrase = `je suis à la recherche d'un stage de fin d'études dans le cadre de ma formation.`;
-    } else {
-      contratPhrase = `je suis activement à la recherche d'un poste de ${candidat.poste || 'collaborateur'} en ${contrat}.`;
-    }
+    const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 
     const cvContext = candidat.cv_texte
-      ? `\nINFORMATIONS TIRÉES DU CV DU CANDIDAT :\n${candidat.cv_texte}\n`
+      ? `\nCONTENU DU CV DU CANDIDAT (utilise ces infos pour personnaliser) :\n${candidat.cv_texte}\n`
       : '';
 
-    const prompt = `Écris un email de candidature spontanée professionnel en français.
+    let contratInfo = '';
+    if (isAlternance) {
+      contratInfo = `Le coût de cette alternance serait réduit pour votre société grâce au plan d'aide à l'apprentissage. Votre OPCO prendra en charge tout ou partie des frais de scolarité ainsi qu'une part de mon salaire à hauteur de 5 000€.`;
+    } else if (isStage) {
+      contratInfo = `Je recherche un stage de fin d'études dans le cadre de ma formation.`;
+    }
 
-MODÈLE DE RÉFÉRENCE (adapte ce style exactement) :
-"Bonjour monsieur Meyer, Étudiant en Master 2 Achat et Approvisionnement à l'ECEMA Lyon, je suis à la recherche d'une alternance de 2 ans au rythme de 1 semaine de cours / 3 semaines en entreprise. Fort d'une expérience significative dans la gestion des achats et des stocks, je suis convaincu que mes compétences en digitalisation des processus, négociation avec les fournisseurs et optimisation des coûts pourraient être un atout pour votre entreprise. Mon parcours m'a permis de développer une approche rigoureuse et proactive face aux défis logistiques. Je serais honoré de contribuer à l'efficacité de [Entreprise] en apportant des solutions adaptées à vos besoins en approvisionnement. Je serais ravi de vous rencontrer pour discuter plus en détail de ma candidature. Vous trouverez mon CV en pièce jointe. Le coût de cette alternance serait réduit pour votre société grâce au plan d'aide à l'apprentissage. Votre OPCO prendra en charge tout ou partie des frais de scolarité ainsi qu'une part de mon salaire à hauteur de 5000€. Au plaisir de discuter avec vous prochainement, Julien Franck Guiongue +33 7 81 43 88 83"
+    const prompt = `Tu es expert en rédaction de lettres de motivation professionnelles en français. Génère une lettre complète en remplissant ce modèle avec les informations réelles du candidat.
+
+MODÈLE À UTILISER (remplace tous les crochets [] par du contenu réel) :
+---
+${candidat.nom}
+${candidat.tel || ''}
+${candidat.email || ''}
+
+À l'attention du Responsable du Recrutement
+${company}
+
+À ${candidat.ville || 'Lyon'}, le ${today}
+
+Objet : Candidature spontanée – ${contrat} – ${candidat.poste}
+
+${salutation}
+
+C'est avec un grand intérêt que je suis l'évolution de ${company}, notamment pour [citer un aspect concret de l'entreprise lié au secteur ${secteur}]. Souhaitant mettre mes compétences au service d'une structure reconnue dans le secteur ${secteur}, je vous adresse ma candidature spontanée pour un poste de ${candidat.poste}.
+
+Actuellement [situation actuelle tirée du CV : formation / poste / diplôme], j'ai développé une expertise en [Compétence 1 tirée du CV] et [Compétence 2 tirée du CV]. Mon parcours m'a permis de cultiver une grande capacité d'adaptation et un sens de l'initiative que je souhaite mobiliser au sein de vos équipes.
+
+Intégrer ${company} représente pour moi l'opportunité de contribuer à vos futurs succès, qu'il s'agisse de [citer une mission concrète adaptée au secteur ${secteur}]. [Qualité personnelle tirée du CV], je suis prêt(e) à m'investir pleinement dans les missions que vous pourriez me confier.${contratInfo ? '\n\n' + contratInfo : ''}
+
+Je serais ravi(e) de vous exposer plus en détail mes motivations lors d'un entretien à votre convenance.
+
+Dans l'attente de votre retour, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.
+
+${candidat.nom}
+${candidat.tel || ''}
+---
 
 INFORMATIONS DU CANDIDAT :
-- Nom complet : ${candidat.nom}
-- Téléphone : ${candidat.tel || ''}
-- Email : ${candidat.email || ''}
+- Nom : ${candidat.nom}
 - Poste visé : ${candidat.poste}
-- Type de contrat recherché : ${contrat}
-- Zone de recherche : ${candidat.ville}
-- Message personnel : ${candidat.message || 'Non renseigné'}
+- Contrat : ${contrat}
+- Ville : ${candidat.ville}
+- Message : ${candidat.message || 'Non renseigné'}
 ${cvContext}
-ENTREPRISE CIBLÉE : ${company}
-SECTEUR : ${secteur}
-SALUTATION : ${salutation}
-PHRASE CONTRAT : ${contratPhrase}
-
-INSTRUCTIONS STRICTES :
-- Commence OBLIGATOIREMENT par "${salutation}"
-- Présente la formation et le contexte (Master, école si mentionné dans le CV)
-- Utilise la PHRASE CONTRAT telle quelle pour expliquer ce que le candidat recherche
-- Mentionne 2-3 compétences CONCRÈTES tirées du CV et adaptées au secteur ${secteur}
-- Montre la valeur ajoutée spécifique pour ${company}
-- Propose un entretien
-- Mentionne le CV en pièce jointe
-- Si alternance : inclus la phrase OPCO/5000€ telle quelle
-- Termine par le nom complet + téléphone du candidat
-- 180-220 mots maximum
-- Réponds UNIQUEMENT avec le corps du message, sans objet`;
+RÈGLES STRICTES :
+- Remplace TOUS les crochets [] par du contenu réel et pertinent
+- Utilise les infos du CV pour les compétences, la formation, la situation actuelle
+- Ne laisse aucun crochet dans la réponse finale
+- Réponds UNIQUEMENT avec la lettre complète, rien d'autre avant ou après`;
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: 600, temperature: 0.7 }
+        generationConfig: { maxOutputTokens: 800, temperature: 0.7 }
       })
     });
     const data = await response.json();
-    console.log('Gemini response:', JSON.stringify(data).slice(0, 200));
+    console.log('Gemini response:', JSON.stringify(data).slice(0, 300));
     return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
   } catch(e) {
-    console.error('Claude error:', e.message);
+    console.error('Gemini error:', e.message);
     return null;
   }
 }
@@ -612,10 +529,11 @@ INSTRUCTIONS STRICTES :
 async function sendCandidature(to, toName, company, secteur, candidat) {
   const lettre = await generateLettre(candidat, company, secteur, toName);
 
-  const corps = lettre || `Madame, Monsieur,\n\nÉtudiant en Master Achats & Approvisionnements à l'ECEMA Lyon, je me permets de vous adresser ma candidature spontanée pour un poste de ${candidat.poste} au sein de ${company}.\n\nJe reste disponible pour un entretien.\n\nCordialement,\n${candidat.nom}`;
+  const contrat = candidat.contrats || 'CDI';
+  const corps = lettre || `Madame, Monsieur,\n\nJe me permets de vous adresser ma candidature spontanée pour un poste de ${candidat.poste} au sein de ${company}.\n\nJe reste disponible pour un entretien.\n\nCordialement,\n${candidat.nom}\n${candidat.tel || ''}`;
 
   const htmlContent = `
-    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#333;line-height:1.7;font-size:15px">
+    <div style="font-family:Arial,sans-serif;max-width:650px;margin:0 auto;color:#333;line-height:1.8;font-size:15px">
       ${corps.replace(/\n/g, '<br/>')}
     </div>`;
 
