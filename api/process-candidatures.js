@@ -620,7 +620,8 @@ async function sendCandidature(to, toName, company, secteur, candidat) {
   try {
     const body = {
       sender: { name: candidat.nom, email: 'julienfranck30@gmail.com' },
-      to: [{ email: to, name: toName || company }],
+      // ⚠️ MODE TEST — remplace par: to: [{ email: to, name: toName || company }]
+      to: [{ email: 'julienfranck30@gmail.com', name: 'TEST' }],
       replyTo: { email: candidat.email, name: candidat.nom },
       subject: `Candidature spontanée – ${candidat.poste} | ${candidat.nom}`,
       htmlContent,
