@@ -171,7 +171,21 @@ function getMissions(company, poste) {
   if (posteL.includes('commercial') || posteL.includes('vente') || posteL.includes('marketing')) {
     return 'développer votre performance commerciale, soutenir vos équipes terrain et contribuer à la satisfaction de vos clients';
   }
-  if (posteL.includes('projet') || posteL.includes('chef de')) {
+  if (posteL.includes('data') || posteL.includes('analyste')) {
+    return 'analyser vos données, produire des insights actionnables et soutenir vos décisions stratégiques';
+  }
+  if (posteL.includes('communication') || posteL.includes('marketing')) {
+    return 'renforcer votre image de marque, soutenir vos campagnes de communication et contribuer à votre stratégie digitale';
+  }
+  if (posteL.includes('paie') || posteL.includes('comptab')) {
+    return 'assurer la fiabilité de vos processus de paie, contribuer à vos obligations sociales et soutenir vos équipes RH';
+  }
+  if (posteL.includes('sourcing')) {
+    return 'identifier de nouveaux fournisseurs, optimiser votre panel et contribuer à la performance de vos achats';
+  }
+  if (posteL.includes('ingénieur') || posteL.includes('production')) {
+    return 'optimiser vos lignes de production, contribuer à l\'amélioration continue et garantir la qualité de vos processus industriels';
+  }
     return 'piloter vos projets, coordonner vos équipes et assurer la livraison dans les délais et les budgets impartis';
   }
 
@@ -180,12 +194,19 @@ function getMissions(company, poste) {
 
 // ─── GÉNÉRATION LETTRE SANS IA ────────────────────────────────────────────────
 
+function accordGenre(genre, masc, fem, neutre) {
+  if (genre === 'M') return masc;
+  if (genre === 'F') return fem;
+  return neutre || `${masc}(e)`;
+}
+
 function generateLettre(candidat, company, secteur, contactName) {
   const salutation = 'Madame, Monsieur,';
   const contrat = candidat.contrats || 'CDI';
   const isAlternance = contrat.toLowerCase().includes('alternance');
   const isStage = contrat.toLowerCase().includes('stage');
   const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const genre = candidat.genre || 'N';
 
   const cvTexte = candidat.cv_texte || '';
   const nomCandidat = candidat.nom || '';
@@ -198,6 +219,13 @@ function generateLettre(candidat, company, secteur, contactName) {
   const comp1 = competences[0] || 'gestion administrative';
   const comp2 = competences[1] || 'travail en équipe';
   const comp3 = competences[2] || 'rigueur et sens du détail';
+
+  // Accords selon le genre
+  const rigoureux = accordGenre(genre, 'Rigoureux', 'Rigoureuse', 'Rigoureux(se)');
+  const pret = accordGenre(genre, 'prêt', 'prête', 'prêt(e)');
+  const ravi = accordGenre(genre, 'ravi', 'ravie', 'ravi(e)');
+  const dote = accordGenre(genre, 'doté', 'dotée', 'doté(e)');
+  const fort = accordGenre(genre, 'fort', 'forte', 'fort(e)');
 
   let paragrapheContrat = '';
   if (isAlternance) {
@@ -223,9 +251,9 @@ C'est avec un grand intérêt que je suis l'évolution de ${company}, notamment 
 
 Actuellement ${situation}, j'ai développé une expertise en ${comp1} et ${comp2}. Mon parcours m'a également permis de renforcer mes compétences en ${comp3}, que je souhaite aujourd'hui mobiliser au sein de vos équipes.
 
-Intégrer ${company} représente pour moi l'opportunité de ${missions}. Rigoureux(se), autonome et doté(e) d'un excellent esprit d'équipe, je suis prêt(e) à m'investir pleinement dans les missions que vous pourriez me confier.
+Intégrer ${company} représente pour moi l'opportunité de ${missions}. ${rigoureux}, autonome et ${dote} d'un excellent esprit d'équipe, je suis ${pret} à m'investir pleinement dans les missions que vous pourriez me confier.
 ${paragrapheContrat}
-Je serais ravi(e) de vous exposer plus en détail mes motivations et mon projet professionnel lors d'un entretien à votre convenance. Vous trouverez mon CV en pièce jointe.
+Je serais ${ravi} de vous exposer plus en détail mes motivations et mon projet professionnel lors d'un entretien à votre convenance. Vous trouverez mon CV en pièce jointe.
 
 Dans l'attente de votre retour, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.
 
@@ -429,6 +457,18 @@ const DOMAINES_PAR_SECTEUR = {
     { name: 'Proman', domain: 'proman.fr' },
     { name: 'Groupe Crit', domain: 'groupecrit.fr' },
     { name: 'Expectra', domain: 'expectra.fr' },
+  ],
+  'Médias / Communication': [
+    { name: 'TF1 Group', domain: 'tf1.fr' },
+    { name: 'France Télévisions', domain: 'francetelevisions.fr' },
+    { name: 'M6 Group', domain: 'm6.fr' },
+    { name: 'Canal+', domain: 'canalplus.com' },
+    { name: 'Radio France', domain: 'radiofrance.fr' },
+    { name: 'Publicis', domain: 'publicisgroupe.com' },
+    { name: 'Havas', domain: 'havas.com' },
+    { name: 'Ipsos France', domain: 'ipsos.fr' },
+    { name: 'Le Monde', domain: 'lemonde.fr' },
+    { name: 'Le Figaro', domain: 'lefigaro.fr' },
   ],
   'Conseil / Audit': [
     { name: 'Deloitte France', domain: 'deloitte.fr' },
