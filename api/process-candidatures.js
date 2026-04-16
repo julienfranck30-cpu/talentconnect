@@ -16,6 +16,9 @@ function getPlanVolume(plan) {
   return 50;
 }
 
+// Emails génériques de fallback par type de domaine
+const FALLBACK_EMAILS = ['rh', 'recrutement', 'contact', 'jobs', 'carriere'];
+
 const DOMAINES_PAR_SECTEUR = {
   'Distribution / Négoce': [
     { name: 'Sysco France', domain: 'sysco.fr' },
@@ -510,24 +513,32 @@ async function findCompanies(secteur, limit) {
   return liste.slice(0, limit);
 }
 
+// Recherche emails via Hunter — avec fallback générique si 0 résultat
 async function searchEmails(domain) {
   try {
     const res = await fetch(
       `https://api.hunter.io/v2/domain-search?domain=${domain}&api_key=${HUNTER_KEY}&limit=3&type=personal`
     );
     const data = await res.json();
-    if (data.data && data.data.emails) {
-      return data.data.emails
+    if (data.data && data.data.emails && data.data.emails.length > 0) {
+      const filtered = data.data.emails
         .filter(e => e.confidence > 70)
         .map(e => ({
           email: e.value,
           name: `${e.first_name || ''} ${e.last_name || ''}`.trim()
         }));
+      if (filtered.length > 0) return filtered;
     }
   } catch(e) {
     console.error('Hunter error:', e.message);
   }
-  return [];
+
+  // Fallback : génère emails génériques RH sur le domaine
+  console.log(`Hunter: 0 résultat pour ${domain} — utilisation fallback générique`);
+  return FALLBACK_EMAILS.slice(0, 2).map(prefix => ({
+    email: `${prefix}@${domain}`,
+    name: ''
+  }));
 }
 
 async function generateLettre(candidat, company, secteur, contactName) {
@@ -619,11 +630,12 @@ async function sendCandidature(to, toName, company, secteur, candidat) {
 
   try {
     const body = {
-      sender: { name: candidat.nom, email: 'julienfranck30@gmail.com' },
-      // ⚠️ MODE TEST — remplace par: to: [{ email: to, name: toName || company }]
+      sender: { name: 'TalentConnect', email: 'julienfranck30@gmail.com' },
+      // ⚠️ MODE TEST — pour passer en production, remplacer par:
+      // to: [{ email: to, name: toName || company }],
       to: [{ email: 'julienfranck30@gmail.com', name: 'TEST' }],
       replyTo: { email: candidat.email, name: candidat.nom },
-      subject: `Candidature spontanée – ${candidat.poste} | ${candidat.nom}`,
+      subject: `Candidature spontanée – ${candidat.poste} | ${candidat.nom} → ${company}`,
       htmlContent,
     };
 
@@ -639,7 +651,14 @@ async function sendCandidature(to, toName, company, secteur, candidat) {
       },
       body: JSON.stringify(body),
     });
-    return res.ok;
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error(`Brevo error ${res.status}: ${errText}`);
+      return false;
+    }
+
+    return true;
   } catch(e) {
     console.error('Brevo error:', e.message);
     return false;
