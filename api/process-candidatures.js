@@ -16,7 +16,6 @@ function getPlanVolume(plan) {
   return 50;
 }
 
-// Emails génériques de fallback par type de domaine
 const FALLBACK_EMAILS = ['rh', 'recrutement', 'contact', 'jobs', 'carriere'];
 
 const DOMAINES_PAR_SECTEUR = {
@@ -513,7 +512,6 @@ async function findCompanies(secteur, limit) {
   return liste.slice(0, limit);
 }
 
-// Recherche emails via Hunter — avec fallback générique si 0 résultat
 async function searchEmails(domain) {
   try {
     const res = await fetch(
@@ -532,8 +530,6 @@ async function searchEmails(domain) {
   } catch(e) {
     console.error('Hunter error:', e.message);
   }
-
-  // Fallback : génère emails génériques RH sur le domaine
   console.log(`Hunter: 0 résultat pour ${domain} — utilisation fallback générique`);
   return FALLBACK_EMAILS.slice(0, 2).map(prefix => ({
     email: `${prefix}@${domain}`,
@@ -545,6 +541,24 @@ async function generateLettre(candidat, company, secteur, contactName) {
   try {
     const prenom = contactName ? contactName.split(' ')[0] : null;
     const salutation = prenom ? `Bonjour ${prenom},` : 'Madame, Monsieur,';
+
+    // Détermine le type de contrat pour adapter la lettre
+    const contrat = candidat.contrats || 'CDI';
+    const isAlternance = contrat.toLowerCase().includes('alternance');
+    const isStage = contrat.toLowerCase().includes('stage');
+
+    let contratPhrase = '';
+    if (isAlternance) {
+      contratPhrase = `je suis à la recherche d'une alternance de 2 ans au rythme de 1 semaine de cours / 3 semaines en entreprise. Le coût de cette alternance serait réduit pour votre société grâce au plan d'aide à l'apprentissage. Votre OPCO prendra en charge tout ou partie des frais de scolarité ainsi qu'une part de mon salaire à hauteur de 5000€.`;
+    } else if (isStage) {
+      contratPhrase = `je suis à la recherche d'un stage de fin d'études dans le cadre de ma formation.`;
+    } else {
+      contratPhrase = `je suis activement à la recherche d'un poste de ${candidat.poste || 'collaborateur'} en ${contrat}.`;
+    }
+
+    const cvContext = candidat.cv_texte
+      ? `\nINFORMATIONS TIRÉES DU CV DU CANDIDAT :\n${candidat.cv_texte}\n`
+      : '';
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -558,33 +572,37 @@ async function generateLettre(candidat, company, secteur, contactName) {
         max_tokens: 600,
         messages: [{
           role: 'user',
-          content: `Écris un email de candidature spontanée professionnel en français, dans le style suivant :
+          content: `Écris un email de candidature spontanée professionnel en français.
 
-EXEMPLE DE STYLE :
-"Bonjour monsieur Billau, Étudiant en Master 2 Achat et Approvisionnement à l'ECEMA Lyon, je suis à la recherche d'une alternance de 2 ans au rythme de 1 semaine de cours / 3 semaines en entreprise. Fort d'une expérience significative dans la gestion des achats et des stocks, je suis convaincu que mes compétences en digitalisation des processus, négociation avec les fournisseurs et optimisation des coûts pourraient être un atout pour votre entreprise. Mon parcours m'a permis de développer une approche rigoureuse et proactive face aux défis logistiques. Je suis persuadé que ma contribution pourrait soutenir [Entreprise] dans l'optimisation de ses processus d'approvisionnement. Je serais ravi de vous rencontrer pour discuter plus en détail de ma candidature. Vous trouverez mon CV en pièce jointe. Au plaisir de discuter avec vous prochainement."
+MODÈLE DE RÉFÉRENCE (adapte ce style exactement) :
+"Bonjour monsieur Meyer, Étudiant en Master 2 Achat et Approvisionnement à l'ECEMA Lyon, je suis à la recherche d'une alternance de 2 ans au rythme de 1 semaine de cours / 3 semaines en entreprise. Fort d'une expérience significative dans la gestion des achats et des stocks, je suis convaincu que mes compétences en digitalisation des processus, négociation avec les fournisseurs et optimisation des coûts pourraient être un atout pour votre entreprise. Mon parcours m'a permis de développer une approche rigoureuse et proactive face aux défis logistiques. Je serais honoré de contribuer à l'efficacité de [Entreprise] en apportant des solutions adaptées à vos besoins en approvisionnement. Je serais ravi de vous rencontrer pour discuter plus en détail de ma candidature. Vous trouverez mon CV en pièce jointe. Le coût de cette alternance serait réduit pour votre société grâce au plan d'aide à l'apprentissage. Votre OPCO prendra en charge tout ou partie des frais de scolarité ainsi qu'une part de mon salaire à hauteur de 5000€. Au plaisir de discuter avec vous prochainement, Julien Franck Guiongue +33 7 81 43 88 83"
 
 INFORMATIONS DU CANDIDAT :
-- Nom : ${candidat.nom}
+- Nom complet : ${candidat.nom}
+- Téléphone : ${candidat.tel || ''}
+- Email : ${candidat.email || ''}
 - Poste visé : ${candidat.poste}
-- Secteurs : ${candidat.secteurs}
-- Zone : ${candidat.ville}
-- Type de contrat : ${candidat.contrats || 'CDI'}
+- Type de contrat recherché : ${contrat}
+- Zone de recherche : ${candidat.ville}
 - Message personnel : ${candidat.message || 'Non renseigné'}
-${candidat.cv_texte ? `\nCONTENU DU CV (utilise ces informations pour personnaliser) :\n${candidat.cv_texte}` : ''}
-
+${cvContext}
 ENTREPRISE CIBLÉE : ${company}
 SECTEUR : ${secteur}
 SALUTATION : ${salutation}
+PHRASE CONTRAT : ${contratPhrase}
 
-INSTRUCTIONS :
-- Commence par "${salutation}"
-- Présente la formation/expérience clé tirée du CV
-- Mentionne 2-3 compétences concrètes du CV adaptées au secteur de ${company}
-- Montre comment le candidat peut apporter de la valeur à ${company} spécifiquement
-- Propose un entretien et mentionne le CV en pièce jointe
-- Termine par une formule chaleureuse
-- 150-200 mots maximum
-- Réponds uniquement avec le corps du message, sans objet ni signature séparée`
+INSTRUCTIONS STRICTES :
+- Commence OBLIGATOIREMENT par "${salutation}"
+- Présente la formation et le contexte (Master, école si mentionné dans le CV)
+- Utilise la PHRASE CONTRAT telle quelle pour expliquer ce que le candidat recherche
+- Mentionne 2-3 compétences CONCRÈTES tirées du CV et adaptées au secteur ${secteur}
+- Montre la valeur ajoutée spécifique pour ${company}
+- Propose un entretien
+- Mentionne le CV en pièce jointe
+- Si alternance : inclus la phrase OPCO/5000€ telle quelle
+- Termine par le nom complet + téléphone du candidat
+- 180-220 mots maximum
+- Réponds UNIQUEMENT avec le corps du message, sans objet`
         }]
       })
     });
@@ -599,18 +617,13 @@ INSTRUCTIONS :
 async function sendCandidature(to, toName, company, secteur, candidat) {
   const lettre = await generateLettre(candidat, company, secteur, toName);
 
-  const corps = lettre || `Madame, Monsieur,\n\nÉtudiant en Master Achats & Approvisionnements à l'ECEMA Lyon, je me permets de vous adresser ma candidature spontanée pour un poste de ${candidat.poste} au sein de ${company}.\n\nFort de mon expérience dans le secteur ${candidat.secteurs}, je serais ravi de contribuer au développement de votre entreprise.\n\nJe reste disponible pour un entretien.\n\nCordialement,`;
+  const corps = lettre || `Madame, Monsieur,\n\nÉtudiant en Master Achats & Approvisionnements à l'ECEMA Lyon, je me permets de vous adresser ma candidature spontanée pour un poste de ${candidat.poste} au sein de ${company}.\n\nJe reste disponible pour un entretien.\n\nCordialement,\n${candidat.nom}`;
 
   const htmlContent = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#333;line-height:1.7;font-size:15px">
       ${corps.replace(/\n/g, '<br/>')}
-      <br/><br/>
-      <strong>${candidat.nom}</strong><br/>
-      ${candidat.email}<br/>
-      ${candidat.tel || ''}
     </div>`;
 
-  // Télécharge le CV depuis Cloudinary et convertit en base64
   let attachments = [];
   if (candidat.cv_url) {
     try {
@@ -620,17 +633,13 @@ async function sendCandidature(to, toName, company, secteur, candidat) {
         if (cvBuffer.byteLength > 0) {
           const cvBase64 = Buffer.from(cvBuffer).toString('base64');
           const cvNom = candidat.cv || 'CV.pdf';
-          attachments = [{
-            content: cvBase64,
-            name: cvNom,
-            type: 'application/pdf'
-          }];
+          attachments = [{ content: cvBase64, name: cvNom, type: 'application/pdf' }];
           console.log(`CV chargé: ${cvNom} (${cvBuffer.byteLength} bytes)`);
         } else {
           console.error('CV vide — byteLength = 0');
         }
       } else {
-        console.error(`CV fetch failed: HTTP ${cvRes.status} — ${candidat.cv_url}`);
+        console.error(`CV fetch failed: HTTP ${cvRes.status}`);
       }
     } catch(e) {
       console.error('CV download error:', e.message);
@@ -640,8 +649,7 @@ async function sendCandidature(to, toName, company, secteur, candidat) {
   try {
     const body = {
       sender: { name: 'TalentConnect', email: 'julienfranck30@gmail.com' },
-      // ⚠️ MODE TEST — pour passer en production, remplacer par:
-      // to: [{ email: to, name: toName || company }],
+      // ⚠️ MODE TEST — pour production remplacer par: to: [{ email: to, name: toName || company }],
       to: [{ email: 'julienfranck30@gmail.com', name: 'TEST' }],
       replyTo: { email: candidat.email, name: candidat.nom },
       subject: `Candidature spontanée – ${candidat.poste} | ${candidat.nom} → ${company}`,
@@ -654,10 +662,7 @@ async function sendCandidature(to, toName, company, secteur, candidat) {
 
     const res = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api-key': BREVO_KEY
-      },
+      headers: { 'Content-Type': 'application/json', 'api-key': BREVO_KEY },
       body: JSON.stringify(body),
     });
 
@@ -666,7 +671,6 @@ async function sendCandidature(to, toName, company, secteur, candidat) {
       console.error(`Brevo error ${res.status}: ${errText}`);
       return false;
     }
-
     return true;
   } catch(e) {
     console.error('Brevo error:', e.message);
@@ -708,9 +712,7 @@ module.exports = async (req, res) => {
 
     console.log(`Traitement de ${candidat.nom} — ${volume} envois`);
 
-    await sb.from('candidatures')
-      .update({ statut: "En cours d'envoi" })
-      .eq('id', candidat.id);
+    await sb.from('candidatures').update({ statut: "En cours d'envoi" }).eq('id', candidat.id);
 
     let totalSent = 0;
 
