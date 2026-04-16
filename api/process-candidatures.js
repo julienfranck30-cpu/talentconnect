@@ -568,7 +568,7 @@ async function generateLettre(candidat, company, secteur, contactName) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-haiku-4-5',
         max_tokens: 600,
         messages: [{
           role: 'user',
@@ -607,6 +607,7 @@ INSTRUCTIONS STRICTES :
       })
     });
     const data = await response.json();
+    console.log('Claude response:', JSON.stringify(data).slice(0, 200));
     return data.content?.[0]?.text || null;
   } catch(e) {
     console.error('Claude error:', e.message);
