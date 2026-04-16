@@ -615,14 +615,23 @@ async function sendCandidature(to, toName, company, secteur, candidat) {
   if (candidat.cv_url) {
     try {
       const cvRes = await fetch(candidat.cv_url);
-      const cvBuffer = await cvRes.arrayBuffer();
-      const cvBase64 = Buffer.from(cvBuffer).toString('base64');
-      const cvNom = candidat.cv || 'CV.pdf';
-      attachments = [{
-        content: cvBase64,
-        name: cvNom,
-        type: 'application/pdf'
-      }];
+      if (cvRes.ok) {
+        const cvBuffer = await cvRes.arrayBuffer();
+        if (cvBuffer.byteLength > 0) {
+          const cvBase64 = Buffer.from(cvBuffer).toString('base64');
+          const cvNom = candidat.cv || 'CV.pdf';
+          attachments = [{
+            content: cvBase64,
+            name: cvNom,
+            type: 'application/pdf'
+          }];
+          console.log(`CV chargé: ${cvNom} (${cvBuffer.byteLength} bytes)`);
+        } else {
+          console.error('CV vide — byteLength = 0');
+        }
+      } else {
+        console.error(`CV fetch failed: HTTP ${cvRes.status} — ${candidat.cv_url}`);
+      }
     } catch(e) {
       console.error('CV download error:', e.message);
     }
