@@ -225,8 +225,7 @@ function generateLettre(candidat, company, secteur, contactName) {
   const situation = extraireSituation(cvTexte, nomCandidat, contrat);
   const descriptionEntreprise = getDescriptionEntreprise(company);
   const missionText = getMissions(company, candidat.poste);
-  const missionPrefix = missionText.match(/^[aeiouéèêëàâîïôùûü]/i) ? "d'" : "de ";
-  const missions = missionPrefix + missionText;
+  const missions = missionText.match(/^[aeiouéèêëàâîïôùûü]/i) ? "d'" + missionText : "de " + missionText;
 
   const comp1 = competences[0] || 'gestion administrative';
   const comp2 = competences[1] || 'travail en équipe';
@@ -269,7 +268,7 @@ C'est avec un grand intérêt que je suis l'évolution de ${company}, notamment 
 
 Actuellement ${situation}, j'ai développé une expertise en ${comp1} et ${comp2}. Mon parcours m'a également permis de renforcer mes compétences en ${comp3}, que je souhaite aujourd'hui mobiliser au sein de vos équipes.
 
-Intégrer ${company} représente pour moi l'opportunité de ${missions}. ${rigoureux}, autonome et ${dote} d'un excellent esprit d'équipe, je suis ${pret} à m'investir pleinement dans les missions que vous pourriez me confier.
+Intégrer ${company} représente pour moi l'opportunité ${missions}. ${rigoureux}, autonome et ${dote} d'un excellent esprit d'équipe, je suis ${pret} à m'investir pleinement dans les missions que vous pourriez me confier.
 ${paragrapheContrat}
 Je serais ${ravi} de vous exposer plus en détail mes motivations et mon projet professionnel lors d'un entretien à votre convenance. Vous trouverez mon CV en pièce jointe.
 
