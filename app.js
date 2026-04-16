@@ -28,7 +28,7 @@ function badgeCls(s){ return s==='Retenu'?'badge-retained':s==='Refusé'?'badge-
 if(document.getElementById('step-1')){
 
   let currentStep = 1;
-  let formData = { rayon: '100 km', plan: 'pro' };
+  let formData = { rayon: '100 km', plan: 'pro', genre: 'N' };
 
   function setProgress(step){
     document.getElementById('progress-bar').style.width = ((step-1)/TOTAL_STEPS*100) + '%';
@@ -40,6 +40,7 @@ if(document.getElementById('step-1')){
     el.classList.add('selected');
     if(group==='poste') formData.poste = el.textContent.trim();
     if(group==='rayon') formData.rayon = el.textContent.trim();
+    if(group==='genre') formData.genre = el.dataset.value || el.textContent.trim();
   };
 
   window.toggleChip = function(el){ el.classList.toggle('selected'); };
@@ -99,8 +100,10 @@ if(document.getElementById('step-1')){
   }
 
   function buildRecap(){
+    const genreLabel = formData.genre === 'M' ? 'Masculin' : formData.genre === 'F' ? 'Féminin' : 'Non précisé';
     document.getElementById('recap-card').innerHTML = `
       <strong>Candidat :</strong> ${formData.prenom} ${formData.nom}<br>
+      <strong>Genre :</strong> ${genreLabel}<br>
       <strong>Email :</strong> ${formData.email}<br>
       <strong>Poste visé :</strong> ${formData.poste||'—'}<br>
       <strong>Secteurs :</strong> ${formData.secteurs||'—'}<br>
@@ -145,7 +148,6 @@ if(document.getElementById('step-1')){
       console.log('Upload CV succès:', data.url);
       if (data.cvTexte) {
         formData.cvTexte = data.cvTexte;
-        console.log('CV texte extrait:', data.cvTexte.slice(0, 80) + '...');
       }
       return data.url;
     } catch(e) {
@@ -170,7 +172,6 @@ if(document.getElementById('step-1')){
       const cvUrl = await uploadCV(formData.cvFile);
       if(cvUrl) {
         formData.cvUrl = cvUrl;
-        console.log('cvUrl sauvegardé:', cvUrl);
       } else {
         console.warn('cvUrl est null — le CV ne sera pas joint');
       }
@@ -190,6 +191,7 @@ if(document.getElementById('step-1')){
         nom:      formData.prenom + ' ' + formData.nom,
         email:    formData.email,
         tel:      formData.tel,
+        genre:    formData.genre || 'N',
         poste:    formData.poste,
         secteurs: formData.secteurs,
         ville:    formData.ville,
@@ -319,12 +321,14 @@ if(document.getElementById('login-screen')){
     const { data } = await getClient().from('candidatures').select('*').eq('id', id).single();
     if(!data) return;
     currentId = id;
+    const genreLabel = data.genre === 'M' ? 'Masculin' : data.genre === 'F' ? 'Féminin' : 'Non précisé';
     document.getElementById('m-nom').textContent   = data.nom;
     document.getElementById('m-poste').textContent = data.poste||'—';
     document.getElementById('m-msg').textContent   = data.message||'(aucun message)';
     document.getElementById('m-fields').innerHTML = `
       <div class="modal-field"><span class="field-key">Email</span><span class="field-val">${data.email}</span></div>
       <div class="modal-field"><span class="field-key">Téléphone</span><span class="field-val">${data.tel||'—'}</span></div>
+      <div class="modal-field"><span class="field-key">Genre</span><span class="field-val">${genreLabel}</span></div>
       <div class="modal-field"><span class="field-key">Secteurs</span><span class="field-val">${data.secteurs||'—'}</span></div>
       <div class="modal-field"><span class="field-key">Zone</span><span class="field-val">${data.ville||'—'} · ${data.rayon||''}</span></div>
       <div class="modal-field"><span class="field-key">Contrats</span><span class="field-val">${data.contrats||'—'}</span></div>
