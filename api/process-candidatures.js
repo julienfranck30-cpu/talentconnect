@@ -566,11 +566,11 @@ EXEMPLE DE STYLE :
 INFORMATIONS DU CANDIDAT :
 - Nom : ${candidat.nom}
 - Poste visé : ${candidat.poste}
-- Formation : Master Achats & Approvisionnements, ECEMA Lyon
 - Secteurs : ${candidat.secteurs}
 - Zone : ${candidat.ville}
 - Type de contrat : ${candidat.contrats || 'CDI'}
 - Message personnel : ${candidat.message || 'Non renseigné'}
+${candidat.cv_texte ? `\nCONTENU DU CV (utilise ces informations pour personnaliser) :\n${candidat.cv_texte}` : ''}
 
 ENTREPRISE CIBLÉE : ${company}
 SECTEUR : ${secteur}
@@ -578,8 +578,8 @@ SALUTATION : ${salutation}
 
 INSTRUCTIONS :
 - Commence par "${salutation}"
-- Présente la formation et le type de contrat
-- Mentionne 2-3 compétences clés adaptées au secteur de ${company}
+- Présente la formation/expérience clé tirée du CV
+- Mentionne 2-3 compétences concrètes du CV adaptées au secteur de ${company}
 - Montre comment le candidat peut apporter de la valeur à ${company} spécifiquement
 - Propose un entretien et mentionne le CV en pièce jointe
 - Termine par une formule chaleureuse
