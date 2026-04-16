@@ -186,6 +186,7 @@ function getMissions(company, poste) {
   if (posteL.includes('ingénieur') || posteL.includes('production')) {
     return 'optimiser vos lignes de production, contribuer à l\'amélioration continue et garantir la qualité de vos processus industriels';
   }
+  if (posteL.includes('projet') || posteL.includes('chef de')) {
     return 'piloter vos projets, coordonner vos équipes et assurer la livraison dans les délais et les budgets impartis';
   }
 
