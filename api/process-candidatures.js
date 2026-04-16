@@ -530,8 +530,11 @@ async function searchEmails(domain) {
   return [];
 }
 
-async function generateLettre(candidat, company, secteur) {
+async function generateLettre(candidat, company, secteur, contactName) {
   try {
+    const prenom = contactName ? contactName.split(' ')[0] : null;
+    const salutation = prenom ? `Bonjour ${prenom},` : 'Madame, Monsieur,';
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -541,25 +544,36 @@ async function generateLettre(candidat, company, secteur) {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 500,
+        max_tokens: 600,
         messages: [{
           role: 'user',
-          content: `Écris un paragraphe de motivation court (3-4 phrases max) pour une candidature spontanée.
+          content: `Écris un email de candidature spontanée professionnel en français, dans le style suivant :
 
-Candidat : ${candidat.nom}
-Poste visé : ${candidat.poste}
-Entreprise ciblée : ${company}
-Secteur : ${secteur}
-Message du candidat : ${candidat.message || 'Non renseigné'}
+EXEMPLE DE STYLE :
+"Bonjour monsieur Billau, Étudiant en Master 2 Achat et Approvisionnement à l'ECEMA Lyon, je suis à la recherche d'une alternance de 2 ans au rythme de 1 semaine de cours / 3 semaines en entreprise. Fort d'une expérience significative dans la gestion des achats et des stocks, je suis convaincu que mes compétences en digitalisation des processus, négociation avec les fournisseurs et optimisation des coûts pourraient être un atout pour votre entreprise. Mon parcours m'a permis de développer une approche rigoureuse et proactive face aux défis logistiques. Je suis persuadé que ma contribution pourrait soutenir [Entreprise] dans l'optimisation de ses processus d'approvisionnement. Je serais ravi de vous rencontrer pour discuter plus en détail de ma candidature. Vous trouverez mon CV en pièce jointe. Au plaisir de discuter avec vous prochainement."
 
-Le paragraphe doit :
-- Mentionner le nom de l'entreprise
-- Être personnalisé au secteur
-- Rester professionnel et concis
-- Ne pas répéter les informations de la signature
-- Commencer directement par le contenu sans "Voici" ou introduction
+INFORMATIONS DU CANDIDAT :
+- Nom : ${candidat.nom}
+- Poste visé : ${candidat.poste}
+- Formation : Master Achats & Approvisionnements, ECEMA Lyon
+- Secteurs : ${candidat.secteurs}
+- Zone : ${candidat.ville}
+- Type de contrat : ${candidat.contrats || 'CDI'}
+- Message personnel : ${candidat.message || 'Non renseigné'}
 
-Réponds uniquement avec le paragraphe, sans guillemets.`
+ENTREPRISE CIBLÉE : ${company}
+SECTEUR : ${secteur}
+SALUTATION : ${salutation}
+
+INSTRUCTIONS :
+- Commence par "${salutation}"
+- Présente la formation et le type de contrat
+- Mentionne 2-3 compétences clés adaptées au secteur de ${company}
+- Montre comment le candidat peut apporter de la valeur à ${company} spécifiquement
+- Propose un entretien et mentionne le CV en pièce jointe
+- Termine par une formule chaleureuse
+- 150-200 mots maximum
+- Réponds uniquement avec le corps du message, sans objet ni signature séparée`
         }]
       })
     });
@@ -572,22 +586,17 @@ Réponds uniquement avec le paragraphe, sans guillemets.`
 }
 
 async function sendCandidature(to, toName, company, secteur, candidat) {
-  const lettre = await generateLettre(candidat, company, secteur);
+  const lettre = await generateLettre(candidat, company, secteur, toName);
 
-  const corps = lettre ||
-    `Actuellement en recherche dans le secteur ${candidat.secteurs}, région ${candidat.ville}, je serais ravi(e) de mettre mes compétences au service de ${company}. Je reste disponible pour un entretien.`;
+  const corps = lettre || `Madame, Monsieur,\n\nÉtudiant en Master Achats & Approvisionnements à l'ECEMA Lyon, je me permets de vous adresser ma candidature spontanée pour un poste de ${candidat.poste} au sein de ${company}.\n\nFort de mon expérience dans le secteur ${candidat.secteurs}, je serais ravi de contribuer au développement de votre entreprise.\n\nJe reste disponible pour un entretien.\n\nCordialement,`;
 
   const htmlContent = `
-    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#333">
-      <p>Madame, Monsieur,</p>
-      <p>Je me permets de vous adresser ma candidature spontanée pour un poste de <strong>${candidat.poste}</strong> au sein de <strong>${company}</strong>.</p>
-      <p>${corps}</p>
-      <p>Dans l'attente de votre retour, je reste à votre disposition.</p>
-      <br/>
-      <p>Cordialement,<br/>
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#333;line-height:1.7;font-size:15px">
+      ${corps.replace(/\n/g, '<br/>')}
+      <br/><br/>
       <strong>${candidat.nom}</strong><br/>
       ${candidat.email}<br/>
-      ${candidat.tel || 'Non renseigné'}</p>
+      ${candidat.tel || ''}
     </div>`;
 
   try {
