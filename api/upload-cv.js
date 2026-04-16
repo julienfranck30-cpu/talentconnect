@@ -2,6 +2,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const { IncomingForm } = require('formidable');
 const fs = require('fs');
+const pdfParse = require('pdf-parse');
 
 const SUPABASE_URL    = process.env.SUPABASE_URL;
 const SUPABASE_SECRET = process.env.SUPABASE_SECRET_KEY;
@@ -29,6 +30,7 @@ export default async function handler(req, res) {
       const fileBuffer = fs.readFileSync(fichier.filepath || fichier.path);
       const fileName = `cv_${Date.now()}.pdf`;
 
+      // Upload vers Supabase Storage
       const { data, error } = await sb.storage
         .from('cvs')
         .upload(fileName, fileBuffer, {
@@ -44,8 +46,22 @@ export default async function handler(req, res) {
       const { data: urlData } = sb.storage.from('cvs').getPublicUrl(fileName);
       const publicUrl = urlData.publicUrl;
 
+      // Extraction du texte du PDF
+      let cvTexte = '';
+      try {
+        const parsed = await pdfParse(fileBuffer);
+        cvTexte = parsed.text
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 3000);
+        console.log('CV texte extrait:', cvTexte.slice(0, 100) + '...');
+      } catch(e) {
+        console.error('PDF parse error:', e.message);
+        cvTexte = '';
+      }
+
       console.log('CV uploadé Supabase Storage:', publicUrl);
-      return res.status(200).json({ url: publicUrl });
+      return res.status(200).json({ url: publicUrl, cvTexte });
 
     } catch (e) {
       console.error('Upload error:', e.message);
