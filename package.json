@@ -4,6 +4,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
     "cloudinary": "^1.41.3",
-    "formidable": "^2.1.2"
+    "formidable": "^2.1.2",
+    "pdf-parse": "^1.1.1"
   }
 }
