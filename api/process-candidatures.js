@@ -243,6 +243,7 @@ function generateLettre(candidat, company, secteur, contactName) {
   const ravi = accordGenre(genre, 'ravi', 'ravie', 'ravi(e)');
   const dote = accordGenre(genre, 'doté', 'dotée', 'doté(e)');
   const fort = accordGenre(genre, 'fort', 'forte', 'fort(e)');
+  const rigoureux = accordGenre(genre, 'Rigoureux', 'Rigoureuse', 'Rigoureux(se)');
 
   let paragrapheContrat = '';
   if (isAlternance) {
