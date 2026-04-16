@@ -31,9 +31,11 @@ export default async function handler(req, res) {
         folder: 'talentconnect/cvs',
         resource_type: 'raw',
         public_id: `cv_${Date.now()}`,
+        access_mode: 'public',
       });
       return res.status(200).json({ url: result.secure_url });
     } catch (e) {
+      console.error('Cloudinary upload error:', e.message);
       return res.status(500).json({ erreur: 'Échec upload Cloudinary' });
     }
   });
