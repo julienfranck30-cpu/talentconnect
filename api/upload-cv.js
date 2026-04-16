@@ -1,12 +1,10 @@
 // api/upload-cv.js
-const cloudinary = require('cloudinary').v2;
+const { createClient } = require('@supabase/supabase-js');
 const { IncomingForm } = require('formidable');
+const fs = require('fs');
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+const SUPABASE_URL    = process.env.SUPABASE_URL;
+const SUPABASE_SECRET = process.env.SUPABASE_SECRET_KEY;
 
 export const config = { api: { bodyParser: false } };
 
@@ -27,18 +25,31 @@ export default async function handler(req, res) {
     }
 
     try {
-      const result = await cloudinary.uploader.upload(fichier.filepath || fichier.path, {
-        folder: 'talentconnect/cvs',
-        resource_type: 'raw',
-        public_id: `cv_${Date.now()}`,
-        type: 'upload',
-        access_mode: 'public',
-      });
-      console.log('CV uploadé:', result.secure_url, '| access_mode:', result.access_mode);
-      return res.status(200).json({ url: result.secure_url });
+      const sb = createClient(SUPABASE_URL, SUPABASE_SECRET);
+      const fileBuffer = fs.readFileSync(fichier.filepath || fichier.path);
+      const fileName = `cv_${Date.now()}.pdf`;
+
+      const { data, error } = await sb.storage
+        .from('cvs')
+        .upload(fileName, fileBuffer, {
+          contentType: 'application/pdf',
+          upsert: false
+        });
+
+      if (error) {
+        console.error('Supabase storage error:', error.message);
+        return res.status(500).json({ erreur: 'Échec upload: ' + error.message });
+      }
+
+      const { data: urlData } = sb.storage.from('cvs').getPublicUrl(fileName);
+      const publicUrl = urlData.publicUrl;
+
+      console.log('CV uploadé Supabase Storage:', publicUrl);
+      return res.status(200).json({ url: publicUrl });
+
     } catch (e) {
-      console.error('Cloudinary upload error:', e.message);
-      return res.status(500).json({ erreur: 'Échec upload Cloudinary: ' + e.message });
+      console.error('Upload error:', e.message);
+      return res.status(500).json({ erreur: 'Erreur: ' + e.message });
     }
   });
 }
