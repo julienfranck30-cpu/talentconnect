@@ -5,6 +5,7 @@ const SUPABASE_URL    = process.env.SUPABASE_URL;
 const SUPABASE_SECRET = process.env.SUPABASE_SECRET_KEY;
 const HUNTER_KEY      = process.env.HUNTER_API_KEY;
 const BREVO_KEY       = process.env.BREVO_API_KEY;
+const ANTHROPIC_KEY   = process.env.ANTHROPIC_API_KEY;
 
 const PLAN_VOLUMES = { '29€': 50, '59€': 150, '99€': 300 };
 
@@ -292,7 +293,7 @@ const DOMAINES_PAR_SECTEUR = {
     { name: 'Crédit Agricole', domain: 'credit-agricole.fr' },
     { name: 'Crédit Mutuel', domain: 'creditmutuel.fr' },
     { name: 'La Banque Postale', domain: 'labanquepostale.fr' },
-    { name: 'Caisse d\'Épargne', domain: 'caisse-epargne.fr' },
+    { name: "Caisse d'Épargne", domain: 'caisse-epargne.fr' },
     { name: 'Banque Populaire', domain: 'banquepopulaire.fr' },
     { name: 'AXA France', domain: 'axa.fr' },
     { name: 'Allianz France', domain: 'allianz.fr' },
@@ -346,10 +347,10 @@ const DOMAINES_PAR_SECTEUR = {
     { name: 'B&B Hotels', domain: 'hotel-bb.com' },
     { name: 'Marriott France', domain: 'marriott.fr' },
     { name: 'Hilton France', domain: 'hilton.com' },
-    { name: 'McDonald\'s France', domain: 'mcdonalds.fr' },
+    { name: "McDonald's France", domain: 'mcdonalds.fr' },
     { name: 'Burger King France', domain: 'burgerking.fr' },
     { name: 'KFC France', domain: 'kfc.fr' },
-    { name: 'Domino\'s Pizza', domain: 'dominos.fr' },
+    { name: "Domino's Pizza", domain: 'dominos.fr' },
     { name: 'Flunch', domain: 'flunch.fr' },
     { name: 'Courtepaille', domain: 'courtepaille.com' },
     { name: 'Groupe Flo', domain: 'groupeflo.fr' },
@@ -419,7 +420,7 @@ const DOMAINES_PAR_SECTEUR = {
     { name: 'Libération', domain: 'liberation.fr' },
     { name: 'Leo Burnett', domain: 'leoburnett.fr' },
     { name: 'Grey Paris', domain: 'grey.com' },
-    { name: 'L\'Express', domain: 'lexpress.fr' },
+    { name: "L'Express", domain: 'lexpress.fr' },
   ],
   'Énergie / Environnement': [
     { name: 'EDF', domain: 'edf.fr' },
@@ -529,15 +530,59 @@ async function searchEmails(domain) {
   return [];
 }
 
-async function sendCandidature(to, toName, company, candidat) {
-  const subject = `Candidature spontanée – ${candidat.poste} | ${candidat.nom}`;
+async function generateLettre(candidat, company, secteur) {
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 500,
+        messages: [{
+          role: 'user',
+          content: `Écris un paragraphe de motivation court (3-4 phrases max) pour une candidature spontanée.
+
+Candidat : ${candidat.nom}
+Poste visé : ${candidat.poste}
+Entreprise ciblée : ${company}
+Secteur : ${secteur}
+Message du candidat : ${candidat.message || 'Non renseigné'}
+
+Le paragraphe doit :
+- Mentionner le nom de l'entreprise
+- Être personnalisé au secteur
+- Rester professionnel et concis
+- Ne pas répéter les informations de la signature
+- Commencer directement par le contenu sans "Voici" ou introduction
+
+Réponds uniquement avec le paragraphe, sans guillemets.`
+        }]
+      })
+    });
+    const data = await response.json();
+    return data.content?.[0]?.text || null;
+  } catch(e) {
+    console.error('Claude error:', e.message);
+    return null;
+  }
+}
+
+async function sendCandidature(to, toName, company, secteur, candidat) {
+  const lettre = await generateLettre(candidat, company, secteur);
+
+  const corps = lettre ||
+    `Actuellement en recherche dans le secteur ${candidat.secteurs}, région ${candidat.ville}, je serais ravi(e) de mettre mes compétences au service de ${company}. Je reste disponible pour un entretien.`;
+
   const htmlContent = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#333">
       <p>Madame, Monsieur,</p>
       <p>Je me permets de vous adresser ma candidature spontanée pour un poste de <strong>${candidat.poste}</strong> au sein de <strong>${company}</strong>.</p>
-      ${candidat.message ? `<p>${candidat.message}</p>` : ''}
-      <p>Actuellement en recherche dans le secteur <strong>${candidat.secteurs}</strong>, région <strong>${candidat.ville}</strong>.</p>
-      <p>Je reste disponible pour un entretien.</p>
+      <p>${corps}</p>
+      <p>Dans l'attente de votre retour, je reste à votre disposition.</p>
       <br/>
       <p>Cordialement,<br/>
       <strong>${candidat.nom}</strong><br/>
@@ -556,7 +601,7 @@ async function sendCandidature(to, toName, company, candidat) {
         sender: { name: candidat.nom, email: 'julienfranck30@gmail.com' },
         to: [{ email: to, name: toName || company }],
         replyTo: { email: candidat.email, name: candidat.nom },
-        subject,
+        subject: `Candidature spontanée – ${candidat.poste} | ${candidat.nom}`,
         htmlContent,
       }),
     });
@@ -616,12 +661,12 @@ module.exports = async (req, res) => {
         const contacts = await searchEmails(company.domain);
         for (const contact of contacts) {
           if (totalSent >= volume) break;
-          const sent = await sendCandidature(contact.email, contact.name, company.name, candidat);
+          const sent = await sendCandidature(contact.email, contact.name, company.name, secteur, candidat);
           if (sent) {
             totalSent++;
-            console.log(`Envoyé à ${contact.email} — total: ${totalSent}`);
+            console.log(`Envoyé à ${contact.email} (${company.name}) — total: ${totalSent}`);
           }
-          await new Promise(r => setTimeout(r, 200));
+          await new Promise(r => setTimeout(r, 300));
         }
       }
     }
