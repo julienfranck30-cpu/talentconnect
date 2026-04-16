@@ -3,7 +3,6 @@
 const SUPABASE_URL = 'https://ihhqwukfkztwdhxfvsvf.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_AKWSkS_jE-R1PnMWSI408g_5QqV8iPJ';
 
-// Stripe Payment Links
 const STRIPE_LINKS = {
   starter: 'https://buy.stripe.com/eVq8wO7eE1on47xaaldnW01',
   pro:     'https://buy.stripe.com/3cIaEW0Qg2sreMb4Q1dnW02',
@@ -127,7 +126,7 @@ if(document.getElementById('step-1')){
     }
   });
 
-  async function uploadCVToCloudinary(file) {
+  async function uploadCV(file) {
     try {
       const fd = new FormData();
       fd.append('cv', file);
@@ -136,18 +135,17 @@ if(document.getElementById('step-1')){
       const data = await res.json();
       console.log('Upload CV response:', JSON.stringify(data));
       if (!res.ok) {
-        console.error('Upload CV failed — status:', res.status, '— data:', data);
+        console.error('Upload CV failed:', res.status, data);
         return null;
       }
       if (!data.url) {
-        console.error('Upload CV — pas de url dans la réponse:', data);
+        console.error('Pas de url dans la réponse:', data);
         return null;
       }
       console.log('Upload CV succès:', data.url);
-      // Sauvegarde aussi le texte extrait
       if (data.cvTexte) {
         formData.cvTexte = data.cvTexte;
-        console.log('CV texte récupéré:', data.cvTexte.slice(0, 80) + '...');
+        console.log('CV texte extrait:', data.cvTexte.slice(0, 80) + '...');
       }
       return data.url;
     } catch(e) {
@@ -169,13 +167,12 @@ if(document.getElementById('step-1')){
 
     if(formData.cvFile) {
       btn.textContent = 'Upload du CV...';
-      const cvUrl = await uploadCVToCloudinary(formData.cvFile);
+      const cvUrl = await uploadCV(formData.cvFile);
       if(cvUrl) {
         formData.cvUrl = cvUrl;
-        console.log('cvUrl sauvegardé dans formData:', cvUrl);
+        console.log('cvUrl sauvegardé:', cvUrl);
       } else {
         console.warn('cvUrl est null — le CV ne sera pas joint');
-      }
       }
     }
 
@@ -291,7 +288,6 @@ if(document.getElementById('login-screen')){
 
     const total   = data.length;
     const attente = data.filter(c=>c.statut==='En attente'||c.statut==='En attente paiement').length;
-    const retenus = data.filter(c=>c.statut==='Retenu').length;
     const payes   = data.filter(c=>c.statut==='Payé').length;
 
     document.getElementById('stats-row').innerHTML = `
