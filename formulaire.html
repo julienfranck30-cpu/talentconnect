@@ -23,6 +23,14 @@
     <p class="step-label">Étape 1 sur 6</p>
     <h2 class="step-title">Tes coordonnées <span class="req">*</span></h2>
     <p class="step-sub">L'IA enverra tes candidatures depuis ces informations.</p>
+    <div class="field-line">
+      <label>Genre</label>
+      <div class="chips-grid" id="chips-genre" style="margin-top:8px">
+        <div class="chip selected" data-value="N" onclick="selectChip(this,'genre')">Préfère ne pas préciser</div>
+        <div class="chip" data-value="M" onclick="selectChip(this,'genre')">Masculin (M)</div>
+        <div class="chip" data-value="F" onclick="selectChip(this,'genre')">Féminin (F)</div>
+      </div>
+    </div>
     <div class="field-line"><label>Prénom <span class="req">*</span></label><input type="text" id="s1-prenom" placeholder="Julie" autocomplete="given-name"/></div>
     <div class="field-line"><label>Nom <span class="req">*</span></label><input type="text" id="s1-nom" placeholder="Martin" autocomplete="family-name"/></div>
     <div class="field-line">
@@ -48,6 +56,16 @@
       <div class="chip" onclick="selectChip(this,'poste')">Assistant(e) RH</div>
       <div class="chip" onclick="selectChip(this,'poste')">Contrôleur de gestion</div>
       <div class="chip" onclick="selectChip(this,'poste')">Chef de projet</div>
+      <div class="chip" onclick="selectChip(this,'poste')">Assistant(e) comptable</div>
+      <div class="chip" onclick="selectChip(this,'poste')">Chargé(e) de sourcing</div>
+      <div class="chip" onclick="selectChip(this,'poste')">Analyste financier</div>
+      <div class="chip" onclick="selectChip(this,'poste')">Chargé(e) de communication</div>
+      <div class="chip" onclick="selectChip(this,'poste')">Ingénieur(e) production</div>
+      <div class="chip" onclick="selectChip(this,'poste')">Chargé(e) de recrutement</div>
+      <div class="chip" onclick="selectChip(this,'poste')">Conseiller(e) commercial</div>
+      <div class="chip" onclick="selectChip(this,'poste')">Assistant(e) marketing</div>
+      <div class="chip" onclick="selectChip(this,'poste')">Gestionnaire paie</div>
+      <div class="chip" onclick="selectChip(this,'poste')">Data analyst</div>
     </div>
     <div class="field-line" style="margin-top:16px"><label>Ou précise un poste spécifique</label><input type="text" id="s2-poste-custom" placeholder="Ex : Chargé(e) de sourcing"/></div>
     <div class="err" id="err-2"></div>
@@ -70,6 +88,14 @@
       <div class="chip multi" onclick="toggleChip(this)">Services B2B</div>
       <div class="chip multi" onclick="toggleChip(this)">Tech / Numérique</div>
       <div class="chip multi" onclick="toggleChip(this)">Santé / Pharma</div>
+      <div class="chip multi" onclick="toggleChip(this)">Finance / Banque</div>
+      <div class="chip multi" onclick="toggleChip(this)">Immobilier</div>
+      <div class="chip multi" onclick="toggleChip(this)">Hôtellerie / Restauration</div>
+      <div class="chip multi" onclick="toggleChip(this)">Éducation / Formation</div>
+      <div class="chip multi" onclick="toggleChip(this)">Énergie / Environnement</div>
+      <div class="chip multi" onclick="toggleChip(this)">Ressources Humaines</div>
+      <div class="chip multi" onclick="toggleChip(this)">Conseil / Audit</div>
+      <div class="chip multi" onclick="toggleChip(this)">Médias / Communication</div>
     </div>
     <div class="err" id="err-3"></div>
     <div class="nav-btns"><button class="btn-back" onclick="prevStep(3)">← Retour</button><button class="btn-ok" onclick="nextStep(3)">Ok ✓</button></div>
