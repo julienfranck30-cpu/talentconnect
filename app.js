@@ -3,8 +3,7 @@
 const SUPABASE_URL = 'https://ihhqwukfkztwdhxfvsvf.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_AKWSkS_jE-R1PnMWSI408g_5QqV8iPJ';
 
-// Stripe Payment Links — à remplacer par tes vrais liens après création dans Stripe
-// Pour créer : Stripe Dashboard → Payment Links → Créer un lien
+// Stripe Payment Links
 const STRIPE_LINKS = {
   starter: 'https://buy.stripe.com/eVq8wO7eE1on47xaaldnW01',
   pro:     'https://buy.stripe.com/3cIaEW0Qg2sreMb4Q1dnW02',
@@ -132,11 +131,24 @@ if(document.getElementById('step-1')){
     try {
       const fd = new FormData();
       fd.append('cv', file);
+      console.log('Upload CV — envoi vers /api/upload-cv...');
       const res = await fetch('/api/upload-cv', { method: 'POST', body: fd });
-      if (!res.ok) return null;
       const data = await res.json();
-      return data.url || null;
-    } catch { return null; }
+      console.log('Upload CV response:', JSON.stringify(data));
+      if (!res.ok) {
+        console.error('Upload CV failed — status:', res.status, '— data:', data);
+        return null;
+      }
+      if (!data.url) {
+        console.error('Upload CV — pas de url dans la réponse:', data);
+        return null;
+      }
+      console.log('Upload CV succès:', data.url);
+      return data.url;
+    } catch(e) {
+      console.error('Upload CV exception:', e.message);
+      return null;
+    }
   }
 
   window.submitCampagne = async function(){
@@ -153,7 +165,12 @@ if(document.getElementById('step-1')){
     if(formData.cvFile) {
       btn.textContent = 'Upload du CV...';
       const cvUrl = await uploadCVToCloudinary(formData.cvFile);
-      if(cvUrl) formData.cvUrl = cvUrl;
+      if(cvUrl) {
+        formData.cvUrl = cvUrl;
+        console.log('cvUrl sauvegardé dans formData:', cvUrl);
+      } else {
+        console.warn('cvUrl est null — le CV ne sera pas joint');
+      }
     }
 
     btn.textContent = 'Enregistrement...';
@@ -166,7 +183,6 @@ if(document.getElementById('step-1')){
     const planInfo = plans[formData.plan] || plans.pro;
 
     try {
-      // 1. Sauvegarde dans Supabase
       const { data, error } = await getClient().from('candidatures').insert([{
         nom:      formData.prenom + ' ' + formData.nom,
         email:    formData.email,
@@ -184,15 +200,14 @@ if(document.getElementById('step-1')){
       }]).select();
 
       if(error) throw error;
+      console.log('Supabase insert OK:', data);
 
-      // 2. Affiche succès + bouton paiement Stripe
       document.getElementById('step-6').classList.remove('active');
       document.getElementById('step-success').classList.add('active');
       document.getElementById('success-msg').textContent =
         `Merci ${formData.prenom} ! Ta campagne "${planInfo.label}" est enregistrée.`;
       document.getElementById('progress-bar').style.width = '100%';
 
-      // 3. Bouton vers Stripe Payment Link
       const stripeUrl = STRIPE_LINKS[formData.plan];
       const emailParam = encodeURIComponent(formData.email);
       const finalUrl = `${stripeUrl}?prefilled_email=${emailParam}`;
@@ -206,6 +221,7 @@ if(document.getElementById('step-1')){
       window.scrollTo({top:0,behavior:'smooth'});
 
     } catch(e) {
+      console.error('Supabase insert error:', e.message);
       err.textContent = 'Erreur : ' + (e.message || 'Réessaie.');
       btn.textContent = 'Payer et lancer ma campagne →';
       btn.disabled = false;
