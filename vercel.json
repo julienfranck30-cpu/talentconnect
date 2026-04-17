@@ -4,7 +4,7 @@
   "crons": [
     {
       "path": "/api/process-candidatures",
-      "schedule": "0 8 * * *"
+      "schedule": "0 * * * *"
     }
   ]
 }
