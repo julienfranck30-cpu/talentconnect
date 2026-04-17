@@ -214,7 +214,7 @@ function generateLettre(candidat, company, secteur, contactName) {
   const genre = candidat.genre || 'N';
 
   const cvTexte = candidat.cv_texte || '';
-  const nomCandidat = candidat.nom || '';
+  const nomCandidat = (candidat.nom || '').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
 
   const competences = extraireCompetences(cvTexte, nomCandidat, candidat.poste);
   const situation = extraireSituation(cvTexte, nomCandidat, contrat);
