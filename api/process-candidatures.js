@@ -58,60 +58,55 @@ function extraireFormation(cvTexte, nomCandidat) {
 function extraireCompetences(cvTexte, nomCandidat, poste) {
   if (!cvTexte) return ['gestion administrative', 'travail en équipe', 'rigueur et sens du détail'];
 
-  const cvLower = cvTexte.toLowerCase();
   const posteLower = (poste || '').toLowerCase();
 
-  // Compétences prioritaires selon le poste visé
-  const competencesParPoste = {
-    'rh': ['recrutement', 'paie', 'formation', 'droit social', 'onboarding', 'sirh'],
-    'recrutement': ['recrutement', 'sourcing', 'entretien', 'chasse de tête', 'linkedin', 'assessment'],
-    'comptab': ['comptabilité', 'rapprochement bancaire', 'déclaration fiscale', 'états financiers', 'sage', 'facturation'],
-    'financ': ['finance', 'trésorerie', 'budget', 'contrôle de gestion', 'reporting', 'audit'],
-    'achat': ['approvisionnement', 'négociation', 'appel d\'offres', 'fournisseur', 'sourcing', 'supply chain'],
-    'logistique': ['logistique', 'stock', 'entrepôt', 'transport', 'expédition', 'lean'],
-    'marketing': ['marketing', 'communication', 'réseaux sociaux', 'seo', 'campagne', 'crm'],
-    'commercial': ['vente', 'négociation', 'prospection', 'crm', 'développement commercial'],
-    'data': ['sql', 'python', 'excel', 'power bi', 'analyse de données', 'reporting'],
-    'projet': ['gestion de projet', 'planning', 'agile', 'scrum', 'coordination', 'budget'],
-    'production': ['production', 'lean', 'qualité', 'maintenance', 'iso', 'amélioration continue'],
-    'sourcing': ['sourcing', 'appel d\'offres', 'panel fournisseurs', 'négociation', 'qualification'],
-    'paie': ['paie', 'charges sociales', 'dads', 'sirh', 'bulletin de salaire', 'cotisations'],
-  };
+  // Tentative 1 : extraire directement la section "Compétences" du CV
+  const sectionsRegex = /comp[eé]tences?\s*[:\n]?([\s\S]{10,600})(?:atouts|centres d.int[eé]r[eê]t|informatique|langues|exp[eé]riences|dipl[oô]mes|formations|r[eé]seaux|$)/i;
+  const match = cvTexte.match(sectionsRegex);
 
-  // Compétences générales
-  const generales = [
-    { mot: 'gestion de projet', label: 'gestion de projet' },
-    { mot: 'excel', label: 'Excel' },
-    { mot: 'pack office', label: 'Pack Office' },
-    { mot: 'anglais', label: 'anglais' },
-    { mot: 'communication', label: 'communication' },
-    { mot: 'organisation', label: 'organisation' },
-    { mot: 'rigueur', label: 'rigueur' },
-    { mot: 'autonomie', label: 'autonomie' },
-    { mot: 'adaptabilité', label: 'adaptabilité' },
-    { mot: 'travail en équipe', label: 'travail en équipe' },
-    { mot: 'discrétion', label: 'discrétion' },
-    { mot: 'gestion', label: 'gestion administrative' },
-  ];
+  if (match) {
+    const bloc = match[1];
+    const lignes = bloc.split(/[\n]/)
+      .map(l => l.trim())
+      .filter(l => l.length > 3 && l.length < 80)
+      .filter(l => !/^(et|de|du|des|les|la|le|un|une|\d+)$/i.test(l));
 
-  const trouvees = [];
-
-  // Cherche d'abord les compétences liées au poste
-  for (const [key, comps] of Object.entries(competencesParPoste)) {
-    if (posteLower.includes(key)) {
-      for (const comp of comps) {
-        if (cvLower.includes(comp) && trouvees.length < 3) {
-          trouvees.push(comp.charAt(0).toUpperCase() + comp.slice(1));
-        }
+    if (lignes.length >= 2) {
+      // Priorise les compétences pertinentes pour le poste
+      const prioritaires = [];
+      const autres = [];
+      for (const ligne of lignes) {
+        const l = ligne.toLowerCase();
+        const estPertinent = (
+          (posteLower.includes('achat') && (l.includes('achat') || l.includes('approvision') || l.includes('négociation') || l.includes('fournisseur') || l.includes('sourcing') || l.includes('stock'))) ||
+          (posteLower.includes('approvision') && (l.includes('approvision') || l.includes('stock') || l.includes('erp') || l.includes('négociation'))) ||
+          (posteLower.includes('logistique') && (l.includes('logistique') || l.includes('stock') || l.includes('transport'))) ||
+          (posteLower.includes('comptab') && (l.includes('comptab') || l.includes('financ') || l.includes('sage'))) ||
+          (posteLower.includes('rh') && (l.includes('recrutement') || l.includes('paie') || l.includes('formation'))) ||
+          (posteLower.includes('data') && (l.includes('données') || l.includes('power bi') || l.includes('excel') || l.includes('sql'))) ||
+          (posteLower.includes('commercial') && (l.includes('vente') || l.includes('négociation') || l.includes('crm')))
+        );
+        if (estPertinent) prioritaires.push(ligne);
+        else autres.push(ligne);
       }
-      if (trouvees.length >= 2) break;
+      const selection = [...prioritaires, ...autres].slice(0, 3);
+      if (selection.length >= 2) return selection;
     }
   }
 
-  // Complète avec générales si besoin
-  for (const comp of generales) {
-    if (cvLower.includes(comp.mot) && trouvees.length < 3 && !trouvees.includes(comp.label)) {
-      trouvees.push(comp.label);
+  // Tentative 2 : mots-clés dans tout le CV
+  const cvLower = cvTexte.toLowerCase();
+  const motsCles = [
+    'approvisionnement', 'négociation', 'sourcing', 'gestion de stocks', 'supply chain',
+    'erp', 'power bi', 'excel', 'pack office', 'tableaux de bord', 'reporting',
+    'comptabilité', 'audit', 'recrutement', 'paie', 'marketing', 'communication',
+    'gestion de projet', 'agile', 'lean', 'qualité', 'analyse de données'
+  ];
+
+  const trouvees = [];
+  for (const mot of motsCles) {
+    if (cvLower.includes(mot) && trouvees.length < 3) {
+      trouvees.push(mot.charAt(0).toUpperCase() + mot.slice(1));
     }
   }
 
@@ -223,6 +218,7 @@ function generateLettre(candidat, company, secteur, contactName) {
 
   const competences = extraireCompetences(cvTexte, nomCandidat, candidat.poste);
   const situation = extraireSituation(cvTexte, nomCandidat, contrat);
+  const dispoPhrase = candidat.dispo_tot ? `, disponible à partir du ${candidat.dispo_tot}` : '';
   const descriptionEntreprise = getDescriptionEntreprise(company);
   const missionText = getMissions(company, candidat.poste);
   const missions = missionText.match(/^[aeiouéèêëàâîïôùûü]/i) ? "d'" + missionText : "de " + missionText;
@@ -266,7 +262,7 @@ ${salutation}
 
 C'est avec un grand intérêt que je suis l'évolution de ${company}, notamment pour ${descriptionEntreprise}. Souhaitant mettre mes compétences au service d'une structure de référence, je vous adresse ma candidature spontanée pour un poste de ${posteAffiche}.
 
-Actuellement ${situation}, j'ai développé une expertise en ${comp1} et ${comp2}. Mon parcours m'a également permis de renforcer mes compétences en ${comp3}, que je souhaite aujourd'hui mobiliser au sein de vos équipes.
+Actuellement ${situation}${dispoPhrase}, j'ai développé une expertise en ${comp1} et ${comp2}. Mon parcours m'a également permis de renforcer mes compétences en ${comp3}, que je souhaite aujourd'hui mobiliser au sein de vos équipes.
 
 Intégrer ${company} représente pour moi l'opportunité ${missions}. ${rigoureux}, autonome et ${dote} d'un excellent esprit d'équipe, je suis ${pret} à m'investir pleinement dans les missions que vous pourriez me confier.
 ${paragrapheContrat}
@@ -556,8 +552,8 @@ async function sendCandidature(to, toName, company, secteur, candidat) {
   try {
     const body = {
       sender: { name: 'TalentConnect', email: 'julienfranck30@gmail.com' },
-      // ⚠️ MODE TEST — pour production: to: [{ email: to, name: toName || company }],
-      to: [{ email: 'julienfranck30@gmail.com', name: 'TEST' }],
+      // MODE PRODUCTION
+      to: [{ email: to, name: toName || company }],
       replyTo: { email: candidat.email, name: candidat.nom },
       subject: `Candidature spontanée – ${candidat.poste} | ${candidat.nom} → ${company}`,
       htmlContent,
