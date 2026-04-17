@@ -1,4 +1,4 @@
-/* ── TalentConnect V4 — Supabase + Stripe Payment Links ── */
+/* ── TalentConnect V5 — 12 étapes ── */
 
 const SUPABASE_URL = 'https://ihhqwukfkztwdhxfvsvf.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_AKWSkS_jE-R1PnMWSI408g_5QqV8iPJ';
@@ -17,7 +17,7 @@ function getClient(){
 
 const ADMIN_USER = 'admin';
 const ADMIN_PASS = 'admin123';
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 12;
 
 function fmtDate(iso){ return new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}); }
 function badgeCls(s){ return s==='Retenu'?'badge-retained':s==='Refusé'?'badge-rejected':'badge-pending'; }
@@ -35,56 +35,99 @@ if(document.getElementById('step-1')){
   }
   setProgress(1);
 
+  // Sélection unique pour qualification et genre
+  window.selectQual = function(el, group){
+    el.closest('.qualification-list, .step-panel').querySelectorAll('.qual-chip').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected');
+    const val = el.dataset.value || el.textContent.trim();
+    formData[group] = val;
+  };
+
   window.selectChip = function(el, group){
     document.querySelectorAll(`#chips-${group} .chip`).forEach(c=>c.classList.remove('selected'));
     el.classList.add('selected');
     if(group==='poste') formData.poste = el.textContent.trim();
     if(group==='rayon') formData.rayon = el.textContent.trim();
-    if(group==='genre') formData.genre = el.dataset.value || el.textContent.trim();
   };
 
   window.toggleChip = function(el){ el.classList.toggle('selected'); };
+
+  window.autoTab = function(el, nextId){
+    if(el.value.length >= el.maxLength){
+      document.getElementById(nextId)?.focus();
+    }
+  };
 
   function getSelectedChips(id){
     return Array.from(document.querySelectorAll(`#${id} .chip.selected`)).map(c=>c.textContent.trim());
   }
 
+  function parseDate(jour, mois, annee){
+    if(!jour && !mois && !annee) return null;
+    return `${jour.padStart(2,'0')}/${mois.padStart(2,'0')}/${annee}`;
+  }
+
   window.nextStep = function(from){
     const err = document.getElementById(`err-${from}`);
-    err.textContent = '';
+    if(err) err.textContent = '';
 
     if(from===1){
-      const prenom = document.getElementById('s1-prenom').value.trim();
-      const nom    = document.getElementById('s1-nom').value.trim();
-      const tel    = document.getElementById('s1-tel').value.trim();
-      const email  = document.getElementById('s1-email').value.trim();
+      // genre déjà sélectionné par défaut
+    }
+    if(from===2){
+      const prenom = document.getElementById('s2-prenom').value.trim();
+      const nom    = document.getElementById('s2-nom').value.trim();
+      const tel    = document.getElementById('s2-tel').value.trim();
+      const email  = document.getElementById('s2-email').value.trim();
       if(!prenom||!nom){ err.textContent='Prénom et nom obligatoires.'; return; }
       if(!email||!email.includes('@')){ err.textContent='Email invalide.'; return; }
       if(!tel){ err.textContent='Téléphone obligatoire.'; return; }
       formData.prenom=prenom; formData.nom=nom; formData.tel=tel; formData.email=email;
     }
-    if(from===2){
-      const custom = document.getElementById('s2-poste-custom').value.trim();
+    if(from===3){
+      if(!formData.situation){ err.textContent='Sélectionne une option.'; return; }
+    }
+    if(from===4){
+      const custom = document.getElementById('s4-poste-custom').value.trim();
       if(custom) formData.poste = custom;
       if(!formData.poste){ err.textContent='Sélectionne ou précise un poste.'; return; }
     }
-    if(from===3){
+    if(from===5){
       const s = getSelectedChips('chips-secteur');
       if(!s.length){ err.textContent='Sélectionne au moins un secteur.'; return; }
       formData.secteurs = s.join(', ');
     }
-    if(from===4){
-      const ville = document.getElementById('s4-ville').value.trim();
+    if(from===6){
+      if(!formData.contrat){ err.textContent='Sélectionne un type de contrat.'; return; }
+    }
+    if(from===7){
+      const ville = document.getElementById('s7-ville').value.trim();
       if(!ville){ err.textContent='Indique une ville ou région.'; return; }
       formData.ville = ville;
-      formData.contrats = getSelectedChips('chips-contrat').join(', ');
     }
-    if(from===5){
+    if(from===8){
+      const j = document.getElementById('s8-jour').value.trim();
+      const m = document.getElementById('s8-mois').value.trim();
+      const a = document.getElementById('s8-annee').value.trim();
+      if(!j||!m||!a){ err.textContent='Indique une date complète.'; return; }
+      formData.dispo_tot = parseDate(j, m, a);
+    }
+    if(from===9){
+      const j = document.getElementById('s9-jour').value.trim();
+      const m = document.getElementById('s9-mois').value.trim();
+      const a = document.getElementById('s9-annee').value.trim();
+      // Optionnel
+      if(j && m && a) formData.dispo_tard = parseDate(j, m, a);
+    }
+    if(from===10){
       const cv = document.getElementById('cv-input').files[0];
       formData.cv = cv ? cv.name : null;
-      formData.message = document.getElementById('s5-msg').value.trim();
+      formData.message = document.getElementById('s10-msg').value.trim();
     }
-    if(from===6){ submitCampagne(); return; }
+    if(from===11){
+      // page accroche — pas de validation
+    }
+    if(from===12){ submitCampagne(); return; }
     goToStep(from+1);
   };
 
@@ -95,7 +138,7 @@ if(document.getElementById('step-1')){
     currentStep = n;
     document.getElementById(`step-${n}`)?.classList.add('active');
     setProgress(n);
-    if(n===6) buildRecap();
+    if(n===12) buildRecap();
     window.scrollTo({top:0,behavior:'smooth'});
   }
 
@@ -107,8 +150,10 @@ if(document.getElementById('step-1')){
       <strong>Email :</strong> ${formData.email}<br>
       <strong>Poste visé :</strong> ${formData.poste||'—'}<br>
       <strong>Secteurs :</strong> ${formData.secteurs||'—'}<br>
+      <strong>Contrat :</strong> ${formData.contrat||'—'}<br>
       <strong>Zone :</strong> ${formData.ville||'—'} · ${formData.rayon}<br>
-      <strong>Contrats :</strong> ${formData.contrats||'Non précisé'}<br>
+      <strong>Disponible à partir du :</strong> ${formData.dispo_tot||'—'}<br>
+      ${formData.dispo_tard ? `<strong>Au plus tard :</strong> ${formData.dispo_tard}<br>` : ''}
       <strong>CV :</strong> ${formData.cv||'Non joint'}`;
   }
 
@@ -133,22 +178,10 @@ if(document.getElementById('step-1')){
     try {
       const fd = new FormData();
       fd.append('cv', file);
-      console.log('Upload CV — envoi vers /api/upload-cv...');
       const res = await fetch('/api/upload-cv', { method: 'POST', body: fd });
       const data = await res.json();
-      console.log('Upload CV response:', JSON.stringify(data));
-      if (!res.ok) {
-        console.error('Upload CV failed:', res.status, data);
-        return null;
-      }
-      if (!data.url) {
-        console.error('Pas de url dans la réponse:', data);
-        return null;
-      }
-      console.log('Upload CV succès:', data.url);
-      if (data.cvTexte) {
-        formData.cvTexte = data.cvTexte;
-      }
+      if (!res.ok || !data.url) return null;
+      if (data.cvTexte) formData.cvTexte = data.cvTexte;
       return data.url;
     } catch(e) {
       console.error('Upload CV exception:', e.message);
@@ -157,24 +190,20 @@ if(document.getElementById('step-1')){
   }
 
   window.submitCampagne = async function(){
-    const err = document.getElementById('err-6');
+    const err = document.getElementById('err-12');
     err.textContent = '';
     if(!document.getElementById('f-rgpd').checked){
       err.textContent = 'Vous devez accepter la politique de données (RGPD).';
       return;
     }
 
-    const btn = document.querySelector('#step-6 .btn-primary-lg');
+    const btn = document.querySelector('#step-12 .btn-primary-lg');
     btn.disabled = true;
 
     if(formData.cvFile) {
       btn.textContent = 'Upload du CV...';
       const cvUrl = await uploadCV(formData.cvFile);
-      if(cvUrl) {
-        formData.cvUrl = cvUrl;
-      } else {
-        console.warn('cvUrl est null — le CV ne sera pas joint');
-      }
+      if(cvUrl) formData.cvUrl = cvUrl;
     }
 
     btn.textContent = 'Enregistrement...';
@@ -188,27 +217,29 @@ if(document.getElementById('step-1')){
 
     try {
       const { data, error } = await getClient().from('candidatures').insert([{
-        nom:      formData.prenom + ' ' + formData.nom,
-        email:    formData.email,
-        tel:      formData.tel,
-        genre:    formData.genre || 'N',
-        poste:    formData.poste,
-        secteurs: formData.secteurs,
-        ville:    formData.ville,
-        rayon:    formData.rayon,
-        contrats: formData.contrats,
-        cv:       formData.cv,
-        cv_url:   formData.cvUrl || null,
-        cv_texte: formData.cvTexte || null,
-        plan:     planInfo.label,
-        message:  formData.message,
-        statut:   'En attente paiement'
+        nom:        formData.prenom + ' ' + formData.nom,
+        email:      formData.email,
+        tel:        formData.tel,
+        genre:      formData.genre || 'N',
+        poste:      formData.poste,
+        secteurs:   formData.secteurs,
+        ville:      formData.ville,
+        rayon:      formData.rayon,
+        contrats:   formData.contrat,
+        cv:         formData.cv,
+        cv_url:     formData.cvUrl || null,
+        cv_texte:   formData.cvTexte || null,
+        plan:       planInfo.label,
+        message:    formData.message,
+        statut:     'En attente paiement',
+        dispo_tot:  formData.dispo_tot || null,
+        dispo_tard: formData.dispo_tard || null,
+        situation:  formData.situation || null,
       }]).select();
 
       if(error) throw error;
-      console.log('Supabase insert OK:', data);
 
-      document.getElementById('step-6').classList.remove('active');
+      document.getElementById('step-12').classList.remove('active');
       document.getElementById('step-success').classList.add('active');
       document.getElementById('success-msg').textContent =
         `Merci ${formData.prenom} ! Ta campagne "${planInfo.label}" est enregistrée.`;
@@ -329,9 +360,12 @@ if(document.getElementById('login-screen')){
       <div class="modal-field"><span class="field-key">Email</span><span class="field-val">${data.email}</span></div>
       <div class="modal-field"><span class="field-key">Téléphone</span><span class="field-val">${data.tel||'—'}</span></div>
       <div class="modal-field"><span class="field-key">Genre</span><span class="field-val">${genreLabel}</span></div>
+      <div class="modal-field"><span class="field-key">Situation</span><span class="field-val">${data.situation||'—'}</span></div>
       <div class="modal-field"><span class="field-key">Secteurs</span><span class="field-val">${data.secteurs||'—'}</span></div>
+      <div class="modal-field"><span class="field-key">Contrat</span><span class="field-val">${data.contrats||'—'}</span></div>
       <div class="modal-field"><span class="field-key">Zone</span><span class="field-val">${data.ville||'—'} · ${data.rayon||''}</span></div>
-      <div class="modal-field"><span class="field-key">Contrats</span><span class="field-val">${data.contrats||'—'}</span></div>
+      <div class="modal-field"><span class="field-key">Dispo à partir du</span><span class="field-val">${data.dispo_tot||'—'}</span></div>
+      <div class="modal-field"><span class="field-key">Dispo au plus tard</span><span class="field-val">${data.dispo_tard||'—'}</span></div>
       <div class="modal-field"><span class="field-key">CV</span><span class="field-val">${data.cv||'Non joint'}</span></div>
       <div class="modal-field"><span class="field-key">Offre</span><span class="field-val" style="color:#8B5CF6">${data.plan||'—'}</span></div>
       <div class="modal-field"><span class="field-key">Statut</span><span class="field-val"><span class="badge ${badgeCls(data.statut)}">${data.statut}</span></span></div>`;
