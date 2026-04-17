@@ -332,8 +332,8 @@ async function sendCandidature(to, toName, company, secteur, candidat) {
   try {
     const body = {
       sender: { name: 'TalentConnect', email: 'julienfranck30@gmail.com' },
-      // ⚠️ MODE TEST — pour production: to: [{ email: to, name: toName || company }],
-      to: [{ email: 'julienfranck30@gmail.com', name: 'TEST' }],
+      // MODE PRODUCTION
+      to: [{ email: to, name: toName || company }],
       replyTo: { email: candidat.email, name: candidat.nom },
       subject: `Candidature spontanée – ${candidat.poste} | ${candidat.nom} → ${company}`,
       htmlContent,
