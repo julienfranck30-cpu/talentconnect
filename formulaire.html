@@ -7,6 +7,25 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="style.css"/>
+<style>
+  .accroche-wrap { max-width: 560px; margin: 0 auto; }
+  .accroche-wrap h2 { font-size: 2rem; font-weight: 800; margin-bottom: 1rem; }
+  .accroche-wrap p { font-size: 1rem; color: #888; line-height: 1.7; margin-bottom: 1rem; }
+  .accroche-card { background: #1a1a1a; border-radius: 12px; padding: 16px 20px; margin-bottom: 1.5rem; display: flex; gap: 14px; align-items: center; }
+  .accroche-card img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+  .accroche-card blockquote { font-size: 13px; color: #ccc; font-style: italic; margin: 0; }
+  .accroche-card strong { display: block; font-size: 12px; color: #888; margin-bottom: 4px; font-style: normal; }
+  .highlight { color: #fff; font-weight: 700; }
+  .date-row { display: flex; gap: 12px; align-items: center; }
+  .date-row input { background: transparent; border: none; border-bottom: 1px solid #444; color: #fff; font-size: 1.2rem; text-align: center; width: 60px; padding: 8px 4px; font-family: var(--font-body, sans-serif); }
+  .date-row input:focus { outline: none; border-bottom-color: #8B5CF6; }
+  .date-sep { color: #666; font-size: 1.4rem; }
+  .qualification-list { display: flex; flex-direction: column; gap: 10px; max-width: 560px; }
+  .qual-chip { background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 14px 20px; cursor: pointer; font-size: 15px; color: #ddd; transition: all .15s; text-align: left; }
+  .qual-chip:hover, .qual-chip.selected { background: #2a1f3d; border-color: #8B5CF6; color: #fff; }
+  .step-panel { display: none; }
+  .step-panel.active { display: block; }
+</style>
 </head>
 <body class="form-body">
 
@@ -18,35 +37,60 @@
 <div class="form-shell">
   <div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
 
-  <!-- ÉTAPE 1 -->
+  <!-- ÉTAPE 1 — GENRE -->
   <div class="step-panel active" id="step-1">
-    <p class="step-label">Étape 1 sur 6</p>
-    <h2 class="step-title">Tes coordonnées <span class="req">*</span></h2>
-    <p class="step-sub">L'IA enverra tes candidatures depuis ces informations.</p>
-    <div class="field-line">
-      <label>Genre</label>
-      <div class="chips-grid" id="chips-genre" style="margin-top:8px">
-        <div class="chip selected" data-value="N" onclick="selectChip(this,'genre')">Préfère ne pas préciser</div>
-        <div class="chip" data-value="M" onclick="selectChip(this,'genre')">Masculin (M)</div>
-        <div class="chip" data-value="F" onclick="selectChip(this,'genre')">Féminin (F)</div>
-      </div>
+    <p class="step-label">Étape 1 sur 12</p>
+    <h2 class="step-title">Genre à utiliser dans mes candidatures</h2>
+    <p class="step-sub">Utilisé pour accorder correctement ta lettre de motivation.</p>
+    <div class="qualification-list">
+      <div class="qual-chip" data-value="M" onclick="selectQual(this,'genre')">Masculin</div>
+      <div class="qual-chip" data-value="F" onclick="selectQual(this,'genre')">Féminin</div>
+      <div class="qual-chip selected" data-value="N" onclick="selectQual(this,'genre')">Préfère ne pas préciser</div>
     </div>
-    <div class="field-line"><label>Prénom <span class="req">*</span></label><input type="text" id="s1-prenom" placeholder="Julie" autocomplete="given-name"/></div>
-    <div class="field-line"><label>Nom <span class="req">*</span></label><input type="text" id="s1-nom" placeholder="Martin" autocomplete="family-name"/></div>
-    <div class="field-line">
-      <label>Numéro de téléphone <span class="req">*</span></label>
-      <div class="phone-wrap"><div class="phone-flag">🇫🇷 &nbsp;+33</div><input type="tel" id="s1-tel" placeholder="06 12 34 56 78"/></div>
-    </div>
-    <div class="field-line"><label>E-mail <span class="req">*</span></label><input type="email" id="s1-email" placeholder="nom@exemple.com" autocomplete="email"/></div>
     <div class="err" id="err-1"></div>
-    <button class="btn-ok" onclick="nextStep(1)">Ok ✓</button>
+    <div class="nav-btns" style="margin-top:24px">
+      <button class="btn-ok" onclick="nextStep(1)">Ok ✓</button>
+    </div>
   </div>
 
-  <!-- ÉTAPE 2 -->
+  <!-- ÉTAPE 2 — COORDONNÉES -->
   <div class="step-panel" id="step-2">
-    <p class="step-label">Étape 2 sur 6</p>
+    <p class="step-label">Étape 2 sur 12</p>
+    <h2 class="step-title">Tes coordonnées</h2>
+    <p class="step-sub">L'IA enverra tes candidatures depuis ces informations.</p>
+    <div class="field-line"><label>Prénom <span class="req">*</span></label><input type="text" id="s2-prenom" placeholder="Julie" autocomplete="given-name"/></div>
+    <div class="field-line"><label>Nom <span class="req">*</span></label><input type="text" id="s2-nom" placeholder="Martin" autocomplete="family-name"/></div>
+    <div class="field-line">
+      <label>Numéro de téléphone <span class="req">*</span></label>
+      <div class="phone-wrap"><div class="phone-flag">🇫🇷 &nbsp;+33</div><input type="tel" id="s2-tel" placeholder="06 12 34 56 78"/></div>
+    </div>
+    <div class="field-line"><label>E-mail <span class="req">*</span></label><input type="email" id="s2-email" placeholder="nom@exemple.com" autocomplete="email"/></div>
+    <div class="err" id="err-2"></div>
+    <div class="nav-btns"><button class="btn-back" onclick="prevStep(2)">← Retour</button><button class="btn-ok" onclick="nextStep(2)">Ok ✓</button></div>
+  </div>
+
+  <!-- ÉTAPE 3 — SITUATION -->
+  <div class="step-panel" id="step-3">
+    <p class="step-label">Étape 3 sur 12</p>
+    <h2 class="step-title">Où en es-tu aujourd'hui ?</h2>
+    <p class="step-sub">Un seul choix.</p>
+    <div class="qualification-list">
+      <div class="qual-chip" onclick="selectQual(this,'situation')">Je postule → 0 réponse</div>
+      <div class="qual-chip" onclick="selectQual(this,'situation')">Je reçois des appels/messages → 0 entretien derrière</div>
+      <div class="qual-chip" onclick="selectQual(this,'situation')">J'ai des entretiens → je suis refusé(e)</div>
+      <div class="qual-chip" onclick="selectQual(this,'situation')">J'ai des offres → inintéressantes ou sous-payées</div>
+      <div class="qual-chip" onclick="selectQual(this,'situation')">Je veux le job de mes rêves</div>
+      <div class="qual-chip" onclick="selectQual(this,'situation')">Je procrastine...</div>
+    </div>
+    <div class="err" id="err-3"></div>
+    <div class="nav-btns"><button class="btn-back" onclick="prevStep(3)">← Retour</button><button class="btn-ok" onclick="nextStep(3)">Ok ✓</button></div>
+  </div>
+
+  <!-- ÉTAPE 4 — POSTE -->
+  <div class="step-panel" id="step-4">
+    <p class="step-label">Étape 4 sur 12</p>
     <h2 class="step-title">Quel poste vises-tu ?</h2>
-    <p class="step-sub">Choisis le type de poste que tu recherches.</p>
+    <p class="step-sub">Choisis ou précise le poste que tu recherches.</p>
     <div class="chips-grid" id="chips-poste">
       <div class="chip" onclick="selectChip(this,'poste')">Acheteur / Approvisionneur</div>
       <div class="chip" onclick="selectChip(this,'poste')">Gestionnaire de stock</div>
@@ -67,14 +111,14 @@
       <div class="chip" onclick="selectChip(this,'poste')">Gestionnaire paie</div>
       <div class="chip" onclick="selectChip(this,'poste')">Data analyst</div>
     </div>
-    <div class="field-line" style="margin-top:16px"><label>Ou précise un poste spécifique</label><input type="text" id="s2-poste-custom" placeholder="Ex : Chargé(e) de sourcing"/></div>
-    <div class="err" id="err-2"></div>
-    <div class="nav-btns"><button class="btn-back" onclick="prevStep(2)">← Retour</button><button class="btn-ok" onclick="nextStep(2)">Ok ✓</button></div>
+    <div class="field-line" style="margin-top:16px"><label>Ou précise un poste spécifique</label><input type="text" id="s4-poste-custom" placeholder="Ex : Chargé(e) de sourcing"/></div>
+    <div class="err" id="err-4"></div>
+    <div class="nav-btns"><button class="btn-back" onclick="prevStep(4)">← Retour</button><button class="btn-ok" onclick="nextStep(4)">Ok ✓</button></div>
   </div>
 
-  <!-- ÉTAPE 3 -->
-  <div class="step-panel" id="step-3">
-    <p class="step-label">Étape 3 sur 6</p>
+  <!-- ÉTAPE 5 — SECTEUR -->
+  <div class="step-panel" id="step-5">
+    <p class="step-label">Étape 5 sur 12</p>
     <h2 class="step-title">Dans quel secteur ?</h2>
     <p class="step-sub">Sélectionne un ou plusieurs secteurs d'activité.</p>
     <div class="chips-grid" id="chips-secteur">
@@ -97,16 +141,37 @@
       <div class="chip multi" onclick="toggleChip(this)">Conseil / Audit</div>
       <div class="chip multi" onclick="toggleChip(this)">Médias / Communication</div>
     </div>
-    <div class="err" id="err-3"></div>
-    <div class="nav-btns"><button class="btn-back" onclick="prevStep(3)">← Retour</button><button class="btn-ok" onclick="nextStep(3)">Ok ✓</button></div>
+    <div class="err" id="err-5"></div>
+    <div class="nav-btns"><button class="btn-back" onclick="prevStep(5)">← Retour</button><button class="btn-ok" onclick="nextStep(5)">Ok ✓</button></div>
   </div>
 
-  <!-- ÉTAPE 4 -->
-  <div class="step-panel" id="step-4">
-    <p class="step-label">Étape 4 sur 6</p>
+  <!-- ÉTAPE 6 — CONTRAT -->
+  <div class="step-panel" id="step-6">
+    <p class="step-label">Étape 6 sur 12</p>
+    <h2 class="step-title">Type de contrat recherché</h2>
+    <p class="step-sub">Un seul choix.</p>
+    <div class="qualification-list">
+      <div class="qual-chip" onclick="selectQual(this,'contrat')">Stage</div>
+      <div class="qual-chip" onclick="selectQual(this,'contrat')">Stage à l'étranger</div>
+      <div class="qual-chip" onclick="selectQual(this,'contrat')">Alternance</div>
+      <div class="qual-chip" onclick="selectQual(this,'contrat')">1er Emploi (CDI / CDD)</div>
+      <div class="qual-chip" onclick="selectQual(this,'contrat')">Emploi (CDI)</div>
+      <div class="qual-chip" onclick="selectQual(this,'contrat')">Emploi (CDD)</div>
+      <div class="qual-chip" onclick="selectQual(this,'contrat')">Reconversion professionnelle</div>
+      <div class="qual-chip" onclick="selectQual(this,'contrat')">Emploi à l'étranger / V.I.E.</div>
+      <div class="qual-chip" onclick="selectQual(this,'contrat')">Missions en freelance</div>
+      <div class="qual-chip" onclick="selectQual(this,'contrat')">Mission en tant que consultant</div>
+    </div>
+    <div class="err" id="err-6"></div>
+    <div class="nav-btns"><button class="btn-back" onclick="prevStep(6)">← Retour</button><button class="btn-ok" onclick="nextStep(6)">Ok ✓</button></div>
+  </div>
+
+  <!-- ÉTAPE 7 — ZONE -->
+  <div class="step-panel" id="step-7">
+    <p class="step-label">Étape 7 sur 12</p>
     <h2 class="step-title">Quelle zone géographique ?</h2>
     <p class="step-sub">On ciblera les entreprises dans cette zone.</p>
-    <div class="field-line"><label>Ville ou région <span class="req">*</span></label><input type="text" id="s4-ville" placeholder="Ex : Lyon, Rhône-Alpes, Paris..."/></div>
+    <div class="field-line"><label>Ville ou région <span class="req">*</span></label><input type="text" id="s7-ville" placeholder="Ex : Lyon, Rhône-Alpes, Paris..."/></div>
     <div class="field-line">
       <label>Rayon de recherche</label>
       <div class="chips-grid" id="chips-rayon" style="margin-top:8px">
@@ -116,23 +181,45 @@
         <div class="chip" onclick="selectChip(this,'rayon')">France entière</div>
       </div>
     </div>
-    <div class="field-line">
-      <label>Type de contrat</label>
-      <div class="chips-grid" id="chips-contrat" style="margin-top:8px">
-        <div class="chip multi" onclick="toggleChip(this)">CDI</div>
-        <div class="chip multi" onclick="toggleChip(this)">CDD</div>
-        <div class="chip multi" onclick="toggleChip(this)">Alternance</div>
-        <div class="chip multi" onclick="toggleChip(this)">Stage</div>
-        <div class="chip multi" onclick="toggleChip(this)">Freelance</div>
-      </div>
-    </div>
-    <div class="err" id="err-4"></div>
-    <div class="nav-btns"><button class="btn-back" onclick="prevStep(4)">← Retour</button><button class="btn-ok" onclick="nextStep(4)">Ok ✓</button></div>
+    <div class="err" id="err-7"></div>
+    <div class="nav-btns"><button class="btn-back" onclick="prevStep(7)">← Retour</button><button class="btn-ok" onclick="nextStep(7)">Ok ✓</button></div>
   </div>
 
-  <!-- ÉTAPE 5 -->
-  <div class="step-panel" id="step-5">
-    <p class="step-label">Étape 5 sur 6</p>
+  <!-- ÉTAPE 8 — DISPO AU PLUS TÔT -->
+  <div class="step-panel" id="step-8">
+    <p class="step-label">Étape 8 sur 12</p>
+    <h2 class="step-title">À partir de quand peux-tu commencer, au plus tôt ?</h2>
+    <p class="step-sub">Cette date sera mentionnée dans ta lettre de motivation.</p>
+    <div class="date-row" style="margin-top:24px">
+      <input type="text" id="s8-jour" placeholder="JJ" maxlength="2" oninput="autoTab(this,'s8-mois')"/>
+      <span class="date-sep">/</span>
+      <input type="text" id="s8-mois" placeholder="MM" maxlength="2" oninput="autoTab(this,'s8-annee')"/>
+      <span class="date-sep">/</span>
+      <input type="text" id="s8-annee" placeholder="AAAA" maxlength="4"/>
+    </div>
+    <div class="err" id="err-8"></div>
+    <div class="nav-btns" style="margin-top:24px"><button class="btn-back" onclick="prevStep(8)">← Retour</button><button class="btn-ok" onclick="nextStep(8)">Ok ✓</button></div>
+  </div>
+
+  <!-- ÉTAPE 9 — DISPO AU PLUS TARD -->
+  <div class="step-panel" id="step-9">
+    <p class="step-label">Étape 9 sur 12</p>
+    <h2 class="step-title">Au plus tard, quand souhaites-tu commencer ?</h2>
+    <p class="step-sub">Optionnel — laisse vide si tu n'as pas de contrainte.</p>
+    <div class="date-row" style="margin-top:24px">
+      <input type="text" id="s9-jour" placeholder="JJ" maxlength="2" oninput="autoTab(this,'s9-mois')"/>
+      <span class="date-sep">/</span>
+      <input type="text" id="s9-mois" placeholder="MM" maxlength="2" oninput="autoTab(this,'s9-annee')"/>
+      <span class="date-sep">/</span>
+      <input type="text" id="s9-annee" placeholder="AAAA" maxlength="4"/>
+    </div>
+    <div class="err" id="err-9"></div>
+    <div class="nav-btns" style="margin-top:24px"><button class="btn-back" onclick="prevStep(9)">← Retour</button><button class="btn-ok" onclick="nextStep(9)">Ok ✓</button></div>
+  </div>
+
+  <!-- ÉTAPE 10 — CV -->
+  <div class="step-panel" id="step-10">
+    <p class="step-label">Étape 10 sur 12</p>
     <h2 class="step-title">Ton CV et ta présentation</h2>
     <p class="step-sub">On les utilisera pour personnaliser chaque candidature.</p>
     <div class="field-line">
@@ -143,18 +230,34 @@
       </div>
       <input type="file" id="cv-input" accept=".pdf" style="display:none"/>
     </div>
-    <div class="field-line"><label>Message de motivation (optionnel)</label><textarea id="s5-msg" rows="4" placeholder="Résume ton profil en 2-3 phrases..."></textarea></div>
-    <div class="err" id="err-5"></div>
-    <div class="nav-btns"><button class="btn-back" onclick="prevStep(5)">← Retour</button><button class="btn-ok" onclick="nextStep(5)">Ok ✓</button></div>
+    <div class="field-line"><label>Message de motivation (optionnel)</label><textarea id="s10-msg" rows="4" placeholder="Résume ton profil en 2-3 phrases..."></textarea></div>
+    <div class="err" id="err-10"></div>
+    <div class="nav-btns"><button class="btn-back" onclick="prevStep(10)">← Retour</button><button class="btn-ok" onclick="nextStep(10)">Ok ✓</button></div>
   </div>
 
-  <!-- ÉTAPE 6 — PAIEMENT -->
-  <div class="step-panel" id="step-6">
-    <p class="step-label">Étape 6 sur 6</p>
+  <!-- ÉTAPE 11 — ACCROCHE ÉMOTIONNELLE -->
+  <div class="step-panel" id="step-11">
+    <p class="step-label">Étape 11 sur 12</p>
+    <div class="accroche-wrap">
+      <h2 class="step-title">Tu n'es pas seul(e).</h2>
+      <p><span class="highlight">Le problème, ce n'est pas toi.</span><br/>Le problème ce sont les job boards : LinkedIn, Indeed et compagnie.</p>
+      <p><span class="highlight">Ton profil est noyé dans la masse</span> : les annonces sont saturées.<br/>Ces plateformes ne sont pas faites pour t'aider toi.<br/>Ces plateformes sont faites pour aider les recruteurs.</p>
+      <p>→ Résultat : des candidatures dans le vide. Des process interminables.</p>
+      <div class="accroche-card">
+        <div style="width:48px;height:48px;border-radius:50%;background:#8B5CF6;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">👩</div>
+        <blockquote><strong>Julie, RH :</strong>"Lorsque je dépose une offre d'emploi, je reçois 200 candidatures en 2 heures"</blockquote>
+      </div>
+      <p>Pendant ce temps, <span class="highlight">des millions d'entreprises ont besoin de toi mais n'ont pas encore posté d'annonces.</span><br/>Notre objectif est de t'aider à les contacter !</p>
+    </div>
+    <div class="nav-btns" style="margin-top:32px"><button class="btn-back" onclick="prevStep(11)">← Retour</button><button class="btn-ok" onclick="nextStep(11)">Continuer →</button></div>
+  </div>
+
+  <!-- ÉTAPE 12 — PAIEMENT -->
+  <div class="step-panel" id="step-12">
+    <p class="step-label">Étape 12 sur 12</p>
     <h2 class="step-title">Lance ta campagne <span class="grad">✦</span></h2>
     <p class="step-sub">Vérifie tes informations et choisis ton offre.</p>
     <div class="recap-card" id="recap-card"></div>
-
     <div class="pricing-grid">
       <div class="price-card" onclick="selectPlan(this,'starter')">
         <div class="plan-badge">Starter</div>
@@ -188,14 +291,13 @@
         </ul>
       </div>
     </div>
-
     <label class="rgpd-row" style="margin-top:20px">
       <input type="checkbox" id="f-rgpd"/>
       <span>J'accepte le traitement de mes données personnelles (RGPD — 2 ans max). <span class="req">*</span></span>
     </label>
-    <div class="err" id="err-6"></div>
+    <div class="err" id="err-12"></div>
     <div class="nav-btns">
-      <button class="btn-back" onclick="prevStep(6)">← Retour</button>
+      <button class="btn-back" onclick="prevStep(12)">← Retour</button>
       <button class="btn-primary-lg" style="flex:1" onclick="submitCampagne()">Payer et lancer ma campagne →</button>
     </div>
   </div>
