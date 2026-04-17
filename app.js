@@ -258,6 +258,8 @@ if(document.getElementById('step-1')){
       } catch(e) {
         console.warn('Email confirmation non envoyé:', e.message);
       }
+
+      document.getElementById('step-12').classList.remove('active');
       document.getElementById('step-success').classList.add('active');
       document.getElementById('success-msg').textContent =
         `Merci ${formData.prenom} ! Ta campagne "${planInfo.label}" est enregistrée.`;
