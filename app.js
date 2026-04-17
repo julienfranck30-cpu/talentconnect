@@ -239,7 +239,25 @@ if(document.getElementById('step-1')){
 
       if(error) throw error;
 
-      document.getElementById('step-12').classList.remove('active');
+      // Envoie email de confirmation au candidat
+      try {
+        await fetch('/api/confirm-candidature', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email:    formData.email,
+            prenom:   formData.prenom,
+            nom:      formData.nom,
+            poste:    formData.poste,
+            secteurs: formData.secteurs,
+            contrat:  formData.contrat,
+            plan:     planInfo.label,
+            dispo_tot: formData.dispo_tot || null
+          })
+        });
+      } catch(e) {
+        console.warn('Email confirmation non envoyé:', e.message);
+      }
       document.getElementById('step-success').classList.add('active');
       document.getElementById('success-msg').textContent =
         `Merci ${formData.prenom} ! Ta campagne "${planInfo.label}" est enregistrée.`;
