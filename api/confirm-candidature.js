@@ -70,8 +70,8 @@ module.exports = async (req, res) => {
         'api-key': BREVO_KEY
       },
       body: JSON.stringify({
-        sender: { name: 'Lance Mon Job', email: 'julienfranck30@gmail.com' },
-        to: [{ email, name: `${prenom} ${nom}` },],
+        sender: { name: 'Lance Mon Job', email: 'support@lancemonjob.fr' },
+        to: [{ email, name: `${prenom} ${nom}` }],
         subject: `✦ Ta campagne Lance Mon Job est enregistrée, ${prenom} !`,
         htmlContent
       })
