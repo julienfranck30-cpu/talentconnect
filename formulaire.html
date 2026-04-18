@@ -4,6 +4,14 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>TalentConnect — Créer ma campagne</title>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BMKHRFJ914"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-BMKHRFJ914');
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="style.css"/>
@@ -258,6 +266,7 @@
     <h2 class="step-title">Lance ta campagne <span class="grad">✦</span></h2>
     <p class="step-sub">Vérifie tes informations et choisis ton offre.</p>
     <div class="recap-card" id="recap-card"></div>
+
     <div class="pricing-grid">
       <div class="price-card" onclick="selectPlan(this,'starter')">
         <div class="plan-badge">Starter</div>
@@ -291,6 +300,7 @@
         </ul>
       </div>
     </div>
+
     <label class="rgpd-row" style="margin-top:20px">
       <input type="checkbox" id="f-rgpd"/>
       <span>J'accepte le traitement de mes données personnelles (RGPD — 2 ans max). <span class="req">*</span></span>
