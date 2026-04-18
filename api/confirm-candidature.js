@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#333;line-height:1.8;font-size:15px;background:#f9f9f9;padding:32px;border-radius:12px">
 
       <div style="text-align:center;margin-bottom:32px">
-        <h1 style="font-size:28px;font-weight:800;color:#111;margin:0">✦ TalentConnect</h1>
+        <h1 style="font-size:28px;font-weight:800;color:#111;margin:0">✦ Lance Mon Job</h1>
         <p style="color:#888;font-size:14px;margin-top:4px">Ton IA de candidature spontanée</p>
       </div>
 
@@ -55,9 +55,9 @@ module.exports = async (req, res) => {
       </div>
 
       <div style="text-align:center;color:#aaa;font-size:12px">
-        <p>TalentConnect — Paris, France<br/>
-        Pour toute question : <a href="mailto:julienfranck30@gmail.com" style="color:#8B5CF6">julienfranck30@gmail.com</a></p>
-        <p>Tu reçois cet email car tu as créé une campagne sur TalentConnect.</p>
+        <p>Lance Mon Job — Lyon, France<br/>
+        Pour toute question : <a href="mailto:support@lancemonjob.fr" style="color:#8B5CF6">support@lancemonjob.fr</a></p>
+        <p>Tu reçois cet email car tu as créé une campagne sur Lance Mon Job.</p>
       </div>
 
     </div>`;
@@ -70,9 +70,9 @@ module.exports = async (req, res) => {
         'api-key': BREVO_KEY
       },
       body: JSON.stringify({
-        sender: { name: 'TalentConnect', email: 'julienfranck30@gmail.com' },
-        to: [{ email, name: `${prenom} ${nom}` }],
-        subject: `✦ Ta campagne TalentConnect est enregistrée, ${prenom} !`,
+        sender: { name: 'Lance Mon Job', email: 'julienfranck30@gmail.com' },
+        to: [{ email, name: `${prenom} ${nom}` },],
+        subject: `✦ Ta campagne Lance Mon Job est enregistrée, ${prenom} !`,
         htmlContent
       })
     });
