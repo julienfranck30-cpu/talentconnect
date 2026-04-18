@@ -17,62 +17,40 @@ function getPlanVolume(plan) {
 
 const FALLBACK_EMAILS = ['rh', 'recrutement', 'contact', 'jobs', 'carriere'];
 
-// ─── EXTRACTION CV ────────────────────────────────────────────────────────────
-
 function nettoyerTexte(texte) {
   return texte.replace(/\s+/g, ' ').trim();
 }
 
 function extraireFormation(cvTexte, nomCandidat) {
   if (!cvTexte) return null;
-
-  // Ignore les X premières lignes qui contiennent souvent le nom/titre
   const lignes = cvTexte.split('\n').filter(l => l.trim().length > 5);
-
-  // Cherche une ligne contenant un diplôme réel
   const motsDiplome = ['master', 'licence', 'bachelor', 'bts', 'dut', 'mba', 'msc', 'master 2', 'master 1', 'grande école', 'programme grandes ecoles'];
   const motsEcole = ['school', 'ecema', 'emlyon', 'hec', 'essec', 'escp', 'kedge', 'skema', 'edhec', 'iae', 'inseec', 'igs', 'cesi', 'burgundy', 'université', 'university', 'business school', 'école de commerce', 'école supérieure'];
-
-  // Priorité 1 : ligne contenant un diplôme
-  for (const ligne of lignes) {
-    const l = ligne.toLowerCase();
-    // Ignore si la ligne contient le nom du candidat
-    if (nomCandidat && l.includes(nomCandidat.toLowerCase().split(' ')[0])) continue;
-    if (motsDiplome.some(m => l.includes(m))) {
-      return nettoyerTexte(ligne).slice(0, 100);
-    }
-  }
-
-  // Priorité 2 : ligne contenant une école
   for (const ligne of lignes) {
     const l = ligne.toLowerCase();
     if (nomCandidat && l.includes(nomCandidat.toLowerCase().split(' ')[0])) continue;
-    if (motsEcole.some(m => l.includes(m))) {
-      return nettoyerTexte(ligne).slice(0, 100);
-    }
+    if (motsDiplome.some(m => l.includes(m))) return nettoyerTexte(ligne).slice(0, 100);
   }
-
+  for (const ligne of lignes) {
+    const l = ligne.toLowerCase();
+    if (nomCandidat && l.includes(nomCandidat.toLowerCase().split(' ')[0])) continue;
+    if (motsEcole.some(m => l.includes(m))) return nettoyerTexte(ligne).slice(0, 100);
+  }
   return null;
 }
 
 function extraireCompetences(cvTexte, nomCandidat, poste) {
   if (!cvTexte) return ['gestion administrative', 'travail en équipe', 'rigueur et sens du détail'];
-
   const posteLower = (poste || '').toLowerCase();
-
-  // Tentative 1 : extraire directement la section "Compétences" du CV
   const sectionsRegex = /comp[eé]tences?\s*[:\n]?([\s\S]{10,600})(?:atouts|centres d.int[eé]r[eê]t|informatique|langues|exp[eé]riences|dipl[oô]mes|formations|r[eé]seaux|$)/i;
   const match = cvTexte.match(sectionsRegex);
-
   if (match) {
     const bloc = match[1];
     const lignes = bloc.split(/[\n]/)
       .map(l => l.trim())
       .filter(l => l.length > 3 && l.length < 80)
       .filter(l => !/^(et|de|du|des|les|la|le|un|une|\d+)$/i.test(l));
-
     if (lignes.length >= 2) {
-      // Priorise les compétences pertinentes pour le poste
       const prioritaires = [];
       const autres = [];
       for (const ligne of lignes) {
@@ -93,8 +71,6 @@ function extraireCompetences(cvTexte, nomCandidat, poste) {
       if (selection.length >= 2) return selection;
     }
   }
-
-  // Tentative 2 : mots-clés dans tout le CV
   const cvLower = cvTexte.toLowerCase();
   const motsCles = [
     'approvisionnement', 'négociation', 'sourcing', 'gestion de stocks', 'supply chain',
@@ -102,24 +78,19 @@ function extraireCompetences(cvTexte, nomCandidat, poste) {
     'comptabilité', 'audit', 'recrutement', 'paie', 'marketing', 'communication',
     'gestion de projet', 'agile', 'lean', 'qualité', 'analyse de données'
   ];
-
   const trouvees = [];
   for (const mot of motsCles) {
     if (cvLower.includes(mot) && trouvees.length < 3) {
       trouvees.push(mot.charAt(0).toUpperCase() + mot.slice(1));
     }
   }
-
   return trouvees.length >= 2 ? trouvees : ['gestion administrative', 'travail en équipe', 'rigueur et sens du détail'];
 }
 
 function extraireSituation(cvTexte, nomCandidat, contrat) {
   if (!cvTexte) return null;
-
   const formation = extraireFormation(cvTexte, nomCandidat);
   const lignes = cvTexte.split('\n').filter(l => l.trim().length > 5);
-
-  // Cherche une expérience récente
   const motsExp = ['stagiaire', 'alternant', 'assistant', 'chargé', 'responsable', 'analyste', 'consultant', 'coordinateur'];
   for (const ligne of lignes) {
     const l = ligne.toLowerCase();
@@ -130,13 +101,11 @@ function extraireSituation(cvTexte, nomCandidat, contrat) {
       return `fort(e) d'une expérience en tant que ${exp}`;
     }
   }
-
   if (formation) return `en formation (${formation})`;
   return 'en recherche active d\'opportunités professionnelles';
 }
 
 function getDescriptionEntreprise(company) {
-  // Description naturelle sans mentionner le secteur technique interne
   const descriptions = {
     'Sodexo': 'votre leadership dans les services de qualité de vie',
     'Elior': 'votre expertise dans la restauration collective et les services',
@@ -150,16 +119,12 @@ function getDescriptionEntreprise(company) {
     'Danone': 'votre engagement envers la nutrition, la santé et le développement durable',
     'Schneider Electric': 'votre leadership dans la transition énergétique et la digitalisation industrielle',
   };
-
   if (descriptions[company]) return descriptions[company];
-
-  // Générique naturel sans mention du secteur
   return `votre réputation d'excellence et l'ambition de vos projets`;
 }
 
 function getMissions(company, poste) {
   const posteL = (poste || '').toLowerCase();
-
   if (posteL.includes('rh') || posteL.includes('ressources humaines') || posteL.includes('recrutement')) {
     return 'accompagner vos équipes RH, soutenir vos processus de recrutement et contribuer au développement de vos talents';
   }
@@ -178,10 +143,10 @@ function getMissions(company, poste) {
   if (posteL.includes('data') || posteL.includes('analyste')) {
     return 'analyser vos données, produire des insights actionnables et soutenir vos décisions stratégiques';
   }
-  if (posteL.includes('communication') || posteL.includes('marketing')) {
+  if (posteL.includes('communication')) {
     return 'renforcer votre image de marque, soutenir vos campagnes de communication et contribuer à votre stratégie digitale';
   }
-  if (posteL.includes('paie') || posteL.includes('comptab')) {
+  if (posteL.includes('paie')) {
     return 'assurer la fiabilité de vos processus de paie, contribuer à vos obligations sociales et soutenir vos équipes RH';
   }
   if (posteL.includes('sourcing')) {
@@ -193,11 +158,8 @@ function getMissions(company, poste) {
   if (posteL.includes('projet') || posteL.includes('chef de')) {
     return 'piloter vos projets, coordonner vos équipes et assurer la livraison dans les délais et les budgets impartis';
   }
-
   return `contribuer activement à vos projets, soutenir vos équipes et apporter des solutions concrètes à vos enjeux opérationnels`;
 }
-
-// ─── GÉNÉRATION LETTRE SANS IA ────────────────────────────────────────────────
 
 function accordGenre(genre, masc, fem, neutre) {
   if (genre === 'M') return masc;
@@ -212,32 +174,28 @@ function generateLettre(candidat, company, secteur, contactName) {
   const isStage = contrat.toLowerCase().includes('stage');
   const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
   const genre = candidat.genre || 'N';
-
   const cvTexte = candidat.cv_texte || '';
   const nomCandidat = (candidat.nom || '').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-
   const competences = extraireCompetences(cvTexte, nomCandidat, candidat.poste);
   const situation = extraireSituation(cvTexte, nomCandidat, contrat);
   const dispoPhrase = candidat.dispo_tot ? `, disponible à partir du ${candidat.dispo_tot}` : '';
   const descriptionEntreprise = getDescriptionEntreprise(company);
   const missionText = getMissions(company, candidat.poste);
   const missions = missionText.match(/^[aeiouéèêëàâîïôùûü]/i) ? "d'" + missionText : "de " + missionText;
-
   const comp1 = competences[0] || 'gestion administrative';
   const comp2 = competences[1] || 'travail en équipe';
   const comp3 = competences[2] || 'rigueur et sens du détail';
 
-  // Adapte le poste selon le genre (enlève les parenthèses)
   let posteAffiche = candidat.poste || '';
   if (genre === 'M') {
     posteAffiche = posteAffiche.replace(/\(e\)/g, '').replace(/\(e\s/g, ' ').trim();
   } else if (genre === 'F') {
     posteAffiche = posteAffiche.replace(/\(e\)/g, 'e').replace(/\(e\s/g, 'e ').trim();
   }
+
   const pret = accordGenre(genre, 'prêt', 'prête', 'prêt(e)');
   const ravi = accordGenre(genre, 'ravi', 'ravie', 'ravi(e)');
   const dote = accordGenre(genre, 'doté', 'dotée', 'doté(e)');
-  const fort = accordGenre(genre, 'fort', 'forte', 'fort(e)');
   const rigoureux = accordGenre(genre, 'Rigoureux', 'Rigoureuse', 'Rigoureux(se)');
 
   let paragrapheContrat = '';
@@ -331,8 +289,7 @@ async function sendCandidature(to, toName, company, secteur, candidat) {
 
   try {
     const body = {
-      sender: { name: 'TalentConnect', email: 'julienfranck30@gmail.com' },
-      // MODE PRODUCTION
+      sender: { name: 'Lance Mon Job', email: 'support@lancemonjob.fr' },
       to: [{ email: to, name: toName || company }],
       replyTo: { email: candidat.email, name: candidat.nom },
       subject: `Candidature spontanée – ${candidat.poste} | ${candidat.nom} → ${company}`,
