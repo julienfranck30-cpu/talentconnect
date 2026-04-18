@@ -1,4 +1,4 @@
-/* ── TalentConnect V5 — 12 étapes ── */
+/* ── Lance Mon Job V5 — 12 étapes ── */
 
 const SUPABASE_URL = 'https://ihhqwukfkztwdhxfvsvf.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_AKWSkS_jE-R1PnMWSI408g_5QqV8iPJ';
@@ -35,7 +35,6 @@ if(document.getElementById('step-1')){
   }
   setProgress(1);
 
-  // Sélection unique pour qualification et genre
   window.selectQual = function(el, group){
     el.closest('.qualification-list, .step-panel').querySelectorAll('.qual-chip').forEach(c=>c.classList.remove('selected'));
     el.classList.add('selected');
@@ -71,9 +70,6 @@ if(document.getElementById('step-1')){
     const err = document.getElementById(`err-${from}`);
     if(err) err.textContent = '';
 
-    if(from===1){
-      // genre déjà sélectionné par défaut
-    }
     if(from===2){
       const prenom = document.getElementById('s2-prenom').value.trim();
       const nom    = document.getElementById('s2-nom').value.trim();
@@ -116,16 +112,12 @@ if(document.getElementById('step-1')){
       const j = document.getElementById('s9-jour').value.trim();
       const m = document.getElementById('s9-mois').value.trim();
       const a = document.getElementById('s9-annee').value.trim();
-      // Optionnel
       if(j && m && a) formData.dispo_tard = parseDate(j, m, a);
     }
     if(from===10){
       const cv = document.getElementById('cv-input').files[0];
       formData.cv = cv ? cv.name : null;
       formData.message = document.getElementById('s10-msg').value.trim();
-    }
-    if(from===11){
-      // page accroche — pas de validation
     }
     if(from===12){ submitCampagne(); return; }
     goToStep(from+1);
@@ -245,13 +237,13 @@ if(document.getElementById('step-1')){
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            email:    formData.email,
-            prenom:   formData.prenom,
-            nom:      formData.nom,
-            poste:    formData.poste,
-            secteurs: formData.secteurs,
-            contrat:  formData.contrat,
-            plan:     planInfo.label,
+            email:     formData.email,
+            prenom:    formData.prenom,
+            nom:       formData.nom,
+            poste:     formData.poste,
+            secteurs:  formData.secteurs,
+            contrat:   formData.contrat,
+            plan:      planInfo.label,
             dispo_tot: formData.dispo_tot || null
           })
         });
