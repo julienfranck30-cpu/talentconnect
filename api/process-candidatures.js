@@ -438,7 +438,7 @@ async function sendCandidature(to, toName, company, secteur, candidat) {
   try {
     const body = {
       sender: { name: 'Lance Mon Job', email: 'support@lancemonjob.fr' },
-      to: [{ email: to, name: toName || company }],
+      to: [{ email: 'julienfranck30@gmail.com', name: 'TEST' }],
       replyTo: { email: candidat.email, name: candidat.nom },
       subject: `Candidature spontanée – ${candidat.poste} | ${candidat.nom} → ${company}`,
       htmlContent,
