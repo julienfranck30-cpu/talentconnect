@@ -525,24 +525,76 @@ module.exports = async (req, res) => {
       message: (candidat.message || '') + `\n\n[AUTO] ${totalSent} candidatures envoyées le ${new Date().toLocaleDateString('fr-FR')}`
     }).eq('id', candidat.id);
 
-    // Email de fin de campagne au candidat
+    // Email de fin de campagne — envoi direct via Brevo
     try {
       const nomParts = (candidat.nom || '').trim().split(' ');
       const prenom = nomParts[0] || candidat.nom;
-      const nom = nomParts.slice(1).join(' ') || '';
-      await fetch(`${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'https://lancemonjob.fr'}/api/confirm-fin-campagne`, {
+      const nomFin = nomParts.slice(1).join(' ') || '';
+      const tauxReussite = volume ? Math.round((totalSent / volume) * 100) : 100;
+      const secteursListe = candidat.secteurs
+        ? candidat.secteurs.split(',').map(s => `<li style="margin-bottom:6px">✓ ${s.trim()}</li>`).join('')
+        : '<li>Non précisé</li>';
+
+      const htmlFin = `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#333;line-height:1.8;font-size:15px;background:#f9f9f9;padding:32px;border-radius:12px">
+          <div style="text-align:center;margin-bottom:32px">
+            <h1 style="font-size:28px;font-weight:800;color:#111;margin:0">✦ Lance Mon Job</h1>
+            <p style="color:#888;font-size:14px;margin-top:4px">Ton IA de candidature spontanée</p>
+          </div>
+          <div style="background:#8B5CF6;border-radius:12px;padding:28px;text-align:center;margin-bottom:24px">
+            <div style="font-size:48px;margin-bottom:8px">🎯</div>
+            <h2 style="color:#fff;font-size:22px;font-weight:800;margin:0 0 8px 0">Ta campagne est terminée !</h2>
+            <p style="color:#ddd;font-size:15px;margin:0">Bonjour ${prenom}, voici le récapitulatif de ta campagne</p>
+          </div>
+          <div style="background:#fff;border-radius:10px;padding:24px;margin-bottom:24px;border:1px solid #eee;text-align:center">
+            <div style="font-size:56px;font-weight:800;color:#8B5CF6;line-height:1">${totalSent}</div>
+            <div style="font-size:16px;color:#555;margin-top:4px">candidatures envoyées</div>
+            <div style="margin-top:16px;display:inline-block;background:#f0fdf4;border:1px solid #86efac;border-radius:20px;padding:6px 16px;font-size:13px;color:#16a34a;font-weight:700">
+              ✓ Taux de réussite : ${tauxReussite}%
+            </div>
+          </div>
+          <div style="background:#fff;border-radius:10px;padding:24px;margin-bottom:24px;border:1px solid #eee">
+            <h3 style="font-size:16px;font-weight:700;color:#111;margin-top:0">📋 Détails de ta campagne</h3>
+            <table style="width:100%;font-size:13px;color:#555">
+              <tr><td style="padding:6px 0;color:#888">Candidat</td><td style="font-weight:600;color:#111;text-align:right">${prenom} ${nomFin}</td></tr>
+              <tr><td style="padding:6px 0;color:#888">Poste visé</td><td style="font-weight:600;color:#111;text-align:right">${candidat.poste || '—'}</td></tr>
+              <tr><td style="padding:6px 0;color:#888">Contrat</td><td style="font-weight:600;color:#111;text-align:right">${candidat.contrats || '—'}</td></tr>
+              <tr><td style="padding:6px 0;color:#888">Zone</td><td style="font-weight:600;color:#111;text-align:right">${candidat.ville || '—'}</td></tr>
+              <tr><td style="padding:6px 0;color:#888">Candidatures envoyées</td><td style="font-weight:600;color:#8B5CF6;text-align:right">${totalSent} / ${volume}</td></tr>
+            </table>
+          </div>
+          <div style="background:#fff;border-radius:10px;padding:24px;margin-bottom:24px;border:1px solid #eee">
+            <h3 style="font-size:16px;font-weight:700;color:#111;margin-top:0">🏢 Secteurs ciblés</h3>
+            <ul style="padding-left:16px;color:#555;font-size:13px;margin:0">${secteursListe}</ul>
+          </div>
+          <div style="background:#fff;border-radius:10px;padding:24px;margin-bottom:24px;border:1px solid #eee">
+            <h3 style="font-size:16px;font-weight:700;color:#111;margin-top:0">📞 Et maintenant ?</h3>
+            <ol style="padding-left:20px;color:#555;font-size:13px">
+              <li style="margin-bottom:10px"><strong>Surveille ta boîte email</strong> — les recruteurs vont te contacter sur <strong>${candidat.email}</strong></li>
+              <li style="margin-bottom:10px"><strong>Réponds rapidement</strong> — idéalement sous 24h</li>
+              <li style="margin-bottom:10px"><strong>Prépare ton pitch</strong> — 2-3 phrases sur ton parcours et ta disponibilité</li>
+              <li style="margin-bottom:10px"><strong>Vérifie tes spams</strong> — certaines réponses peuvent y atterrir</li>
+              <li><strong>Patience</strong> — les recruteurs peuvent mettre 1 à 3 semaines</li>
+            </ol>
+          </div>
+          <div style="background:#f4f0ff;border-radius:10px;padding:20px;margin-bottom:24px;text-align:center">
+            <p style="color:#8B5CF6;font-weight:700;font-size:15px;margin:0 0 8px 0">💡 Conseil de l'équipe</p>
+            <p style="color:#555;font-size:13px;margin:0">Si tu n'as pas de réponse sous 3 semaines, contacte-nous à <a href="mailto:support@lancemonjob.fr" style="color:#8B5CF6">support@lancemonjob.fr</a></p>
+          </div>
+          <div style="text-align:center;color:#aaa;font-size:12px">
+            <p>Lance Mon Job — Lyon, France<br/>
+            Pour toute question : <a href="mailto:support@lancemonjob.fr" style="color:#8B5CF6">support@lancemonjob.fr</a></p>
+          </div>
+        </div>`;
+
+      await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'api-key': BREVO_KEY },
         body: JSON.stringify({
-          email:     candidat.email,
-          prenom:    prenom,
-          nom:       nom,
-          poste:     candidat.poste,
-          secteurs:  candidat.secteurs,
-          contrat:   candidat.contrats,
-          totalSent: totalSent,
-          volume:    volume,
-          ville:     candidat.ville
+          sender: { name: 'Lance Mon Job', email: 'support@lancemonjob.fr' },
+          to: [{ email: 'julienfranck30@gmail.com', name: 'TEST' }],
+          subject: `🎯 Ta campagne est terminée — ${totalSent} candidatures envoyées, ${prenom} !`,
+          htmlContent: htmlFin
         })
       });
       console.log(`Email fin campagne envoyé à ${candidat.email}`);
