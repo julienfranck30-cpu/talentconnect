@@ -438,7 +438,7 @@ async function sendCandidature(to, toName, company, secteur, candidat) {
   try {
     const body = {
       sender: { name: 'Lance Mon Job', email: 'support@lancemonjob.fr' },
-      to: [{ email: 'julienfranck30@gmail.com', name: 'TEST' }],
+      to: [{ email: to, name: toName || company }],
       replyTo: { email: candidat.email, name: candidat.nom },
       subject: `Candidature spontanée – ${candidat.poste} | ${candidat.nom} → ${company}`,
       htmlContent,
@@ -524,6 +524,31 @@ module.exports = async (req, res) => {
       statut: 'Envoyé',
       message: (candidat.message || '') + `\n\n[AUTO] ${totalSent} candidatures envoyées le ${new Date().toLocaleDateString('fr-FR')}`
     }).eq('id', candidat.id);
+
+    // Email de fin de campagne au candidat
+    try {
+      const nomParts = (candidat.nom || '').trim().split(' ');
+      const prenom = nomParts[0] || candidat.nom;
+      const nom = nomParts.slice(1).join(' ') || '';
+      await fetch(`${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'https://lancemonjob.fr'}/api/confirm-fin-campagne`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email:     candidat.email,
+          prenom:    prenom,
+          nom:       nom,
+          poste:     candidat.poste,
+          secteurs:  candidat.secteurs,
+          contrat:   candidat.contrats,
+          totalSent: totalSent,
+          volume:    volume,
+          ville:     candidat.ville
+        })
+      });
+      console.log(`Email fin campagne envoyé à ${candidat.email}`);
+    } catch(e) {
+      console.error('Email fin campagne error:', e.message);
+    }
 
     console.log(`Terminé: ${totalSent}/${volume} pour ${candidat.nom}`);
     totalProcessed++;
