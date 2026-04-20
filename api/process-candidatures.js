@@ -15,7 +15,28 @@ function getPlanVolume(plan) {
   return 50;
 }
 
-const FALLBACK_EMAILS = ['rh', 'recrutement', 'contact', 'jobs', 'carriere'];
+const FALLBACK_EMAILS = ['rh', 'recrutement', 'contact'];
+
+// Grandes entreprises connues — pas de fallback générique (hard bounce garanti)
+const GRANDES_ENTREPRISES = new Set([
+  'dhl.com', 'fedex.com', 'ups.com', 'chronopost.fr', 'colisprive.com',
+  'geodis.com', 'xpo.com', 'dbschenker.com', 'kuehne-nagel.com', 'id-logistics.com',
+  'bnpparibas.com', 'societegenerale.com', 'credit-agricole.com', 'lcl.fr',
+  'carrefour.com', 'leclerc.fr', 'auchan.fr', 'intermarche.com', 'casino.fr',
+  'decathlon.com', 'fnac.com', 'leroymerlin.fr',
+  'schneider-electric.com', 'michelin.com', 'renault.com', 'stellantis.com',
+  'airbus.com', 'safran.com', 'thalesgroup.com',
+  'danone.com', 'lactalis.fr', 'bonduelle.com',
+  'sodexo.com', 'elior.com', 'capgemini.com', 'accenture.com',
+  'deloitte.com', 'pwc.com', 'kpmg.com', 'ey.com',
+  'orange.com', 'sfr.fr', 'bouyguestelecom.fr', 'soprasteria.com', 'atos.net',
+  'vinci.com', 'bouygues.com', 'eiffage.com', 'spie.com',
+  'sanofi.com', 'ipsen.com', 'servier.com',
+  'edf.fr', 'engie.com', 'totalenergies.com', 'veolia.com', 'suez.com',
+  'axa.com', 'allianz.fr', 'maif.fr', 'macif.fr',
+  'nge.fr', 'laposte.fr', 'sncf.fr', 'ratp.fr', 'airfrance.fr',
+  'credit-mutuel.fr', 'caisse-epargne.fr', 'banquepopulaire.fr',
+]);
 
 function nettoyerTexte(texte) {
   return texte.replace(/\s+/g, ' ').trim();
@@ -94,8 +115,6 @@ function extraireSituation(cvTexte, nomCandidat, contrat) {
   if (!cvTexte) return 'en recherche active d\'opportunités professionnelles';
   const formation = extraireFormation(cvTexte, nomCandidat);
   const lignes = cvTexte.split('\n').filter(l => l.trim().length > 5);
-
-  // Cherche une expérience en cours (présent ou récente)
   const motsExpEnCours = ['en poste', 'en alternance', 'en stage', 'actuellement', 'depuis'];
   for (const ligne of lignes) {
     const l = ligne.toLowerCase();
@@ -105,8 +124,6 @@ function extraireSituation(cvTexte, nomCandidat, contrat) {
       return `en poste et en recherche active de nouvelles opportunités`;
     }
   }
-
-  // Cherche une expérience passée
   const motsExp = ['stagiaire', 'alternant', 'assistant', 'chargé', 'responsable', 'analyste', 'consultant', 'coordinateur', 'gestionnaire'];
   for (const ligne of lignes) {
     const l = ligne.toLowerCase();
@@ -117,17 +134,12 @@ function extraireSituation(cvTexte, nomCandidat, contrat) {
       return `fort(e) d'une expérience en tant que ${exp}`;
     }
   }
-
   if (formation) return `en formation (${formation})`;
   return 'en recherche active d\'opportunités professionnelles';
 }
 
-// ─── DESCRIPTION ENTREPRISE PAR NOM + FALLBACK PAR SECTEUR ───────────────────
-
 function getDescriptionEntreprise(company, secteur) {
-  // Descriptions spécifiques pour les grandes entreprises connues
   const descriptions = {
-    // Assurance / Mutuelle
     'Maif': 'votre engagement militant et vos valeurs de solidarité qui font de vous une référence dans le secteur mutualiste',
     'Macif': 'votre modèle coopératif et votre engagement envers vos sociétaires',
     'Mma': 'votre expertise en assurance et votre engagement envers la protection de vos clients',
@@ -136,7 +148,6 @@ function getDescriptionEntreprise(company, secteur) {
     'Groupama': 'votre ancrage territorial et votre engagement envers le monde agricole et rural',
     'Covea': 'votre modèle mutualiste unique et votre engagement envers vos assurés',
     'Malakoff Humanis': 'votre engagement envers la protection sociale et le bien-être de vos assurés',
-    // Banque / Finance
     'BNP Paribas': 'votre engagement envers l\'innovation financière et l\'accompagnement client',
     'Société Générale': 'votre dynamisme et votre engagement envers la transformation bancaire',
     'Crédit Agricole': 'votre ancrage coopératif et votre proximité avec les territoires',
@@ -145,7 +156,6 @@ function getDescriptionEntreprise(company, secteur) {
     'Caisse d\'Epargne': 'votre mission d\'utilité sociale et votre ancrage dans les territoires',
     'La Banque Postale': 'votre mission de service public et votre engagement envers l\'accessibilité bancaire',
     'Natixis': 'votre expertise en banque de financement et en gestion d\'actifs',
-    // Logistique / Transport
     'Geodis': 'votre positionnement de référence dans la supply chain mondiale',
     'DHL': 'votre leadership mondial dans la logistique et l\'express international',
     'Fedex': 'votre expertise dans la livraison express et la logistique mondiale',
@@ -155,7 +165,6 @@ function getDescriptionEntreprise(company, secteur) {
     'XPO Logistics': 'votre positionnement de leader dans la logistique et le transport',
     'DB Schenker': 'votre expertise en logistique intégrée et en supply chain internationale',
     'Kuehne Nagel': 'votre leadership dans la logistique maritime, aérienne et terrestre',
-    // Distribution / Retail
     'Carrefour': 'votre engagement envers la proximité client et l\'innovation retail',
     'Leclerc': 'votre modèle coopératif et votre engagement envers le pouvoir d\'achat des consommateurs',
     'Auchan': 'votre vision du commerce et votre engagement envers la satisfaction client',
@@ -164,23 +173,16 @@ function getDescriptionEntreprise(company, secteur) {
     'Decathlon': 'votre culture sportive et votre engagement envers l\'accessibilité du sport',
     'Fnac Darty': 'votre expertise dans le commerce de produits culturels et technologiques',
     'Leroy Merlin': 'votre engagement envers l\'habitat et l\'accompagnement de vos clients dans leurs projets',
-    // Industrie / Manufacture
     'Schneider Electric': 'votre leadership dans la transition énergétique et la digitalisation industrielle',
     'Michelin': 'votre excellence industrielle et votre engagement envers la mobilité durable',
     'Renault': 'votre engagement envers la mobilité électrique et la transformation automobile',
-    'PSA': 'votre expertise automobile et votre engagement envers la mobilité de demain',
     'Stellantis': 'votre positionnement de référence dans l\'industrie automobile mondiale',
     'Airbus': 'votre excellence aéronautique et votre leadership dans l\'aviation civile mondiale',
     'Safran': 'votre expertise en propulsion et équipements aéronautiques de haute technologie',
     'Thales': 'votre positionnement de référence dans les technologies de défense et de sécurité',
-    'Dassault': 'votre excellence dans l\'aéronautique et les systèmes d\'information',
-    // Agroalimentaire
     'Danone': 'votre engagement envers la nutrition, la santé et le développement durable',
     'Lactalis': 'votre positionnement de leader mondial des produits laitiers',
-    'Sodebo': 'votre dynamisme dans l\'agroalimentaire et votre engagement envers la qualité',
     'Bonduelle': 'votre engagement envers la végétalisation de l\'alimentation et le développement durable',
-    'Fleury Michon': 'votre engagement envers une alimentation saine et des produits de qualité',
-    // Services / Conseil
     'Sodexo': 'votre leadership dans les services de qualité de vie',
     'Elior': 'votre expertise dans la restauration collective et les services',
     'Capgemini': 'votre expertise en transformation digitale et en conseil technologique',
@@ -189,25 +191,16 @@ function getDescriptionEntreprise(company, secteur) {
     'PwC': 'votre expertise en audit, conseil et accompagnement des transformations',
     'KPMG': 'votre référence en audit et conseil auprès des grandes organisations',
     'EY': 'votre engagement envers la transformation et la performance des organisations',
-    // Tech
     'Orange': 'votre leadership dans les télécommunications et votre engagement envers le numérique pour tous',
     'SFR': 'votre dynamisme dans les télécommunications et les services numériques',
     'Bouygues Telecom': 'votre engagement envers la connectivité et l\'innovation numérique',
     'Sopra Steria': 'votre expertise en transformation numérique et en conseil IT',
     'Atos': 'votre positionnement de référence dans la transformation numérique des entreprises',
-    'CGI': 'votre expertise en conseil IT et en intégration de systèmes',
-    // BTP / Construction
     'Vinci': 'votre leadership dans la construction et les concessions à l\'échelle mondiale',
     'Bouygues Construction': 'votre savoir-faire reconnu dans la construction durable et innovante',
     'Eiffage': 'votre expertise dans la construction et les infrastructures en France et en Europe',
-    'Spie': 'votre positionnement de référence dans les services multi-techniques',
-    // Santé / Pharma
     'Sanofi': 'votre engagement envers la santé et le bien-être des patients dans le monde',
     'Ipsen': 'votre expertise dans le développement de traitements innovants',
-    'Servier': 'votre engagement envers la recherche pharmaceutique et l\'amélioration de la vie des patients',
-    'Korian': 'votre engagement envers le bien vieillir et la qualité de l\'accompagnement des personnes âgées',
-    'Ramsay Santé': 'votre positionnement de référence dans les soins de santé privés en France',
-    // Énergie
     'EDF': 'votre rôle central dans la transition énergétique et la production d\'électricité en France',
     'Engie': 'votre engagement envers la transition énergétique et les énergies renouvelables',
     'TotalEnergies': 'votre transformation vers une énergie plus propre et votre engagement envers la durabilité',
@@ -217,95 +210,40 @@ function getDescriptionEntreprise(company, secteur) {
 
   if (descriptions[company]) return descriptions[company];
 
-  // Fallback par secteur quand l'entreprise n'est pas connue
   const secteurLower = (secteur || '').toLowerCase();
-  if (secteurLower.includes('assur') || secteurLower.includes('mutuel')) {
-    return 'votre engagement envers la protection et l\'accompagnement de vos assurés';
-  }
-  if (secteurLower.includes('finance') || secteurLower.includes('banque')) {
-    return 'votre rigueur dans la gestion des actifs et votre engagement envers vos clients';
-  }
-  if (secteurLower.includes('logistique') || secteurLower.includes('transport')) {
-    return 'votre expertise logistique et votre engagement envers la performance des flux';
-  }
-  if (secteurLower.includes('industrie') || secteurLower.includes('automobile')) {
-    return 'votre excellence industrielle et votre culture de l\'amélioration continue';
-  }
-  if (secteurLower.includes('agroalimentaire')) {
-    return 'votre engagement envers la qualité alimentaire et la satisfaction de vos consommateurs';
-  }
-  if (secteurLower.includes('santé') || secteurLower.includes('pharma')) {
-    return 'votre engagement envers la santé et le bien-être des patients';
-  }
-  if (secteurLower.includes('tech') || secteurLower.includes('numérique')) {
-    return 'votre dynamisme dans la transformation numérique et votre culture de l\'innovation';
-  }
-  if (secteurLower.includes('btp') || secteurLower.includes('construction')) {
-    return 'votre savoir-faire reconnu dans la construction et votre engagement envers la qualité';
-  }
-  if (secteurLower.includes('énergie') || secteurLower.includes('environnement')) {
-    return 'votre engagement envers la transition énergétique et le développement durable';
-  }
-  if (secteurLower.includes('conseil') || secteurLower.includes('audit')) {
-    return 'votre excellence dans le conseil et votre engagement envers la performance de vos clients';
-  }
-  if (secteurLower.includes('retail') || secteurLower.includes('commerce') || secteurLower.includes('distribution')) {
-    return 'votre engagement envers la satisfaction client et votre dynamisme commercial';
-  }
-  if (secteurLower.includes('rh') || secteurLower.includes('ressources humaines')) {
-    return 'votre engagement envers le développement des talents et le bien-être au travail';
-  }
-  if (secteurLower.includes('immobilier')) {
-    return 'votre expertise dans la valorisation et la gestion de l\'immobilier';
-  }
-  if (secteurLower.includes('hôtellerie') || secteurLower.includes('restauration')) {
-    return 'votre engagement envers l\'excellence du service et l\'expérience client';
-  }
-  if (secteurLower.includes('éducation') || secteurLower.includes('formation')) {
-    return 'votre engagement envers la transmission du savoir et le développement des compétences';
-  }
-  if (secteurLower.includes('médias') || secteurLower.includes('communication')) {
-    return 'votre créativité et votre engagement envers une communication impactante';
-  }
+  if (secteurLower.includes('assur') || secteurLower.includes('mutuel')) return 'votre engagement envers la protection et l\'accompagnement de vos assurés';
+  if (secteurLower.includes('finance') || secteurLower.includes('banque')) return 'votre rigueur dans la gestion des actifs et votre engagement envers vos clients';
+  if (secteurLower.includes('logistique') || secteurLower.includes('transport')) return 'votre expertise logistique et votre engagement envers la performance des flux';
+  if (secteurLower.includes('industrie') || secteurLower.includes('automobile')) return 'votre excellence industrielle et votre culture de l\'amélioration continue';
+  if (secteurLower.includes('agroalimentaire')) return 'votre engagement envers la qualité alimentaire et la satisfaction de vos consommateurs';
+  if (secteurLower.includes('santé') || secteurLower.includes('pharma')) return 'votre engagement envers la santé et le bien-être des patients';
+  if (secteurLower.includes('tech') || secteurLower.includes('numérique')) return 'votre dynamisme dans la transformation numérique et votre culture de l\'innovation';
+  if (secteurLower.includes('btp') || secteurLower.includes('construction')) return 'votre savoir-faire reconnu dans la construction et votre engagement envers la qualité';
+  if (secteurLower.includes('énergie') || secteurLower.includes('environnement')) return 'votre engagement envers la transition énergétique et le développement durable';
+  if (secteurLower.includes('conseil') || secteurLower.includes('audit')) return 'votre excellence dans le conseil et votre engagement envers la performance de vos clients';
+  if (secteurLower.includes('retail') || secteurLower.includes('commerce') || secteurLower.includes('distribution')) return 'votre engagement envers la satisfaction client et votre dynamisme commercial';
+  if (secteurLower.includes('rh') || secteurLower.includes('ressources humaines')) return 'votre engagement envers le développement des talents et le bien-être au travail';
+  if (secteurLower.includes('immobilier')) return 'votre expertise dans la valorisation et la gestion de l\'immobilier';
+  if (secteurLower.includes('hôtellerie') || secteurLower.includes('restauration')) return 'votre engagement envers l\'excellence du service et l\'expérience client';
+  if (secteurLower.includes('éducation') || secteurLower.includes('formation')) return 'votre engagement envers la transmission du savoir et le développement des compétences';
+  if (secteurLower.includes('médias') || secteurLower.includes('communication')) return 'votre créativité et votre engagement envers une communication impactante';
 
   return `votre réputation d'excellence et l'ambition de vos projets`;
 }
 
 function getMissions(company, poste) {
   const posteL = (poste || '').toLowerCase();
-  if (posteL.includes('rh') || posteL.includes('ressources humaines') || posteL.includes('recrutement')) {
-    return 'accompagner vos équipes RH, soutenir vos processus de recrutement et contribuer au développement de vos talents';
-  }
-  if (posteL.includes('comptab') || posteL.includes('financ') || posteL.includes('audit')) {
-    return 'renforcer la fiabilité de vos processus financiers, contribuer à la production de vos états comptables et soutenir vos équipes dans le respect des obligations fiscales';
-  }
-  if (posteL.includes('achat') || posteL.includes('approvisionnement') || posteL.includes('supply')) {
-    return 'optimiser vos processus d\'achats, renforcer vos relations fournisseurs et contribuer à la performance de votre chaîne d\'approvisionnement';
-  }
-  if (posteL.includes('logistique') || posteL.includes('transport') || posteL.includes('stock')) {
-    return 'optimiser vos flux logistiques, améliorer la gestion de vos stocks et contribuer à la performance de votre organisation';
-  }
-  if (posteL.includes('commercial') || posteL.includes('vente') || posteL.includes('marketing')) {
-    return 'développer votre performance commerciale, soutenir vos équipes terrain et contribuer à la satisfaction de vos clients';
-  }
-  if (posteL.includes('data') || posteL.includes('analyste')) {
-    return 'analyser vos données, produire des insights actionnables et soutenir vos décisions stratégiques';
-  }
-  if (posteL.includes('communication')) {
-    return 'renforcer votre image de marque, soutenir vos campagnes de communication et contribuer à votre stratégie digitale';
-  }
-  if (posteL.includes('paie')) {
-    return 'assurer la fiabilité de vos processus de paie, contribuer à vos obligations sociales et soutenir vos équipes RH';
-  }
-  if (posteL.includes('sourcing')) {
-    return 'identifier de nouveaux fournisseurs, optimiser votre panel et contribuer à la performance de vos achats';
-  }
-  if (posteL.includes('ingénieur') || posteL.includes('production')) {
-    return 'optimiser vos lignes de production, contribuer à l\'amélioration continue et garantir la qualité de vos processus industriels';
-  }
-  if (posteL.includes('projet') || posteL.includes('chef de')) {
-    return 'piloter vos projets, coordonner vos équipes et assurer la livraison dans les délais et les budgets impartis';
-  }
+  if (posteL.includes('rh') || posteL.includes('ressources humaines') || posteL.includes('recrutement')) return 'accompagner vos équipes RH, soutenir vos processus de recrutement et contribuer au développement de vos talents';
+  if (posteL.includes('comptab') || posteL.includes('financ') || posteL.includes('audit')) return 'renforcer la fiabilité de vos processus financiers, contribuer à la production de vos états comptables et soutenir vos équipes dans le respect des obligations fiscales';
+  if (posteL.includes('achat') || posteL.includes('approvisionnement') || posteL.includes('supply')) return 'optimiser vos processus d\'achats, renforcer vos relations fournisseurs et contribuer à la performance de votre chaîne d\'approvisionnement';
+  if (posteL.includes('logistique') || posteL.includes('transport') || posteL.includes('stock')) return 'optimiser vos flux logistiques, améliorer la gestion de vos stocks et contribuer à la performance de votre organisation';
+  if (posteL.includes('commercial') || posteL.includes('vente') || posteL.includes('marketing')) return 'développer votre performance commerciale, soutenir vos équipes terrain et contribuer à la satisfaction de vos clients';
+  if (posteL.includes('data') || posteL.includes('analyste')) return 'analyser vos données, produire des insights actionnables et soutenir vos décisions stratégiques';
+  if (posteL.includes('communication')) return 'renforcer votre image de marque, soutenir vos campagnes de communication et contribuer à votre stratégie digitale';
+  if (posteL.includes('paie')) return 'assurer la fiabilité de vos processus de paie, contribuer à vos obligations sociales et soutenir vos équipes RH';
+  if (posteL.includes('sourcing')) return 'identifier de nouveaux fournisseurs, optimiser votre panel et contribuer à la performance de vos achats';
+  if (posteL.includes('ingénieur') || posteL.includes('production')) return 'optimiser vos lignes de production, contribuer à l\'amélioration continue et garantir la qualité de vos processus industriels';
+  if (posteL.includes('projet') || posteL.includes('chef de')) return 'piloter vos projets, coordonner vos équipes et assurer la livraison dans les délais et les budgets impartis';
   return `contribuer activement à vos projets, soutenir vos équipes et apporter des solutions concrètes à vos enjeux opérationnels`;
 }
 
@@ -335,11 +273,8 @@ function generateLettre(candidat, company, secteur, contactName) {
   const comp3 = competences[2] || 'rigueur et sens du détail';
 
   let posteAffiche = candidat.poste || '';
-  if (genre === 'M') {
-    posteAffiche = posteAffiche.replace(/\(e\)/g, '').replace(/\(e\s/g, ' ').trim();
-  } else if (genre === 'F') {
-    posteAffiche = posteAffiche.replace(/\(e\)/g, 'e').replace(/\(e\s/g, 'e ').trim();
-  }
+  if (genre === 'M') { posteAffiche = posteAffiche.replace(/\(e\)/g, '').replace(/\(e\s/g, ' ').trim(); }
+  else if (genre === 'F') { posteAffiche = posteAffiche.replace(/\(e\)/g, 'e').replace(/\(e\s/g, 'e ').trim(); }
 
   const pret = accordGenre(genre, 'prêt', 'prête', 'prêt(e)');
   const ravi = accordGenre(genre, 'ravi', 'ravie', 'ravi(e)');
@@ -353,7 +288,7 @@ function generateLettre(candidat, company, secteur, contactName) {
     paragrapheContrat = `\nCe stage s'inscrit dans le cadre de ma formation et constitue une étape déterminante pour consolider mes compétences professionnelles.\n`;
   }
 
-  const lettre = `${nomCandidat}
+  return `${nomCandidat}
 ${candidat.tel || ''}
 ${candidat.email || ''}
 
@@ -378,8 +313,6 @@ Dans l'attente de votre retour, je vous prie d'agréer, Madame, Monsieur, l'expr
 
 ${nomCandidat}
 ${candidat.tel || ''}`;
-
-  return lettre;
 }
 
 const { DOMAINES_PAR_SECTEUR, getCompaniesByRegion } = require('./companies');
@@ -403,13 +336,20 @@ async function searchEmails(domain) {
   } catch(e) {
     console.error('Hunter error:', e.message);
   }
-  console.log(`Hunter: 0 résultat pour ${domain} — fallback générique`);
+
+  // Grandes entreprises connues — pas de fallback (hard bounce garanti)
+  if (GRANDES_ENTREPRISES.has(domain)) {
+    console.log(`${domain} — grande entreprise, pas de fallback générique`);
+    return [];
+  }
+
+  // PME inconnues — fallback générique acceptable
+  console.log(`Hunter: 0 résultat pour ${domain} — fallback générique PME`);
   return FALLBACK_EMAILS.slice(0, 2).map(prefix => ({ email: `${prefix}@${domain}`, name: '' }));
 }
 
 async function sendCandidature(to, toName, company, secteur, candidat) {
   const lettre = generateLettre(candidat, company, secteur, toName);
-
   const htmlContent = `
     <div style="font-family:Arial,sans-serif;max-width:650px;margin:0 auto;color:#333;line-height:1.8;font-size:15px">
       ${lettre.replace(/\n/g, '<br/>')}
@@ -443,7 +383,6 @@ async function sendCandidature(to, toName, company, secteur, candidat) {
       subject: `Candidature spontanée – ${candidat.poste} | ${candidat.nom} → ${company}`,
       htmlContent,
     };
-
     if (attachments.length > 0) body.attachment = attachments;
 
     const res = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -504,7 +443,6 @@ module.exports = async (req, res) => {
     for (const secteur of secteurs) {
       if (totalSent >= volume) break;
       const companies = await findCompanies(secteur, candidat.ville, Math.min(volume - totalSent, 15));
-
       for (const company of companies) {
         if (totalSent >= volume) break;
         const contacts = await searchEmails(company.domain);
@@ -582,8 +520,7 @@ module.exports = async (req, res) => {
             <p style="color:#555;font-size:13px;margin:0">Si tu n'as pas de réponse sous 3 semaines, contacte-nous à <a href="mailto:support@lancemonjob.fr" style="color:#8B5CF6">support@lancemonjob.fr</a></p>
           </div>
           <div style="text-align:center;color:#aaa;font-size:12px">
-            <p>Lance Mon Job — Lyon, France<br/>
-            Pour toute question : <a href="mailto:support@lancemonjob.fr" style="color:#8B5CF6">support@lancemonjob.fr</a></p>
+            <p>Lance Mon Job — Lyon, France<br/>Pour toute question : <a href="mailto:support@lancemonjob.fr" style="color:#8B5CF6">support@lancemonjob.fr</a></p>
           </div>
         </div>`;
 
