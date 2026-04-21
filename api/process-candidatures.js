@@ -265,6 +265,19 @@ function generateLettre(candidat, company, secteur, contactName) {
   const competences = extraireCompetences(cvTexte, nomCandidat, candidat.poste);
   const situation = extraireSituation(cvTexte, nomCandidat, contrat);
   const dispoPhrase = candidat.dispo_tot ? `, disponible à partir du ${candidat.dispo_tot}` : '';
+
+  // Phrase durée contrat
+  const duree = candidat.duree_contrat || '';
+  let dureePhrase = '';
+  if (duree) {
+    if (isAlternance) {
+      dureePhrase = ` pour une alternance de ${duree}`;
+    } else if (isStage) {
+      dureePhrase = ` pour un stage de ${duree}`;
+    } else if (contrat.toLowerCase().includes('cdd') || contrat.toLowerCase().includes('1er emploi')) {
+      dureePhrase = ` pour un contrat de ${duree}`;
+    }
+  }
   const descriptionEntreprise = getDescriptionEntreprise(company, secteur);
   const missionText = getMissions(company, candidat.poste);
   const missions = missionText.match(/^[aeiouéèêëàâîïôùûü]/i) ? "d'" + missionText : "de " + missionText;
@@ -303,7 +316,7 @@ ${salutation}
 
 C'est avec un grand intérêt que je suis l'évolution de ${company}, notamment pour ${descriptionEntreprise}. Souhaitant mettre mes compétences au service d'une structure de référence, je vous adresse ma candidature spontanée pour un poste de ${posteAffiche}.
 
-Actuellement ${situation}${dispoPhrase}, j'ai développé une expertise en ${comp1} et ${comp2}. Mon parcours m'a également permis de renforcer mes compétences en ${comp3}, que je souhaite aujourd'hui mobiliser au sein de vos équipes.
+Actuellement ${situation}${dispoPhrase}${dureePhrase}, j'ai développé une expertise en ${comp1} et ${comp2}. Mon parcours m'a également permis de renforcer mes compétences en ${comp3}, que je souhaite aujourd'hui mobiliser au sein de vos équipes.
 
 Intégrer ${company} représente pour moi l'opportunité ${missions}. ${rigoureux}, autonome et ${dote} d'un excellent esprit d'équipe, je suis ${pret} à m'investir pleinement dans les missions que vous pourriez me confier.
 ${paragrapheContrat}
