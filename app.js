@@ -1,4 +1,4 @@
-/* ── Lance Mon Job V5 — 12 étapes ── */
+/* ── Lance Mon Job V6 — 13 étapes ── */
 
 const SUPABASE_URL = 'https://ihhqwukfkztwdhxfvsvf.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_AKWSkS_jE-R1PnMWSI408g_5QqV8iPJ';
@@ -17,13 +17,34 @@ function getClient(){
 
 const ADMIN_USER = 'admin';
 const ADMIN_PASS = 'admin123';
-const TOTAL_STEPS = 12;
+const TOTAL_STEPS = 13;
 
 function fmtDate(iso){ return new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}); }
 function badgeCls(s){ return s==='Retenu'?'badge-retained':s==='Refusé'?'badge-rejected':'badge-pending'; }
 
+// Options de durée selon le type de contrat
+const DUREE_OPTIONS = {
+  'Stage': ['1 mois','2 mois','3 mois','4 mois','5 mois','6 mois','7 mois','8 mois','9 mois','10 mois','11 mois','12 mois'],
+  'Stage à l\'étranger': ['1 mois','2 mois','3 mois','4 mois','5 mois','6 mois','7 mois','8 mois','9 mois','10 mois','11 mois','12 mois'],
+  'Alternance': [
+    '1 an — 3 semaines entreprise / 1 semaine école',
+    '2 ans — 3 semaines entreprise / 1 semaine école',
+    '3 ans — 3 semaines entreprise / 1 semaine école',
+    '1 an — 1 semaine entreprise / 1 semaine école',
+    '2 ans — 1 semaine entreprise / 1 semaine école',
+    '1 an — 2 semaines entreprise / 2 semaines école',
+    '2 ans — 2 semaines entreprise / 2 semaines école',
+    '1 an — 3 jours entreprise / 2 jours école',
+    '2 ans — 3 jours entreprise / 2 jours école',
+    '3 ans — 3 jours entreprise / 2 jours école',
+  ],
+  'Emploi (CDD)': ['3 mois','6 mois','9 mois','12 mois','18 mois','24 mois'],
+  '1er Emploi (CDI / CDD)': ['3 mois','6 mois','9 mois','12 mois','18 mois','24 mois'],
+  'Reconversion professionnelle': ['3 mois','6 mois','9 mois','12 mois','18 mois','24 mois'],
+};
+
 /* ════════════════════════════
-   FORMULAIRE (formulaire.html)
+   FORMULAIRE
 ════════════════════════════ */
 if(document.getElementById('step-1')){
 
@@ -40,6 +61,9 @@ if(document.getElementById('step-1')){
     el.classList.add('selected');
     const val = el.dataset.value || el.textContent.trim();
     formData[group] = val;
+
+    // Si on sélectionne un contrat, prépare les options de durée
+    if(group === 'contrat') buildDureeOptions(val);
   };
 
   window.selectChip = function(el, group){
@@ -64,6 +88,52 @@ if(document.getElementById('step-1')){
   function parseDate(jour, mois, annee){
     if(!jour && !mois && !annee) return null;
     return `${jour.padStart(2,'0')}/${mois.padStart(2,'0')}/${annee}`;
+  }
+
+  function buildDureeOptions(contrat) {
+    const container = document.getElementById('duree-chips');
+    const title = document.getElementById('duree-title');
+    const sub = document.getElementById('duree-sub');
+    const options = DUREE_OPTIONS[contrat] || [];
+
+    // Adapte le titre selon le contrat
+    if(contrat.toLowerCase().includes('alternance')) {
+      title.textContent = 'Durée et rythme de ton alternance';
+      sub.textContent = 'Sélectionne la durée et le rythme de ta future alternance.';
+    } else if(contrat.toLowerCase().includes('stage')) {
+      title.textContent = 'Durée de ton stage';
+      sub.textContent = 'Sélectionne la durée souhaitée pour ton stage.';
+    } else if(contrat.toLowerCase().includes('cdd') || contrat.toLowerCase().includes('1er emploi')) {
+      title.textContent = 'Durée souhaitée du contrat';
+      sub.textContent = 'Précise la durée minimale souhaitée.';
+    } else {
+      title.textContent = 'Durée souhaitée';
+      sub.textContent = 'Optionnel — précise si tu as une préférence.';
+    }
+
+    if(options.length === 0) {
+      container.innerHTML = '<p style="color:#888;font-size:14px">Pas de durée spécifique pour ce type de contrat.</p>';
+      return;
+    }
+
+    container.innerHTML = options.map(opt =>
+      `<div class="duree-chip" onclick="selectDuree(this)">${opt}</div>`
+    ).join('');
+  }
+
+  window.selectDuree = function(el) {
+    document.querySelectorAll('.duree-chip').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    formData.duree_contrat = el.textContent.trim();
+    document.getElementById('s7-duree-custom').value = '';
+  };
+
+  function getStepForField(field) {
+    const map = {
+      's8-ville': 's8-ville',
+      's9-jour': 's9-jour',
+    };
+    return map[field] || field;
   }
 
   window.nextStep = function(from){
@@ -95,31 +165,45 @@ if(document.getElementById('step-1')){
     }
     if(from===6){
       if(!formData.contrat){ err.textContent='Sélectionne un type de contrat.'; return; }
+      // Build duree options for next step
+      buildDureeOptions(formData.contrat);
     }
     if(from===7){
-      const ville = document.getElementById('s7-ville').value.trim();
-      if(!ville){ err.textContent='Indique une ville ou région.'; return; }
-      formData.ville = ville;
+      // Durée — optionnel sauf pour stage et alternance
+      const custom = document.getElementById('s7-duree-custom').value.trim();
+      if(custom) {
+        formData.duree_contrat = custom;
+      }
+      const contrat = formData.contrat || '';
+      if((contrat.toLowerCase().includes('stage') || contrat.toLowerCase().includes('alternance')) && !formData.duree_contrat) {
+        err.textContent = 'Précise la durée de ton ' + (contrat.toLowerCase().includes('stage') ? 'stage' : 'alternance') + '.';
+        return;
+      }
     }
     if(from===8){
-      const j = document.getElementById('s8-jour').value.trim();
-      const m = document.getElementById('s8-mois').value.trim();
-      const a = document.getElementById('s8-annee').value.trim();
-      if(!j||!m||!a){ err.textContent='Indique une date complète.'; return; }
-      formData.dispo_tot = parseDate(j, m, a);
+      const ville = document.getElementById('s8-ville').value.trim();
+      if(!ville){ err.textContent='Indique une ville ou région.'; return; }
+      formData.ville = ville;
     }
     if(from===9){
       const j = document.getElementById('s9-jour').value.trim();
       const m = document.getElementById('s9-mois').value.trim();
       const a = document.getElementById('s9-annee').value.trim();
-      if(j && m && a) formData.dispo_tard = parseDate(j, m, a);
+      if(!j||!m||!a){ err.textContent='Indique une date complète.'; return; }
+      formData.dispo_tot = parseDate(j, m, a);
     }
     if(from===10){
+      const j = document.getElementById('s10-jour').value.trim();
+      const m = document.getElementById('s10-mois').value.trim();
+      const a = document.getElementById('s10-annee').value.trim();
+      if(j && m && a) formData.dispo_tard = parseDate(j, m, a);
+    }
+    if(from===11){
       const cv = document.getElementById('cv-input').files[0];
       formData.cv = cv ? cv.name : null;
-      formData.message = document.getElementById('s10-msg').value.trim();
+      formData.message = document.getElementById('s11-msg').value.trim();
     }
-    if(from===12){ submitCampagne(); return; }
+    if(from===13){ submitCampagne(); return; }
     goToStep(from+1);
   };
 
@@ -130,7 +214,7 @@ if(document.getElementById('step-1')){
     currentStep = n;
     document.getElementById(`step-${n}`)?.classList.add('active');
     setProgress(n);
-    if(n===12) buildRecap();
+    if(n===13) buildRecap();
     window.scrollTo({top:0,behavior:'smooth'});
   }
 
@@ -143,6 +227,7 @@ if(document.getElementById('step-1')){
       <strong>Poste visé :</strong> ${formData.poste||'—'}<br>
       <strong>Secteurs :</strong> ${formData.secteurs||'—'}<br>
       <strong>Contrat :</strong> ${formData.contrat||'—'}<br>
+      ${formData.duree_contrat ? `<strong>Durée :</strong> ${formData.duree_contrat}<br>` : ''}
       <strong>Zone :</strong> ${formData.ville||'—'} · ${formData.rayon}<br>
       <strong>Disponible à partir du :</strong> ${formData.dispo_tot||'—'}<br>
       ${formData.dispo_tard ? `<strong>Au plus tard :</strong> ${formData.dispo_tard}<br>` : ''}
@@ -182,14 +267,14 @@ if(document.getElementById('step-1')){
   }
 
   window.submitCampagne = async function(){
-    const err = document.getElementById('err-12');
+    const err = document.getElementById('err-13');
     err.textContent = '';
     if(!document.getElementById('f-rgpd').checked){
       err.textContent = 'Vous devez accepter la politique de données (RGPD).';
       return;
     }
 
-    const btn = document.querySelector('#step-12 .btn-primary-lg');
+    const btn = document.querySelector('#step-13 .btn-primary-lg');
     btn.disabled = true;
 
     if(formData.cvFile) {
@@ -209,49 +294,50 @@ if(document.getElementById('step-1')){
 
     try {
       const { data, error } = await getClient().from('candidatures').insert([{
-        nom:        formData.prenom + ' ' + formData.nom,
-        email:      formData.email,
-        tel:        formData.tel,
-        genre:      formData.genre || 'N',
-        poste:      formData.poste,
-        secteurs:   formData.secteurs,
-        ville:      formData.ville,
-        rayon:      formData.rayon,
-        contrats:   formData.contrat,
-        cv:         formData.cv,
-        cv_url:     formData.cvUrl || null,
-        cv_texte:   formData.cvTexte || null,
-        plan:       planInfo.label,
-        message:    formData.message,
-        statut:     'En attente paiement',
-        dispo_tot:  formData.dispo_tot || null,
-        dispo_tard: formData.dispo_tard || null,
-        situation:  formData.situation || null,
+        nom:           formData.prenom + ' ' + formData.nom,
+        email:         formData.email,
+        tel:           formData.tel,
+        genre:         formData.genre || 'N',
+        poste:         formData.poste,
+        secteurs:      formData.secteurs,
+        ville:         formData.ville,
+        rayon:         formData.rayon,
+        contrats:      formData.contrat,
+        duree_contrat: formData.duree_contrat || null,
+        cv:            formData.cv,
+        cv_url:        formData.cvUrl || null,
+        cv_texte:      formData.cvTexte || null,
+        plan:          planInfo.label,
+        message:       formData.message,
+        statut:        'En attente paiement',
+        dispo_tot:     formData.dispo_tot || null,
+        dispo_tard:    formData.dispo_tard || null,
+        situation:     formData.situation || null,
       }]).select();
 
       if(error) throw error;
 
-      // Envoie email de confirmation au candidat
       try {
         await fetch('/api/confirm-candidature', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            email:     formData.email,
-            prenom:    formData.prenom,
-            nom:       formData.nom,
-            poste:     formData.poste,
-            secteurs:  formData.secteurs,
-            contrat:   formData.contrat,
-            plan:      planInfo.label,
-            dispo_tot: formData.dispo_tot || null
+            email:         formData.email,
+            prenom:        formData.prenom,
+            nom:           formData.nom,
+            poste:         formData.poste,
+            secteurs:      formData.secteurs,
+            contrat:       formData.contrat,
+            duree_contrat: formData.duree_contrat || null,
+            plan:          planInfo.label,
+            dispo_tot:     formData.dispo_tot || null
           })
         });
       } catch(e) {
         console.warn('Email confirmation non envoyé:', e.message);
       }
 
-      document.getElementById('step-12').classList.remove('active');
+      document.getElementById('step-13').classList.remove('active');
       document.getElementById('step-success').classList.add('active');
       document.getElementById('success-msg').textContent =
         `Merci ${formData.prenom} ! Ta campagne "${planInfo.label}" est enregistrée.`;
@@ -375,6 +461,7 @@ if(document.getElementById('login-screen')){
       <div class="modal-field"><span class="field-key">Situation</span><span class="field-val">${data.situation||'—'}</span></div>
       <div class="modal-field"><span class="field-key">Secteurs</span><span class="field-val">${data.secteurs||'—'}</span></div>
       <div class="modal-field"><span class="field-key">Contrat</span><span class="field-val">${data.contrats||'—'}</span></div>
+      <div class="modal-field"><span class="field-key">Durée</span><span class="field-val">${data.duree_contrat||'—'}</span></div>
       <div class="modal-field"><span class="field-key">Zone</span><span class="field-val">${data.ville||'—'} · ${data.rayon||''}</span></div>
       <div class="modal-field"><span class="field-key">Dispo à partir du</span><span class="field-val">${data.dispo_tot||'—'}</span></div>
       <div class="modal-field"><span class="field-key">Dispo au plus tard</span><span class="field-val">${data.dispo_tard||'—'}</span></div>
