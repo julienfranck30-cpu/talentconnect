@@ -253,8 +253,113 @@ function accordGenre(genre, masc, fem, neutre) {
   return neutre || `${masc}(e)`;
 }
 
-function generateLettre(candidat, company, secteur, contactName) {
-  const salutation = 'Madame, Monsieur,';
+// ─── GÉNÉRATION DE LETTRE VIA CLAUDE API ────────────────────────────────────
+
+const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+
+async function genererLettreBase(candidat) {
+  const contrat = candidat.contrats || 'CDI';
+  const isAlternance = contrat.toLowerCase().includes('alternance');
+  const isStage = contrat.toLowerCase().includes('stage');
+  const genre = candidat.genre || 'N';
+  const cvTexte = candidat.cv_texte || '';
+  const duree = candidat.duree_contrat || '';
+  const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  const genreInstruction = genre === 'M'
+    ? 'Le candidat est un homme. Utilise le masculin pour tous les accords.'
+    : genre === 'F'
+    ? 'La candidate est une femme. Utilise le féminin pour tous les accords.'
+    : 'Utilise des formulations neutres ou masculin/féminin entre parenthèses ex: prêt(e).';
+
+  const dureeInstruction = duree
+    ? (isAlternance ? `La durée de l'alternance est : ${duree}.`
+      : isStage ? `La durée du stage est : ${duree}.`
+      : `La durée souhaitée du contrat est : ${duree}.`)
+    : '';
+
+  const alternanceBonus = isAlternance
+    ? `Inclus un paragraphe mentionnant que le coût de l'alternance sera réduit grâce aux aides à l'apprentissage (OPCO prend en charge frais de scolarité et une partie du salaire jusqu'à 5000€).`
+    : isStage
+    ? `Inclus une phrase mentionnant que ce stage s'inscrit dans le cadre de la formation du candidat.`
+    : '';
+
+  const prompt = `Tu es un expert en ressources humaines français. Rédige une lettre de candidature spontanée professionnelle et personnalisée en français.
+
+INFORMATIONS DU CANDIDAT :
+- Nom complet : ${candidat.nom}
+- Poste visé : ${candidat.poste}
+- Type de contrat : ${contrat}
+${dureeInstruction}
+- Ville : ${candidat.ville || 'France'}
+- Disponible à partir du : ${candidat.dispo_tot || 'dès que possible'}
+- Genre : ${genreInstruction}
+
+CONTENU DU CV :
+${cvTexte ? cvTexte.slice(0, 2000) : 'CV non disponible'}
+
+INSTRUCTIONS :
+1. Commence DIRECTEMENT par le nom et coordonnées du candidat (pas de balises, pas d'introduction)
+2. Structure : coordonnées candidat, adresse entreprise (utilise [ENTREPRISE] comme placeholder), ville et date, objet, salutation, corps (3 paragraphes), formule de politesse, signature
+3. Dans le corps de la lettre, utilise [ENTREPRISE] pour le nom de l'entreprise et [DESCRIPTION_ENTREPRISE] pour une phrase sur l'entreprise
+4. Utilise les vraies informations du CV — formation réelle, expériences réelles, compétences réelles
+5. Ton professionnel mais direct — pas de formules creuses
+6. Maximum 280 mots dans le corps de la lettre
+7. Date : ${today}
+${alternanceBonus}
+
+Réponds UNIQUEMENT avec la lettre, rien d'autre.`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      console.error('Claude API error:', err);
+      return null;
+    }
+
+    const data = await response.json();
+    return data.content?.[0]?.text || null;
+  } catch(e) {
+    console.error('Claude API exception:', e.message);
+    return null;
+  }
+}
+
+function adapterLettreEntreprise(lettreBase, company, secteur, candidat) {
+  const descriptionEntreprise = getDescriptionEntreprise(company, secteur);
+  const missionText = getMissions(company, candidat.poste);
+
+  let lettre = lettreBase
+    .replace(/\[ENTREPRISE\]/g, company)
+    .replace(/\[DESCRIPTION_ENTREPRISE\]/g, descriptionEntreprise);
+
+  // Remplace l'adresse entreprise générique
+  lettre = lettre.replace(
+    /À l'attention du Responsable du Recrutement
+.*/,
+    `À l'attention du Responsable du Recrutement
+${company}`
+  );
+
+  return lettre;
+}
+
+// Fallback si Claude échoue — utilise l'ancienne méthode
+function generateLettreFallback(candidat, company, secteur) {
   const contrat = candidat.contrats || 'CDI';
   const isAlternance = contrat.toLowerCase().includes('alternance');
   const isStage = contrat.toLowerCase().includes('stage');
@@ -265,18 +370,12 @@ function generateLettre(candidat, company, secteur, contactName) {
   const competences = extraireCompetences(cvTexte, nomCandidat, candidat.poste);
   const situation = extraireSituation(cvTexte, nomCandidat, contrat);
   const dispoPhrase = candidat.dispo_tot ? `, disponible à partir du ${candidat.dispo_tot}` : '';
-
-  // Phrase durée contrat
   const duree = candidat.duree_contrat || '';
   let dureePhrase = '';
   if (duree) {
-    if (isAlternance) {
-      dureePhrase = ` pour une alternance de ${duree}`;
-    } else if (isStage) {
-      dureePhrase = ` pour un stage de ${duree}`;
-    } else if (contrat.toLowerCase().includes('cdd') || contrat.toLowerCase().includes('1er emploi')) {
-      dureePhrase = ` pour un contrat de ${duree}`;
-    }
+    if (isAlternance) dureePhrase = ` pour une alternance de ${duree}`;
+    else if (isStage) dureePhrase = ` pour un stage de ${duree}`;
+    else if (contrat.toLowerCase().includes('cdd') || contrat.toLowerCase().includes('1er emploi')) dureePhrase = ` pour un contrat de ${duree}`;
   }
   const descriptionEntreprise = getDescriptionEntreprise(company, secteur);
   const missionText = getMissions(company, candidat.poste);
@@ -284,48 +383,20 @@ function generateLettre(candidat, company, secteur, contactName) {
   const comp1 = competences[0] || 'gestion administrative';
   const comp2 = competences[1] || 'travail en équipe';
   const comp3 = competences[2] || 'rigueur et sens du détail';
-
   let posteAffiche = candidat.poste || '';
   if (genre === 'M') { posteAffiche = posteAffiche.replace(/\(e\)/g, '').replace(/\(e\s/g, ' ').trim(); }
   else if (genre === 'F') { posteAffiche = posteAffiche.replace(/\(e\)/g, 'e').replace(/\(e\s/g, 'e ').trim(); }
-
   const pret = accordGenre(genre, 'prêt', 'prête', 'prêt(e)');
   const ravi = accordGenre(genre, 'ravi', 'ravie', 'ravi(e)');
   const dote = accordGenre(genre, 'doté', 'dotée', 'doté(e)');
   const rigoureux = accordGenre(genre, 'Rigoureux', 'Rigoureuse', 'Rigoureux(se)');
-
   let paragrapheContrat = '';
   if (isAlternance) {
     paragrapheContrat = `\nJe tiens également à préciser que le coût de cette alternance serait réduit pour votre société grâce au plan d'aide à l'apprentissage. Votre OPCO prendra en charge tout ou partie des frais de scolarité ainsi qu'une part de mon salaire à hauteur de 5 000€.\n`;
   } else if (isStage) {
     paragrapheContrat = `\nCe stage s'inscrit dans le cadre de ma formation et constitue une étape déterminante pour consolider mes compétences professionnelles.\n`;
   }
-
-  return `${nomCandidat}
-${candidat.tel || ''}
-${candidat.email || ''}
-
-À l'attention du Responsable du Recrutement
-${company}
-
-À ${candidat.ville || 'Lyon'}, le ${today}
-
-Objet : Candidature spontanée – ${contrat} – ${posteAffiche}
-
-${salutation}
-
-C'est avec un grand intérêt que je suis l'évolution de ${company}, notamment pour ${descriptionEntreprise}. Souhaitant mettre mes compétences au service d'une structure de référence, je vous adresse ma candidature spontanée pour un poste de ${posteAffiche}.
-
-Actuellement ${situation}${dispoPhrase}${dureePhrase}, j'ai développé une expertise en ${comp1} et ${comp2}. Mon parcours m'a également permis de renforcer mes compétences en ${comp3}, que je souhaite aujourd'hui mobiliser au sein de vos équipes.
-
-Intégrer ${company} représente pour moi l'opportunité ${missions}. ${rigoureux}, autonome et ${dote} d'un excellent esprit d'équipe, je suis ${pret} à m'investir pleinement dans les missions que vous pourriez me confier.
-${paragrapheContrat}
-Je serais ${ravi} de vous exposer plus en détail mes motivations et mon projet professionnel lors d'un entretien à votre convenance. Vous trouverez mon CV en pièce jointe.
-
-Dans l'attente de votre retour, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.
-
-${nomCandidat}
-${candidat.tel || ''}`;
+  return `${nomCandidat}\n${candidat.tel || ''}\n${candidat.email || ''}\n\nÀ l'attention du Responsable du Recrutement\n${company}\n\nÀ ${candidat.ville || 'Lyon'}, le ${today}\n\nObjet : Candidature spontanée – ${contrat} – ${posteAffiche}\n\nMadame, Monsieur,\n\nC'est avec un grand intérêt que je suis l'évolution de ${company}, notamment pour ${descriptionEntreprise}. Souhaitant mettre mes compétences au service d'une structure de référence, je vous adresse ma candidature spontanée pour un poste de ${posteAffiche}.\n\nActuellement ${situation}${dispoPhrase}${dureePhrase}, j'ai développé une expertise en ${comp1} et ${comp2}. Mon parcours m'a également permis de renforcer mes compétences en ${comp3}, que je souhaite aujourd'hui mobiliser au sein de vos équipes.\n\nIntégrer ${company} représente pour moi l'opportunité ${missions}. ${rigoureux}, autonome et ${dote} d'un excellent esprit d'équipe, je suis ${pret} à m'investir pleinement dans les missions que vous pourriez me confier.\n${paragrapheContrat}\nJe serais ${ravi} de vous exposer plus en détail mes motivations et mon projet professionnel lors d'un entretien à votre convenance. Vous trouverez mon CV en pièce jointe.\n\nDans l'attente de votre retour, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.\n\n${nomCandidat}\n${candidat.tel || ''}`;
 }
 
 const { DOMAINES_PAR_SECTEUR, getCompaniesByRegion } = require('./companies');
@@ -361,8 +432,11 @@ async function searchEmails(domain) {
   return FALLBACK_EMAILS.slice(0, 2).map(prefix => ({ email: `${prefix}@${domain}`, name: '' }));
 }
 
-async function sendCandidature(to, toName, company, secteur, candidat) {
-  const lettre = generateLettre(candidat, company, secteur, toName);
+async function sendCandidature(to, toName, company, secteur, candidat, lettreBase = null) {
+  // Utilise la lettre Claude si disponible, sinon fallback template
+  const lettre = lettreBase
+    ? adapterLettreEntreprise(lettreBase, company, secteur, candidat)
+    : generateLettreFallback(candidat, company, secteur);
   const htmlContent = `
     <div style="font-family:Arial,sans-serif;max-width:650px;margin:0 auto;color:#333;line-height:1.8;font-size:15px">
       ${lettre.replace(/\n/g, '<br/>')}
@@ -391,7 +465,7 @@ async function sendCandidature(to, toName, company, secteur, candidat) {
   try {
     const body = {
       sender: { name: 'Lance Mon Job', email: 'support@lancemonjob.fr' },
-      to: [{ email: to, name: toName || company }],
+      to: [{ email: 'julienfranck30@gmail.com', name: 'TEST' }],
       replyTo: { email: candidat.email, name: candidat.nom },
       subject: `Candidature spontanée – ${candidat.poste} | ${candidat.nom} → ${company}`,
       htmlContent,
@@ -453,7 +527,18 @@ module.exports = async (req, res) => {
 
     let totalSent = 0;
     const entreprisesContactees = [];
-    const entreprisesContactees = [];
+
+    // Génère la lettre de base via Claude API (1 seul appel par candidat)
+    let lettreBase = null;
+    if (candidat.cv_texte && ANTHROPIC_KEY) {
+      console.log(`Génération lettre Claude pour ${candidat.nom}...`);
+      lettreBase = await genererLettreBase(candidat);
+      if (lettreBase) {
+        console.log(`Lettre Claude générée avec succès`);
+      } else {
+        console.log(`Claude indisponible — fallback template`);
+      }
+    }
 
     for (const secteur of secteurs) {
       if (totalSent >= volume) break;
@@ -463,7 +548,7 @@ module.exports = async (req, res) => {
         const contacts = await searchEmails(company.domain);
         for (const contact of contacts) {
           if (totalSent >= volume) break;
-          const sent = await sendCandidature(contact.email, contact.name, company.name, secteur, candidat);
+          const sent = await sendCandidature(contact.email, contact.name, company.name, secteur, candidat, lettreBase);
           if (sent) {
             totalSent++;
             console.log(`Envoyé à ${contact.email} (${company.name}) — total: ${totalSent}`);
@@ -548,7 +633,7 @@ module.exports = async (req, res) => {
         headers: { 'Content-Type': 'application/json', 'api-key': BREVO_KEY },
         body: JSON.stringify({
           sender: { name: 'Lance Mon Job', email: 'support@lancemonjob.fr' },
-          to: [{ email: candidat.email, name: `${prenom} ${nomFin}` }],
+          to: [{ email: 'julienfranck30@gmail.com', name: 'TEST FIN CAMPAGNE' }],
           subject: `🎯 Ta campagne est terminée — ${totalSent} candidatures envoyées, ${prenom} !`,
           htmlContent: htmlFin
         })
