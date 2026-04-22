@@ -341,19 +341,10 @@ Réponds UNIQUEMENT avec la lettre, rien d'autre.`;
 
 function adapterLettreEntreprise(lettreBase, company, secteur, candidat) {
   const descriptionEntreprise = getDescriptionEntreprise(company, secteur);
-  const missionText = getMissions(company, candidat.poste);
 
   let lettre = lettreBase
     .replace(/\[ENTREPRISE\]/g, company)
     .replace(/\[DESCRIPTION_ENTREPRISE\]/g, descriptionEntreprise);
-
-  // Remplace l'adresse entreprise générique
-  lettre = lettre.replace(
-    /À l'attention du Responsable du Recrutement
-.*/,
-    `À l'attention du Responsable du Recrutement
-${company}`
-  );
 
   return lettre;
 }
