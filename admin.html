@@ -3,81 +3,527 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>TalentConnect — Espace RH</title>
+<title>Lance Mon Job — Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="style.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#080612;color:#e8e8e0;font-family:'Manrope',sans-serif;min-height:100vh}
+:root{--v1:#A855F7;--c1:#22D3EE;--bg2:#13101f;--border:rgba(255,255,255,0.08);--border2:rgba(168,85,247,0.25);--muted:#777770;--text:#e8e8e0}
+
+/* LOGIN */
+.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem}
+.login-box{background:var(--bg2);border:.5px solid var(--border2);border-radius:20px;padding:2.5rem;width:100%;max-width:400px;text-align:center}
+.login-logo{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;margin-bottom:0.5rem}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:2rem}
+.field{margin-bottom:1rem;text-align:left}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.field input{width:100%;background:rgba(255,255,255,0.05);border:.5px solid var(--border);border-radius:8px;padding:12px 14px;color:#e8e8e0;font-size:14px;font-family:'Manrope',sans-serif}
+.field input:focus{outline:none;border-color:var(--v1)}
+.btn-login{width:100%;padding:13px;border-radius:8px;background:linear-gradient(135deg,var(--v1),var(--c1));border:none;color:#080612;font-size:14px;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif;margin-top:8px}
+.login-err{color:#F87171;font-size:13px;margin-top:10px;display:none}
+
+/* DASHBOARD */
+.dash{display:none}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:1rem 2rem;border-bottom:.5px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:100}
+.topbar-logo{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.btn-refresh{padding:8px 16px;border-radius:8px;border:.5px solid var(--border2);background:transparent;color:var(--v1);font-size:13px;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif}
+.btn-logout{padding:8px 16px;border-radius:8px;border:.5px solid var(--border);background:transparent;color:var(--muted);font-size:13px;cursor:pointer;font-family:'Manrope',sans-serif}
+.dash-body{padding:2rem;max-width:1200px;margin:0 auto}
+.section-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:2rem}
+.stat-card{background:var(--bg2);border:.5px solid var(--border);border-radius:14px;padding:1.25rem 1.5rem}
+.stat-label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.stat-val{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:#e8e8e0}
+.stat-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.stat-card.purple .stat-val{background:linear-gradient(135deg,var(--v1),var(--c1));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-card.green .stat-val{color:#34D399}
+.stat-card.blue .stat-val{color:#60A5FA}
+.stat-card.orange .stat-val{color:#F59E0B}
+
+/* BREVO STATS */
+.brevo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:2rem}
+.brevo-card{background:var(--bg2);border:.5px solid var(--border);border-radius:14px;padding:1.25rem 1.5rem;text-align:center}
+.brevo-icon{font-size:24px;margin-bottom:8px}
+.brevo-val{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:4px}
+.brevo-label{font-size:11px;color:var(--muted)}
+
+/* CHARTS ROW */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:2rem}
+.chart-card{background:var(--bg2);border:.5px solid var(--border);border-radius:14px;padding:1.5rem}
+.chart-title{font-size:13px;font-weight:700;margin-bottom:1.25rem;color:#e8e8e0}
+.bar-chart{display:flex;flex-direction:column;gap:8px}
+.bar-row{display:flex;align-items:center;gap:10px}
+.bar-label{font-size:12px;color:var(--muted);width:140px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;background:rgba(255,255,255,0.06);border-radius:99px;height:8px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--v1),var(--c1));transition:width .8s ease}
+.bar-count{font-size:12px;color:var(--muted);width:30px;text-align:right;flex-shrink:0}
+.donut-wrap{display:flex;align-items:center;gap:24px}
+.donut-legend{display:flex;flex-direction:column;gap:8px;flex:1}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* FILTERS */
+.filters-row{display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap}
+.filter-btn{padding:7px 14px;border-radius:20px;border:.5px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;font-family:'Manrope',sans-serif;transition:all .15s}
+.filter-btn.active,.filter-btn:hover{border-color:var(--v1);color:var(--v1)}
+.search-input{padding:8px 14px;border-radius:8px;border:.5px solid var(--border);background:rgba(255,255,255,0.04);color:#e8e8e0;font-size:13px;font-family:'Manrope',sans-serif;width:220px}
+.search-input:focus{outline:none;border-color:var(--v1)}
+.btn-export{margin-left:auto;padding:8px 16px;border-radius:8px;border:.5px solid var(--border2);background:transparent;color:var(--v1);font-size:12px;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif}
+
+/* TABLE */
+.table-wrap{background:var(--bg2);border:.5px solid var(--border);border-radius:14px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th{padding:12px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:.5px solid var(--border);background:rgba(255,255,255,0.02)}
+td{padding:12px 16px;border-bottom:.5px solid var(--border);font-size:13px;color:var(--muted);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(168,85,247,0.04);cursor:pointer}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-wait{background:rgba(251,191,36,0.12);color:#FBBf24;border:.5px solid rgba(251,191,36,0.3)}
+.badge-paid{background:rgba(99,102,241,0.12);color:#818CF8;border:.5px solid rgba(99,102,241,0.3)}
+.badge-sending{background:rgba(34,211,238,0.12);color:#22D3EE;border:.5px solid rgba(34,211,238,0.3)}
+.badge-sent{background:rgba(52,211,153,0.12);color:#34D399;border:.5px solid rgba(52,211,153,0.3)}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;padding:2rem}
+.modal-overlay.open{display:flex}
+.modal{background:#13101f;border:.5px solid var(--border2);border-radius:20px;padding:2rem;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
+.modal-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem}
+.modal-name{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800}
+.modal-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px}
+.modal-fields{display:flex;flex-direction:column;gap:8px;margin-bottom:1.5rem}
+.modal-field{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:8px}
+.field-key{font-size:12px;color:var(--muted);flex-shrink:0;margin-right:12px}
+.field-val{font-size:13px;color:#e8e8e0;text-align:right;font-weight:600}
+.modal-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn-action{padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif;border:none;transition:all .15s}
+.btn-green{background:rgba(52,211,153,0.15);color:#34D399;border:.5px solid rgba(52,211,153,0.3)}
+.btn-red{background:rgba(248,113,113,0.15);color:#F87171;border:.5px solid rgba(248,113,113,0.3)}
+.btn-blue{background:rgba(96,165,250,0.15);color:#60A5FA;border:.5px solid rgba(96,165,250,0.3)}
+.btn-purple{background:rgba(168,85,247,0.15);color:#A855F7;border:.5px solid rgba(168,85,247,0.3)}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:4rem 2rem;color:var(--muted)}
+.empty-state p{font-size:14px;margin-top:8px}
+
+/* LOADING */
+.loading{text-align:center;padding:3rem;color:var(--muted)}
+.spinner{width:28px;height:28px;border:3px solid rgba(168,85,247,0.2);border-top-color:var(--v1);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:900px){.stats-grid,.brevo-grid{grid-template-columns:repeat(2,1fr)}.charts-row{grid-template-columns:1fr}}
+@media(max-width:600px){.stats-grid,.brevo-grid{grid-template-columns:1fr}.topbar{padding:1rem}}
+</style>
 </head>
 <body>
 
-<div id="login-screen" class="login-screen">
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen">
   <div class="login-box">
-    <div class="nav-logo" style="justify-content:center;margin-bottom:2rem"><span class="star">✦</span> TalentConnect</div>
-    <h2 class="step-title" style="text-align:center;margin-bottom:6px">Espace RH</h2>
-    <p class="step-sub" style="text-align:center;margin-bottom:1.75rem">Accès réservé aux recruteurs</p>
-    <div class="field-line"><label>Identifiant</label><input type="text" id="l-user" placeholder="admin" onkeydown="if(event.key==='Enter')doLogin()"/></div>
-    <div class="field-line"><label>Mot de passe</label><input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
-    <div class="err" id="l-err" style="display:none">Identifiants incorrects</div>
-    <button class="btn-ok" style="width:100%;margin-top:6px" onclick="doLogin()">Se connecter →</button>
-    <p style="font-size:11px;color:#555550;text-align:center;margin-top:14px">Démo : admin / admin123</p>
+    <div class="login-logo">✦ Lance Mon Job</div>
+    <div class="login-sub">Accès administrateur</div>
+    <div class="field"><label>Identifiant</label><input type="text" id="l-user" placeholder="admin"/></div>
+    <div class="field"><label>Mot de passe</label><input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <button class="btn-login" onclick="doLogin()">Se connecter →</button>
+    <div class="login-err" id="l-err">Identifiants incorrects</div>
   </div>
 </div>
 
-<div id="dashboard-screen" style="display:none">
-  <nav class="nav">
-    <div class="nav-logo"><span class="star">✦</span> TalentConnect</div>
-    <div style="display:flex;align-items:center;gap:12px">
-      <span class="badge-rh">Espace RH</span>
-      <button class="btn-back" onclick="doLogout()">Déconnexion</button>
+<!-- DASHBOARD -->
+<div class="dash" id="dashboard-screen">
+  <div class="topbar">
+    <div class="topbar-logo">✦ Lance Mon Job — Admin</div>
+    <div class="topbar-right">
+      <button class="btn-refresh" onclick="refreshAll()">↻ Actualiser</button>
+      <button class="btn-logout" onclick="doLogout()">Déconnexion</button>
     </div>
-  </nav>
-  <div class="admin-main">
-    <div class="admin-header">
-      <div>
-        <h1 class="admin-title">Candidatures <span class="grad">reçues</span></h1>
-        <p class="step-sub">Données en temps réel · Supabase</p>
+  </div>
+
+  <div class="dash-body">
+
+    <!-- STATS SUPABASE -->
+    <div class="section-title" style="margin-bottom:1rem">Vue d'ensemble</div>
+    <div class="stats-grid" id="stats-grid">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+
+    <!-- STATS BREVO -->
+    <div class="section-title">Statistiques emails (30 derniers jours)</div>
+    <div class="brevo-grid" id="brevo-grid">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Campagnes par plan</div>
+        <div class="bar-chart" id="chart-plans"></div>
       </div>
-      <button class="btn-danger" onclick="clearAll()">Tout effacer</button>
-    </div>
-    <div class="stats-row" id="stats-row">
-      <div class="stat-card"><div class="stat-label">Total</div><div class="stat-val" id="stat-total">—</div></div>
-      <div class="stat-card"><div class="stat-label">En attente</div><div class="stat-val" id="stat-attente">—</div></div>
-      <div class="stat-card"><div class="stat-label">Retenus</div><div class="stat-val" id="stat-retenus">—</div></div>
-    </div>
-    <div class="table-card">
-      <div class="empty-state" id="empty-state" style="display:none">
-        <div style="font-size:28px;opacity:.3;margin-bottom:12px">✦</div>
-        <p style="font-size:14px;color:#888880;margin-bottom:16px">Aucune candidature pour l'instant.</p>
-        <a href="index.html" class="btn-back" style="text-decoration:none">Voir le site →</a>
-      </div>
-      <div id="table-wrap">
-        <table>
-          <thead><tr><th>Candidat</th><th>Poste</th><th>Secteurs</th><th>Zone</th><th>Offre</th><th>Date</th><th>Statut</th></tr></thead>
-          <tbody id="table-body"><tr><td colspan="7" style="text-align:center;color:#555550;padding:2rem">Connexion...</td></tr></tbody>
-        </table>
+      <div class="chart-card">
+        <div class="chart-title">Top secteurs ciblés</div>
+        <div class="bar-chart" id="chart-secteurs"></div>
       </div>
     </div>
+
+    <!-- TABLE -->
+    <div class="section-title">Toutes les candidatures</div>
+    <div class="filters-row">
+      <button class="filter-btn active" onclick="filterTable('all',this)">Tous</button>
+      <button class="filter-btn" onclick="filterTable('En attente paiement',this)">En attente</button>
+      <button class="filter-btn" onclick="filterTable('Payé',this)">Payés</button>
+      <button class="filter-btn" onclick="filterTable('En cours d\'envoi',this)">En cours</button>
+      <button class="filter-btn" onclick="filterTable('Envoyé',this)">Envoyés</button>
+      <input class="search-input" type="text" placeholder="Rechercher..." oninput="searchTable(this.value)" id="search-input"/>
+      <button class="btn-export" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+    <div class="table-wrap">
+      <div id="table-container"><div class="loading"><div class="spinner"></div><p>Chargement...</p></div></div>
+    </div>
+
   </div>
 </div>
 
+<!-- MODAL -->
 <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <div class="modal-header">
-      <div><div class="modal-name" id="m-nom"></div><div style="font-size:12px;color:#888880;margin-top:3px" id="m-poste"></div></div>
-      <button class="close-btn" onclick="closeModal()">✕</button>
+      <div>
+        <div class="modal-name" id="m-nom">—</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px" id="m-poste">—</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
-    <div id="m-fields"></div>
-    <div class="modal-section-title">Message de motivation</div>
-    <div class="modal-msg" id="m-msg"></div>
+    <div class="modal-fields" id="m-fields"></div>
+    <div style="margin-bottom:1rem">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Message</div>
+      <div id="m-msg" style="font-size:13px;color:var(--muted);background:rgba(255,255,255,0.03);border-radius:8px;padding:12px;line-height:1.7;white-space:pre-wrap"></div>
+    </div>
     <div class="modal-actions">
-      <button class="btn-retain" onclick="setStatut('Retenu')">✓ Retenir</button>
-      <button class="btn-reject" onclick="setStatut('Refusé')">✕ Refuser</button>
-      <button class="btn-pending" onclick="setStatut('En attente')">↺ En attente</button>
+      <button class="btn-action btn-purple" onclick="setStatut('Payé')">✓ Marquer Payé</button>
+      <button class="btn-action btn-blue" onclick="setStatut('En cours d\'envoi')">⚡ En cours</button>
+      <button class="btn-action btn-green" onclick="setStatut('Envoyé')">✅ Envoyé</button>
+      <button class="btn-action btn-red" onclick="setStatut('Annulé')">✕ Annuler</button>
     </div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js"></script>
+<script>
+const SUPABASE_URL = 'https://ihhqwukfkztwdhxfvsvf.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_AKWSkS_jE-R1PnMWSI408g_5QqV8iPJ';
+const ADMIN_USER = 'admin';
+const ADMIN_PASS = 'admin123';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let allData = [];
+let currentFilter = 'all';
+let currentSearch = '';
+let currentId = null;
+
+// AUTH
+if(sessionStorage.getItem('lmj_admin')==='1') showDash();
+
+function doLogin(){
+  const u = document.getElementById('l-user').value;
+  const p = document.getElementById('l-pass').value;
+  if(u===ADMIN_USER && p===ADMIN_PASS){
+    sessionStorage.setItem('lmj_admin','1');
+    showDash();
+  } else {
+    document.getElementById('l-err').style.display='block';
+  }
+}
+
+function doLogout(){
+  sessionStorage.removeItem('lmj_admin');
+  document.getElementById('dashboard-screen').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+}
+
+function showDash(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('dashboard-screen').style.display='block';
+  loadAll();
+}
+
+function refreshAll(){ loadAll(); }
+
+async function loadAll(){
+  await Promise.all([loadSupabase(), loadBrevo()]);
+}
+
+// SUPABASE DATA
+async function loadSupabase(){
+  const { data, error } = await sb.from('candidatures').select('*').order('created_at',{ascending:false});
+  if(error){ console.error(error); return; }
+  allData = data || [];
+  renderStats(allData);
+  renderCharts(allData);
+  renderTable(allData);
+}
+
+function renderStats(data){
+  const total = data.length;
+  const payes = data.filter(c=>c.statut==='Payé'||c.statut==='En cours d\'envoi'||c.statut==='Envoyé').length;
+  const envoyes = data.filter(c=>c.statut==='Envoyé').length;
+
+  // Calcul revenus
+  let revenus = 0;
+  data.forEach(c=>{
+    if(c.statut==='Payé'||c.statut==='En cours d\'envoi'||c.statut==='Envoyé'){
+      if(c.plan&&c.plan.includes('99')) revenus+=99;
+      else if(c.plan&&c.plan.includes('59')) revenus+=59;
+      else revenus+=29;
+    }
+  });
+
+  // Emails envoyés estimés
+  let emailsEnvoyes = 0;
+  data.forEach(c=>{
+    const match = (c.message||'').match(/(\d+) candidatures envoyées/);
+    if(match) emailsEnvoyes += parseInt(match[1]);
+  });
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card purple">
+      <div class="stat-label">Total campagnes</div>
+      <div class="stat-val">${total}</div>
+      <div class="stat-sub">${payes} payées</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Campagnes terminées</div>
+      <div class="stat-val">${envoyes}</div>
+      <div class="stat-sub">sur ${payes} payées</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">Emails envoyés</div>
+      <div class="stat-val">${emailsEnvoyes.toLocaleString('fr-FR')}</div>
+      <div class="stat-sub">candidatures totales</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-label">Revenus générés</div>
+      <div class="stat-val">${revenus}€</div>
+      <div class="stat-sub">paiements confirmés</div>
+    </div>`;
+}
+
+function renderCharts(data){
+  // Plans
+  const plans = {Starter:0,Pro:0,Max:0};
+  data.forEach(c=>{
+    if(!c.plan) return;
+    if(c.plan.includes('99')) plans.Max++;
+    else if(c.plan.includes('59')) plans.Pro++;
+    else plans.Starter++;
+  });
+  const maxPlan = Math.max(...Object.values(plans),1);
+  const planColors = {Starter:'var(--c1)',Pro:'var(--v1)',Max:'#F59E0B'};
+  document.getElementById('chart-plans').innerHTML = Object.entries(plans).map(([k,v])=>`
+    <div class="bar-row">
+      <div class="bar-label">${k}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxPlan*100)}%;background:${planColors[k]}"></div></div>
+      <div class="bar-count">${v}</div>
+    </div>`).join('');
+
+  // Secteurs
+  const secteurs = {};
+  data.forEach(c=>{
+    if(!c.secteurs) return;
+    c.secteurs.split(',').forEach(s=>{
+      const t = s.trim();
+      secteurs[t] = (secteurs[t]||0)+1;
+    });
+  });
+  const topSecteurs = Object.entries(secteurs).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxSect = topSecteurs[0]?.[1]||1;
+  document.getElementById('chart-secteurs').innerHTML = topSecteurs.map(([k,v])=>`
+    <div class="bar-row">
+      <div class="bar-label">${k}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxSect*100)}%"></div></div>
+      <div class="bar-count">${v}</div>
+    </div>`).join('') || '<p style="color:var(--muted);font-size:13px">Pas de données</p>';
+}
+
+function renderTable(data){
+  const filtered = data.filter(c=>{
+    const matchFilter = currentFilter==='all' || c.statut===currentFilter;
+    const matchSearch = !currentSearch || 
+      (c.nom||'').toLowerCase().includes(currentSearch.toLowerCase()) ||
+      (c.email||'').toLowerCase().includes(currentSearch.toLowerCase()) ||
+      (c.poste||'').toLowerCase().includes(currentSearch.toLowerCase());
+    return matchFilter && matchSearch;
+  });
+
+  if(!filtered.length){
+    document.getElementById('table-container').innerHTML = `
+      <div class="empty-state">
+        <div style="font-size:2rem">📭</div>
+        <p>Aucune candidature trouvée</p>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('table-container').innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Candidat</th>
+          <th>Poste</th>
+          <th>Contrat</th>
+          <th>Zone</th>
+          <th>Offre</th>
+          <th>Date</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filtered.map(c=>`
+          <tr onclick="openDetail('${c.id}')">
+            <td><strong style="color:#e8e8e0">${c.nom||'—'}</strong><br><span style="font-size:11px">${c.email||''}</span></td>
+            <td>${c.poste||'—'}</td>
+            <td style="font-size:12px">${c.contrats||'—'}</td>
+            <td style="font-size:12px">${c.ville||'—'}</td>
+            <td><span style="font-size:11px;color:var(--v1);font-weight:700">${c.plan||'—'}</span></td>
+            <td style="font-size:12px">${new Date(c.created_at).toLocaleDateString('fr-FR')}</td>
+            <td><span class="badge ${getBadgeClass(c.statut)}">${c.statut}</span></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function getBadgeClass(s){
+  if(s==='Envoyé') return 'badge-sent';
+  if(s==='Payé') return 'badge-paid';
+  if(s==="En cours d'envoi") return 'badge-sending';
+  return 'badge-wait';
+}
+
+function filterTable(f, btn){
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable(allData);
+}
+
+function searchTable(v){
+  currentSearch = v;
+  renderTable(allData);
+}
+
+// BREVO STATS
+async function loadBrevo(){
+  try {
+    const res = await fetch('/api/brevo-stats');
+    if(!res.ok) throw new Error('API error');
+    const data = await res.json();
+    renderBrevo(data);
+  } catch(e) {
+    document.getElementById('brevo-grid').innerHTML = `
+      <div class="stat-card" style="grid-column:1/-1">
+        <div class="stat-label">Stats Brevo</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:8px">Données non disponibles — ajoute l'API /api/brevo-stats</div>
+      </div>`;
+  }
+}
+
+function renderBrevo(data){
+  const sent = data.requests || 0;
+  const delivered = data.delivered || 0;
+  const opens = data.uniqueOpens || 0;
+  const bounces = (data.hardBounces||0) + (data.softBounces||0);
+  const openRate = sent > 0 ? Math.round((opens/delivered)*100) : 0;
+  const deliverRate = sent > 0 ? Math.round((delivered/sent)*100) : 0;
+
+  document.getElementById('brevo-grid').innerHTML = `
+    <div class="brevo-card">
+      <div class="brevo-icon">📤</div>
+      <div class="brevo-val" style="color:var(--c1)">${sent.toLocaleString('fr-FR')}</div>
+      <div class="brevo-label">Emails envoyés</div>
+    </div>
+    <div class="brevo-card">
+      <div class="brevo-icon">✅</div>
+      <div class="brevo-val" style="color:#34D399">${deliverRate}%</div>
+      <div class="brevo-label">Taux de délivrance</div>
+    </div>
+    <div class="brevo-card">
+      <div class="brevo-icon">👁</div>
+      <div class="brevo-val" style="color:var(--v1)">${openRate}%</div>
+      <div class="brevo-label">Taux d'ouverture</div>
+    </div>
+    <div class="brevo-card">
+      <div class="brevo-icon">⚠️</div>
+      <div class="brevo-val" style="color:#F87171">${bounces.toLocaleString('fr-FR')}</div>
+      <div class="brevo-label">Bounces</div>
+    </div>`;
+}
+
+// MODAL
+async function openDetail(id){
+  const c = allData.find(x=>x.id===id);
+  if(!c) return;
+  currentId = id;
+  document.getElementById('m-nom').textContent = c.nom||'—';
+  document.getElementById('m-poste').textContent = c.poste||'—';
+  document.getElementById('m-msg').textContent = c.message||'(aucun message)';
+
+  const sent = (c.message||'').match(/(\d+) candidatures envoyées/);
+  const entreprises = c.entreprises_contactees ? `${c.entreprises_contactees.length} entreprises` : '—';
+
+  document.getElementById('m-fields').innerHTML = [
+    ['Email', c.email||'—'],
+    ['Téléphone', c.tel||'—'],
+    ['Genre', c.genre==='M'?'Masculin':c.genre==='F'?'Féminin':'Non précisé'],
+    ['Contrat', c.contrats||'—'],
+    ['Durée', c.duree_contrat||'—'],
+    ['Secteurs', c.secteurs||'—'],
+    ['Zone', `${c.ville||'—'} · ${c.rayon||''}`],
+    ['Disponible le', c.dispo_tot||'—'],
+    ['Offre', c.plan||'—'],
+    ['Emails envoyés', sent ? sent[1] : '—'],
+    ['Entreprises contactées', entreprises],
+    ['Statut', c.statut||'—'],
+    ['Date', new Date(c.created_at).toLocaleDateString('fr-FR')],
+  ].map(([k,v])=>`
+    <div class="modal-field">
+      <span class="field-key">${k}</span>
+      <span class="field-val">${v}</span>
+    </div>`).join('');
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+  currentId = null;
+}
+
+async function setStatut(statut){
+  if(!currentId) return;
+  await sb.from('candidatures').update({statut}).eq('id',currentId);
+  closeModal();
+  loadSupabase();
+}
+
+// EXPORT CSV
+function exportCSV(){
+  const headers = ['Nom','Email','Tel','Poste','Secteurs','Contrat','Durée','Zone','Plan','Statut','Date'];
+  const rows = allData.map(c=>[
+    c.nom||'',c.email||'',c.tel||'',c.poste||'',
+    (c.secteurs||'').replace(/,/g,';'),
+    c.contrats||'',c.duree_contrat||'',c.ville||'',
+    c.plan||'',c.statut||'',
+    new Date(c.created_at).toLocaleDateString('fr-FR')
+  ]);
+  const csv = [headers,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=`lancemonjob_candidatures_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+}
+</script>
 </body>
 </html>
