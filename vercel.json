@@ -1,10 +1,10 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
-  "rewrites": [
-    { "source": "/blog", "destination": "/blog/index.html" },
-    { "source": "/blog/", "destination": "/blog/index.html" },
-    { "source": "/suivi", "destination": "/suivi.html" }
+  "routes": [
+    { "src": "/blog", "dest": "/blog/index.html" },
+    { "src": "/blog/", "dest": "/blog/index.html" },
+    { "src": "/suivi", "dest": "/suivi.html" }
   ],
   "crons": [
     {
