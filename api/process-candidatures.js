@@ -452,6 +452,8 @@ module.exports = async (req, res) => {
     await sb.from('candidatures').update({ statut: "En cours d'envoi" }).eq('id', candidat.id);
 
     let totalSent = 0;
+    const entreprisesContactees = [];
+    const entreprisesContactees = [];
 
     for (const secteur of secteurs) {
       if (totalSent >= volume) break;
@@ -465,6 +467,9 @@ module.exports = async (req, res) => {
           if (sent) {
             totalSent++;
             console.log(`Envoyé à ${contact.email} (${company.name}) — total: ${totalSent}`);
+            if (!entreprisesContactees.find(e => e.name === company.name)) {
+              entreprisesContactees.push({ name: company.name, secteur: secteur });
+            }
           }
           await new Promise(r => setTimeout(r, 300));
         }
@@ -473,7 +478,8 @@ module.exports = async (req, res) => {
 
     await sb.from('candidatures').update({
       statut: 'Envoyé',
-      message: (candidat.message || '') + `\n\n[AUTO] ${totalSent} candidatures envoyées le ${new Date().toLocaleDateString('fr-FR')}`
+      message: (candidat.message || '') + `\n\n[AUTO] ${totalSent} candidatures envoyées le ${new Date().toLocaleDateString('fr-FR')}`,
+      entreprises_contactees: JSON.stringify(entreprisesContactees)
     }).eq('id', candidat.id);
 
     // Email de fin de campagne — envoi direct via Brevo
