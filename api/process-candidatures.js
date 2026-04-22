@@ -484,7 +484,7 @@ async function sendCandidature(to, toName, company, secteur, candidat, lettreBas
   try {
     const body = {
       sender: { name: 'Lance Mon Job', email: 'support@lancemonjob.fr' },
-      to: [{ email: 'julienfranck30@gmail.com', name: 'TEST' }],
+      to: [{ email: to, name: toName || company }],
       replyTo: { email: candidat.email, name: candidat.nom },
       subject: `Candidature spontanée – ${candidat.poste} | ${candidat.nom} → ${company}`,
       htmlContent,
@@ -652,7 +652,7 @@ module.exports = async (req, res) => {
         headers: { 'Content-Type': 'application/json', 'api-key': BREVO_KEY },
         body: JSON.stringify({
           sender: { name: 'Lance Mon Job', email: 'support@lancemonjob.fr' },
-          to: [{ email: 'julienfranck30@gmail.com', name: 'TEST FIN CAMPAGNE' }],
+          to: [{ email: candidat.email, name: `${prenom} ${nomFin}` }],
           subject: `🎯 Ta campagne est terminée — ${totalSent} candidatures envoyées, ${prenom} !`,
           htmlContent: htmlFin
         })
