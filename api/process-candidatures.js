@@ -396,7 +396,35 @@ function generateLettreFallback(candidat, company, secteur) {
   } else if (isStage) {
     paragrapheContrat = `\nCe stage s'inscrit dans le cadre de ma formation et constitue une étape déterminante pour consolider mes compétences professionnelles.\n`;
   }
-  return `${nomCandidat}\n${candidat.tel || ''}\n${candidat.email || ''}\n\nÀ l'attention du Responsable du Recrutement\n${company}\n\nÀ ${candidat.ville || 'Lyon'}, le ${today}\n\nObjet : Candidature spontanée – ${contrat} – ${posteAffiche}\n\nMadame, Monsieur,\n\nC'est avec un grand intérêt que je suis l'évolution de ${company}, notamment pour ${descriptionEntreprise}. Souhaitant mettre mes compétences au service d'une structure de référence, je vous adresse ma candidature spontanée pour un poste de ${posteAffiche}.\n\nActuellement ${situation}${dispoPhrase}${dureePhrase}, j'ai développé une expertise en ${comp1} et ${comp2}. Mon parcours m'a également permis de renforcer mes compétences en ${comp3}, que je souhaite aujourd'hui mobiliser au sein de vos équipes.\n\nIntégrer ${company} représente pour moi l'opportunité ${missions}. ${rigoureux}, autonome et ${dote} d'un excellent esprit d'équipe, je suis ${pret} à m'investir pleinement dans les missions que vous pourriez me confier.\n${paragrapheContrat}\nJe serais ${ravi} de vous exposer plus en détail mes motivations et mon projet professionnel lors d'un entretien à votre convenance. Vous trouverez mon CV en pièce jointe.\n\nDans l'attente de votre retour, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.\n\n${nomCandidat}\n${candidat.tel || ''}`;
+  const lignes = [
+    nomCandidat,
+    candidat.tel || '',
+    candidat.email || '',
+    '',
+    "À l'attention du Responsable du Recrutement",
+    company,
+    '',
+    `À ${candidat.ville || 'Lyon'}, le ${today}`,
+    '',
+    `Objet : Candidature spontanée – ${contrat} – ${posteAffiche}`,
+    '',
+    'Madame, Monsieur,',
+    '',
+    `C'est avec un grand intérêt que je suis l'évolution de ${company}, notamment pour ${descriptionEntreprise}. Souhaitant mettre mes compétences au service d'une structure de référence, je vous adresse ma candidature spontanée pour un poste de ${posteAffiche}.`,
+    '',
+    `Actuellement ${situation}${dispoPhrase}${dureePhrase}, j'ai développé une expertise en ${comp1} et ${comp2}. Mon parcours m'a également permis de renforcer mes compétences en ${comp3}, que je souhaite aujourd'hui mobiliser au sein de vos équipes.`,
+    '',
+    `Intégrer ${company} représente pour moi l'opportunité ${missions}. ${rigoureux}, autonome et ${dote} d'un excellent esprit d'équipe, je suis ${pret} à m'investir pleinement dans les missions que vous pourriez me confier.`,
+    paragrapheContrat || '',
+    '',
+    "Je serais " + ravi + " de vous exposer plus en détail mes motivations et mon projet professionnel lors d'un entretien à votre convenance. Vous trouverez mon CV en pièce jointe.",
+    '',
+    "Dans l'attente de votre retour, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.",
+    '',
+    nomCandidat,
+    candidat.tel || ''
+  ];
+  return lignes.join('\n');
 }
 
 const { DOMAINES_PAR_SECTEUR, getCompaniesByRegion } = require('./companies');
