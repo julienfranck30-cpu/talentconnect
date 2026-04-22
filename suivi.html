@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lance Mon Job — Suivi de ma campagne</title>
+<link rel="canonical" href="https://www.lancemonjob.fr/suivi"/>
+<meta name="description" content="Suivez l'avancement de votre campagne de candidatures spontanées Lance Mon Job."/>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BMKHRFJ914"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-BMKHRFJ914');
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+<style>
+  body { background: #080612; color: #e8e8e0; font-family: 'Manrope', sans-serif; min-height: 100vh; }
+  .suivi-wrap { max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+  .suivi-header { text-align: center; margin-bottom: 3rem; }
+  .suivi-header h1 { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
+  .suivi-header p { color: #888; font-size: 14px; }
+  .card { background: #13101f; border: .5px solid rgba(168,85,247,0.2); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+  .card-title { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 16px; }
+  .statut-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; }
+  .statut-attente { background: rgba(251,191,36,0.12); color: #FBBf24; border: .5px solid rgba(251,191,36,0.3); }
+  .statut-cours { background: rgba(99,102,241,0.12); color: #818CF8; border: .5px solid rgba(99,102,241,0.3); }
+  .statut-envoye { background: rgba(52,211,153,0.12); color: #34D399; border: .5px solid rgba(52,211,153,0.3); }
+  .progress-track { background: rgba(255,255,255,0.06); border-radius: 99px; height: 8px; margin: 16px 0 8px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #A855F7, #22D3EE); transition: width 1s ease; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: #888; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .info-item { background: rgba(255,255,255,0.03); border-radius: 10px; padding: 12px 16px; }
+  .info-key { font-size: 11px; color: #666; margin-bottom: 4px; }
+  .info-val { font-size: 14px; font-weight: 600; color: #e8e8e0; }
+  .entreprises-list { display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto; }
+  .entreprise-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 8px; font-size: 13px; }
+  .entreprise-name { font-weight: 600; color: #e8e8e0; }
+  .entreprise-secteur { font-size: 11px; color: #888; margin-top: 2px; }
+  .entreprise-check { color: #34D399; font-size: 16px; }
+  .conseils-list { display: flex; flex-direction: column; gap: 10px; }
+  .conseil-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px; background: rgba(168,85,247,0.05); border-radius: 10px; border: .5px solid rgba(168,85,247,0.15); }
+  .conseil-num { width: 24px; height: 24px; border-radius: 50%; background: rgba(168,85,247,0.2); color: #A855F7; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .conseil-text { font-size: 13px; color: #aaa; line-height: 1.6; }
+  .login-box { max-width: 480px; margin: 4rem auto; background: #13101f; border: .5px solid rgba(168,85,247,0.2); border-radius: 16px; padding: 2rem; text-align: center; }
+  .login-box h2 { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; }
+  .login-box p { color: #888; font-size: 13px; margin-bottom: 1.5rem; }
+  .field-line { margin-bottom: 1rem; text-align: left; }
+  .field-line label { display: block; font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+  .field-line input { width: 100%; background: rgba(255,255,255,0.05); border: .5px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 12px 14px; color: #e8e8e0; font-size: 14px; font-family: 'Manrope', sans-serif; box-sizing: border-box; }
+  .field-line input:focus { outline: none; border-color: #A855F7; }
+  .btn-primary { width: 100%; padding: 13px; border-radius: 8px; background: linear-gradient(135deg, #A855F7, #22D3EE); border: none; color: #080612; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Manrope', sans-serif; }
+  .err { color: #F87171; font-size: 13px; margin-top: 8px; }
+  .loading { text-align: center; padding: 4rem; color: #888; }
+  .spinner { width: 32px; height: 32px; border: 3px solid rgba(168,85,247,0.2); border-top-color: #A855F7; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media(max-width:600px) { .info-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" class="nav-logo"><span class="star">✦</span> Lance Mon Job</a>
+</nav>
+
+<div class="suivi-wrap">
+
+  <!-- LOGIN -->
+  <div id="login-section">
+    <div class="login-box">
+      <h2>Suivre ma campagne</h2>
+      <p>Entre ton adresse email pour accéder au suivi de ta campagne.</p>
+      <div class="field-line">
+        <label>Adresse email</label>
+        <input type="email" id="login-email" placeholder="ton@email.com" autocomplete="email"/>
+      </div>
+      <button class="btn-primary" onclick="loadCampagne()">Voir ma campagne →</button>
+      <div class="err" id="login-err"></div>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div id="loading-section" style="display:none">
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Chargement de ta campagne...</p>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard-section" style="display:none">
+
+    <div class="suivi-header">
+      <h1>✦ Ta campagne</h1>
+      <p id="dash-subtitle">Voici le suivi en temps réel de tes candidatures</p>
+    </div>
+
+    <!-- STATUT -->
+    <div class="card">
+      <div class="card-title">Statut de la campagne</div>
+      <div id="dash-statut"></div>
+      <div class="progress-track" id="progress-track" style="display:none">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+      <div class="progress-label" id="progress-label" style="display:none">
+        <span id="prog-sent">0 envoyées</span>
+        <span id="prog-total">/ 0</span>
+      </div>
+    </div>
+
+    <!-- INFOS -->
+    <div class="card">
+      <div class="card-title">Détails de ta campagne</div>
+      <div class="info-grid" id="dash-infos"></div>
+    </div>
+
+    <!-- ENTREPRISES -->
+    <div class="card" id="card-entreprises" style="display:none">
+      <div class="card-title">Entreprises contactées</div>
+      <div class="entreprises-list" id="dash-entreprises"></div>
+    </div>
+
+    <!-- CONSEILS -->
+    <div class="card">
+      <div class="card-title">Et maintenant ?</div>
+      <div class="conseils-list">
+        <div class="conseil-item">
+          <div class="conseil-num">1</div>
+          <div class="conseil-text"><strong>Surveille ta boîte email</strong> — les recruteurs vont te répondre directement à ton adresse.</div>
+        </div>
+        <div class="conseil-item">
+          <div class="conseil-num">2</div>
+          <div class="conseil-text"><strong>Réponds rapidement</strong> — idéalement sous 24h pour montrer ta motivation.</div>
+        </div>
+        <div class="conseil-item">
+          <div class="conseil-num">3</div>
+          <div class="conseil-text"><strong>Vérifie tes spams</strong> — certaines réponses de recruteurs peuvent y atterrir.</div>
+        </div>
+        <div class="conseil-item">
+          <div class="conseil-num">4</div>
+          <div class="conseil-text"><strong>Sois patient(e)</strong> — les recruteurs prennent en moyenne 1 à 3 semaines pour répondre.</div>
+        </div>
+        <div class="conseil-item">
+          <div class="conseil-num">5</div>
+          <div class="conseil-text"><strong>Une question ?</strong> Contacte-nous à <a href="mailto:support@lancemonjob.fr" style="color:#A855F7">support@lancemonjob.fr</a></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://ihhqwukfkztwdhxfvsvf.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_AKWSkS_jE-R1PnMWSI408g_5QqV8iPJ';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Check URL param
+window.addEventListener('load', () => {
+  const params = new URLSearchParams(window.location.search);
+  const email = params.get('email');
+  if (email) {
+    document.getElementById('login-email').value = decodeURIComponent(email);
+    loadCampagne();
+  }
+});
+
+async function loadCampagne() {
+  const email = document.getElementById('login-email').value.trim();
+  const errEl = document.getElementById('login-err');
+  errEl.textContent = '';
+
+  if (!email || !email.includes('@')) {
+    errEl.textContent = 'Entre une adresse email valide.';
+    return;
+  }
+
+  document.getElementById('login-section').style.display = 'none';
+  document.getElementById('loading-section').style.display = 'block';
+
+  const { data, error } = await sb
+    .from('candidatures')
+    .select('*')
+    .eq('email', email)
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  document.getElementById('loading-section').style.display = 'none';
+
+  if (error || !data || !data.length) {
+    document.getElementById('login-section').style.display = 'block';
+    errEl.textContent = 'Aucune campagne trouvée pour cet email. Vérifie l\'adresse utilisée lors de ton inscription.';
+    return;
+  }
+
+  const c = data[0];
+  renderDashboard(c);
+}
+
+function renderDashboard(c) {
+  document.getElementById('dashboard-section').style.display = 'block';
+
+  const nomParts = (c.nom || '').trim().split(' ');
+  const prenom = nomParts[0] || c.nom;
+  document.getElementById('dash-subtitle').textContent = `Bonjour ${prenom} ! Voici le suivi de ta campagne.`;
+
+  // Statut
+  const statutEl = document.getElementById('dash-statut');
+  let statutClass = 'statut-attente';
+  let statutLabel = '⏳ En attente de paiement';
+  let showProgress = false;
+
+  if (c.statut === 'Payé') {
+    statutClass = 'statut-cours';
+    statutLabel = '⚡ Paiement confirmé — traitement en cours';
+  } else if (c.statut === "En cours d'envoi") {
+    statutClass = 'statut-cours';
+    statutLabel = '📤 Candidatures en cours d\'envoi...';
+    showProgress = true;
+  } else if (c.statut === 'Envoyé') {
+    statutClass = 'statut-envoye';
+    statutLabel = '✅ Campagne terminée !';
+    showProgress = true;
+  }
+
+  statutEl.innerHTML = `<span class="statut-badge ${statutClass}">${statutLabel}</span>`;
+
+  // Progress
+  if (showProgress) {
+    const volume = getVolume(c.plan);
+    const sent = getSentCount(c);
+    const pct = volume ? Math.round((sent / volume) * 100) : 0;
+    document.getElementById('progress-track').style.display = 'block';
+    document.getElementById('progress-label').style.display = 'flex';
+    setTimeout(() => {
+      document.getElementById('progress-fill').style.width = pct + '%';
+    }, 300);
+    document.getElementById('prog-sent').textContent = `${sent} envoyées`;
+    document.getElementById('prog-total').textContent = `/ ${volume}`;
+  }
+
+  // Infos
+  const infos = [
+    { key: 'Poste visé', val: c.poste || '—' },
+    { key: 'Contrat', val: c.contrats || '—' },
+    { key: 'Durée', val: c.duree_contrat || '—' },
+    { key: 'Zone', val: c.ville || '—' },
+    { key: 'Secteurs', val: c.secteurs || '—' },
+    { key: 'Offre', val: c.plan || '—' },
+    { key: 'Disponible le', val: c.dispo_tot || '—' },
+    { key: 'Date de création', val: new Date(c.created_at).toLocaleDateString('fr-FR') },
+  ];
+
+  document.getElementById('dash-infos').innerHTML = infos.map(i => `
+    <div class="info-item">
+      <div class="info-key">${i.key}</div>
+      <div class="info-val">${i.val}</div>
+    </div>`).join('');
+
+  // Entreprises contactées
+  if (c.entreprises_contactees && c.entreprises_contactees.length > 0) {
+    document.getElementById('card-entreprises').style.display = 'block';
+    document.getElementById('dash-entreprises').innerHTML = c.entreprises_contactees.map(e => `
+      <div class="entreprise-item">
+        <div>
+          <div class="entreprise-name">${e.name}</div>
+          <div class="entreprise-secteur">${e.secteur || ''}</div>
+        </div>
+        <div class="entreprise-check">✓</div>
+      </div>`).join('');
+  }
+}
+
+function getVolume(plan) {
+  if (!plan) return 50;
+  if (plan.includes('99')) return 300;
+  if (plan.includes('59')) return 150;
+  return 50;
+}
+
+function getSentCount(c) {
+  if (!c.message) return 0;
+  const match = c.message.match(/(\d+) candidatures envoyées/);
+  return match ? parseInt(match[1]) : 0;
+}
+</script>
+</body>
+</html>
