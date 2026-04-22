@@ -3,7 +3,7 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/blog", "destination": "/blog/index.html" },
-    { "source": "/blog/:path*", "destination": "/blog/:path*.html" },
+    { "source": "/blog/", "destination": "/blog/index.html" },
     { "source": "/suivi", "destination": "/suivi.html" }
   ],
   "crons": [
