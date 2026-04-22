@@ -1,6 +1,11 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    { "source": "/blog", "destination": "/blog/index.html" },
+    { "source": "/blog/:path*", "destination": "/blog/:path*.html" },
+    { "source": "/suivi", "destination": "/suivi.html" }
+  ],
   "crons": [
     {
       "path": "/api/process-candidatures",
