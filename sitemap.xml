@@ -11,6 +11,36 @@
     <changefreq>monthly</changefreq>
   </url>
   <url>
+    <loc>https://www.lancemonjob.fr/blog/candidature-spontanee</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://www.lancemonjob.fr/blog/exemple-lettre-motivation</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://www.lancemonjob.fr/blog/trouver-alternance</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://www.lancemonjob.fr/blog/entreprises-recrutent-sans-annonce</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://www.lancemonjob.fr/blog/candidature-spontanee-vs-annonce</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://www.lancemonjob.fr/blog/relance-candidature</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
     <loc>https://www.lancemonjob.fr/cgv</loc>
     <priority>0.5</priority>
     <changefreq>yearly</changefreq>
