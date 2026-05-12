@@ -341,10 +341,16 @@ Réponds UNIQUEMENT avec la lettre, rien d'autre.`;
 
 function adapterLettreEntreprise(lettreBase, company, secteur, candidat) {
   const descriptionEntreprise = getDescriptionEntreprise(company, secteur);
+  const tel = candidat.tel || '';
 
   let lettre = lettreBase
     .replace(/\[ENTREPRISE\]/g, company)
     .replace(/\[DESCRIPTION_ENTREPRISE\]/g, descriptionEntreprise);
+
+  // Ajoute le téléphone en évidence si présent
+  if (tel && !lettre.includes('📞')) {
+    lettre = lettre.replace(tel, `📞 ${tel}`);
+  }
 
   return lettre;
 }
@@ -389,7 +395,7 @@ function generateLettreFallback(candidat, company, secteur) {
   }
   const lignes = [
     nomCandidat,
-    candidat.tel || '',
+    candidat.tel ? `📞 ${candidat.tel}` : '',
     candidat.email || '',
     '',
     "À l'attention du Responsable du Recrutement",
@@ -456,9 +462,14 @@ async function sendCandidature(to, toName, company, secteur, candidat, lettreBas
   const lettre = lettreBase
     ? adapterLettreEntreprise(lettreBase, company, secteur, candidat)
     : generateLettreFallback(candidat, company, secteur);
+  // Mise en forme de la lettre avec téléphone en évidence
+  const lettreFormatee = lettre
+    .replace(/\n/g, '<br/>')
+    .replace(/(📞[^<]+)/, '<strong style="color:#8B5CF6;font-size:16px">$1</strong>');
+
   const htmlContent = `
     <div style="font-family:Arial,sans-serif;max-width:650px;margin:0 auto;color:#333;line-height:1.8;font-size:15px">
-      ${lettre.replace(/\n/g, '<br/>')}
+      ${lettreFormatee}
     </div>`;
 
   let attachments = [];
@@ -486,7 +497,18 @@ async function sendCandidature(to, toName, company, secteur, candidat, lettreBas
       sender: { name: 'Lance Mon Job', email: 'support@lancemonjob.fr' },
       to: [{ email: to, name: toName || company }],
       replyTo: { email: candidat.email, name: candidat.nom },
-      subject: `Candidature spontanée – ${candidat.poste} | ${candidat.nom} → ${company}`,
+      // Objet accrocheur et humain
+      const nomParts2 = (candidat.nom || '').trim().split(' ');
+      const prenomCourt = nomParts2[0] || candidat.nom;
+      const contratCourt = candidat.contrats
+        ? (candidat.contrats.toLowerCase().includes('alternance') ? 'Alternance'
+          : candidat.contrats.toLowerCase().includes('stage') ? 'Stage'
+          : candidat.contrats.toLowerCase().includes('cdi') ? 'CDI'
+          : candidat.contrats.toLowerCase().includes('cdd') ? 'CDD'
+          : 'Candidature')
+        : 'Candidature';
+      const dispoLabel = candidat.dispo_tot ? `disponible le ${candidat.dispo_tot}` : 'disponible rapidement';
+      subject: `${prenomCourt} ${nomParts2.slice(1).join(' ')} – ${candidat.poste} – ${contratCourt} – ${dispoLabel}`,
       htmlContent,
     };
     if (attachments.length > 0) body.attachment = attachments;
