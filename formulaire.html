@@ -37,6 +37,13 @@
   .duree-grid { display: flex; flex-wrap: wrap; gap: 8px; max-width: 560px; }
   .duree-chip { padding: 10px 18px; border-radius: 20px; border: .5px solid rgba(140,80,255,0.32); font-size: 13px; color: #ddd; cursor: pointer; transition: all .15s; background: rgba(140,80,255,0.06); }
   .duree-chip:hover, .duree-chip.selected { border-color: #8B5CF6; color: #fff; background: rgba(168,85,247,0.15); }
+  /* Option offres publiées */
+  .offres-option { background: rgba(168,85,247,0.06); border: 1px solid rgba(168,85,247,0.25); border-radius: 12px; padding: 16px 20px; margin-top: 20px; max-width: 560px; }
+  .offres-option label { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; }
+  .offres-option input[type="checkbox"] { width: 18px; height: 18px; accent-color: #A855F7; flex-shrink: 0; margin-top: 2px; }
+  .offres-option .opt-title { font-size: 14px; font-weight: 700; color: #e8e8e0; margin-bottom: 4px; }
+  .offres-option .opt-desc { font-size: 12px; color: #888; line-height: 1.5; }
+  .offres-badge { display: inline-block; background: linear-gradient(135deg,#A855F7,#22D3EE); color: #080612; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-left: 8px; vertical-align: middle; }
 </style>
 </head>
 <body class="form-body">
@@ -256,7 +263,19 @@
       </div>
       <input type="file" id="cv-input" accept=".pdf" style="display:none"/>
     </div>
-    <div class="field-line"><label>Message de motivation (optionnel)</label><textarea id="s11-msg" rows="4" placeholder="Résume ton profil en 2-3 phrases..."></textarea></div>
+
+    <!-- OPTION OFFRES PUBLIÉES -->
+    <div class="offres-option">
+      <label>
+        <input type="checkbox" id="f-offres-publiees"/>
+        <div>
+          <div class="opt-title">Répondre aussi aux offres publiées <span class="offres-badge">NOUVEAU</span></div>
+          <div class="opt-desc">En plus des candidatures spontanées, Lance Mon Job répondra automatiquement aux offres d'emploi publiées sur internet qui correspondent à ton profil. Lettres adaptées à chaque annonce.</div>
+        </div>
+      </label>
+    </div>
+
+    <div class="field-line" style="margin-top:16px"><label>Message de motivation (optionnel)</label><textarea id="s11-msg" rows="4" placeholder="Résume ton profil en 2-3 phrases..."></textarea></div>
     <div class="err" id="err-11"></div>
     <div class="nav-btns"><button class="btn-back" onclick="prevStep(11)">← Retour</button><button class="btn-ok" onclick="nextStep(11)">Ok ✓</button></div>
   </div>
