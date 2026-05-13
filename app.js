@@ -202,6 +202,7 @@ if(document.getElementById('step-1')){
       const cv = document.getElementById('cv-input').files[0];
       formData.cv = cv ? cv.name : null;
       formData.message = document.getElementById('s11-msg').value.trim();
+      formData.offres_publiees = document.getElementById('f-offres-publiees')?.checked || false;
     }
     if(from===13){ submitCampagne(); return; }
     goToStep(from+1);
@@ -309,6 +310,7 @@ if(document.getElementById('step-1')){
         cv_texte:      formData.cvTexte || null,
         plan:          planInfo.label,
         message:       formData.message,
+        offres_publiees: formData.offres_publiees || false,
         statut:        'En attente paiement',
         dispo_tot:     formData.dispo_tot || null,
         dispo_tard:    formData.dispo_tard || null,
