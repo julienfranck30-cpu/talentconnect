@@ -425,6 +425,7 @@ function generateLettreFallback(candidat, company, secteur) {
 }
 
 const { DOMAINES_PAR_SECTEUR, getCompaniesByRegion } = require('./companies');
+const { fetchOffresAdzuna } = require('./adzuna-jobs');
 
 async function findCompanies(secteur, ville, limit) {
   return getCompaniesByRegion(secteur, ville, limit);
@@ -601,6 +602,86 @@ module.exports = async (req, res) => {
         }
       }
     }
+
+    // ─── ADZUNA — Réponse aux offres publiées ───────────────────────────────
+    if (candidat.offres_publiees === true || candidat.offres_publiees === 'true') {
+      console.log(`Adzuna activé pour ${candidat.nom} — recherche d'offres...`);
+      for (const secteur of secteurs) {
+        if (totalSent >= volume) break;
+        const offres = await fetchOffresAdzuna(candidat.poste, secteur, candidat.ville, 5);
+        for (const offre of offres) {
+          if (totalSent >= volume) break;
+          if (!offre.entreprise || !offre.domain) continue;
+
+          // Cherche un email via Hunter
+          const contacts = await searchEmails(offre.domain);
+          for (const contact of contacts) {
+            if (totalSent >= volume) break;
+
+            // Lettre adaptée à l'annonce
+            const lettreOffre = lettreBase
+              ? adapterLettreEntreprise(lettreBase, offre.entreprise, secteur, candidat)
+              : generateLettreFallback(candidat, offre.entreprise, secteur);
+
+            // Objet spécifique pour réponse à annonce
+            const nomParts3 = (candidat.nom || '').trim().split(' ');
+            const prenomO = nomParts3[0] || candidat.nom;
+            const subjectOffre = `${prenomO} ${nomParts3.slice(1).join(' ')} – Réponse à votre annonce : ${offre.titre}`;
+
+            const htmlOffre = `
+              <div style="font-family:Arial,sans-serif;max-width:650px;margin:0 auto;color:#333;line-height:1.8;font-size:15px">
+                <div style="background:#f4f0ff;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#6D28D9">
+                  📋 En réponse à votre annonce : <strong>${offre.titre}</strong>
+                </div>
+                ${lettreOffre.replace(/\n/g, '<br/>').replace(/(📞[^<]+)/, '<strong style="color:#8B5CF6;font-size:16px">$1</strong>')}
+              </div>`;
+
+            try {
+              const bodyOffre = {
+                sender:  { name: 'Lance Mon Job', email: 'support@lancemonjob.fr' },
+                to:      [{ email: contact.email, name: contact.name || offre.entreprise }],
+                replyTo: { email: candidat.email, name: candidat.nom },
+                subject: subjectOffre,
+                htmlContent: htmlOffre,
+              };
+              if (candidat.cv_url) {
+                try {
+                  const cvRes = await fetch(candidat.cv_url);
+                  if (cvRes.ok) {
+                    const cvBuffer = await cvRes.arrayBuffer();
+                    if (cvBuffer.byteLength > 0) {
+                      bodyOffre.attachment = [{
+                        content: Buffer.from(cvBuffer).toString('base64'),
+                        name: candidat.cv || 'CV.pdf',
+                        type: 'application/pdf'
+                      }];
+                    }
+                  }
+                } catch(e) { console.error('CV error (adzuna):', e.message); }
+              }
+
+              const resOffre = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'api-key': BREVO_KEY },
+                body: JSON.stringify(bodyOffre),
+              });
+
+              if (resOffre.ok) {
+                totalSent++;
+                console.log(`[ADZUNA] Envoyé à ${contact.email} (${offre.entreprise}) pour annonce: ${offre.titre}`);
+                if (!entreprisesContactees.find(e => e.name === offre.entreprise)) {
+                  entreprisesContactees.push({ name: offre.entreprise, secteur, type: 'offre_publiee' });
+                }
+              }
+            } catch(e) {
+              console.error('Brevo error (adzuna):', e.message);
+            }
+            await new Promise(r => setTimeout(r, 300));
+          }
+        }
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     await sb.from('candidatures').update({
       statut: 'Envoyé',
