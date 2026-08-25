@@ -13,7 +13,7 @@ html{scroll-behavior:smooth}
   --v1:#A855F7;
   --v2:#C084FC;
   --c1:#22D3EE;
-  --c2:#67E8F9;
+  --c2:#67E8F9; 
   --r:10px;--rlg:16px;--rxl:22px;
 }
 body{font-family:'Manrope',sans-serif;background:var(--bg-solid);background-image:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
