@@ -320,6 +320,7 @@ if(document.getElementById('step-1')){
       if(error) throw error;
 
       try {
+        const candidatId = data?.[0]?.id || '';
         await fetch('/api/confirm-candidature', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -332,7 +333,8 @@ if(document.getElementById('step-1')){
             contrat:       formData.contrat,
             duree_contrat: formData.duree_contrat || null,
             plan:          planInfo.label,
-            dispo_tot:     formData.dispo_tot || null
+            dispo_tot:     formData.dispo_tot || null,
+            candidat_id:   candidatId
           })
         });
       } catch(e) {
