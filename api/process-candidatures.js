@@ -426,6 +426,8 @@ function generateLettreFallback(candidat, company, secteur) {
 
 const { DOMAINES_PAR_SECTEUR, getCompaniesByRegion } = require('./companies');
 const { fetchOffresAdzuna } = require('./adzuna-jobs');
+const gmailModule = require('./gmail'); const sendViaGmail = gmailModule.sendViaGmail;
+const gmailModule = require('./gmail'); const sendViaGmail = gmailModule.sendViaGmail;
 
 async function findCompanies(secteur, ville, limit) {
   return getCompaniesByRegion(secteur, ville, limit);
@@ -472,6 +474,36 @@ async function sendCandidature(to, toName, company, secteur, candidat, lettreBas
     <div style="font-family:Arial,sans-serif;max-width:650px;margin:0 auto;color:#333;line-height:1.8;font-size:15px">
       ${lettreFormatee}
     </div>`;
+
+  // ── GMAIL : Si le candidat a connecté son Gmail → envoie depuis sa boîte mail ──
+  if (candidat.gmail_token && candidat.gmail_connected) {
+    console.log(`Envoi via Gmail du candidat: ${candidat.email}`);
+    let gmailAttachments = [];
+    if (candidat.cv_url) {
+      try {
+        const cvRes = await fetch(candidat.cv_url);
+        if (cvRes.ok) {
+          const cvBuffer = await cvRes.arrayBuffer();
+          if (cvBuffer.byteLength > 0) {
+            gmailAttachments = [{ content: Buffer.from(cvBuffer).toString('base64'), name: candidat.cv || 'CV.pdf', type: 'application/pdf' }];
+          }
+        }
+      } catch(e) { console.error('CV error (gmail):', e.message); }
+    }
+    const contratG = candidat.contrats || 'CDI';
+    const dispoG = candidat.dispo_tot ? `disponible le ${candidat.dispo_tot}` : 'disponible rapidement';
+    const subjectG = `${candidat.nom} – ${candidat.poste} – ${contratG} – ${dispoG}`;
+    return await sendViaGmail({
+      refreshToken: candidat.gmail_token,
+      from: candidat.email,
+      fromName: candidat.nom,
+      to,
+      subject: subjectG,
+      htmlContent,
+      attachments: gmailAttachments
+    });
+  }
+  // ────────────────────────────────────────────────────────────────────────────────
 
   let attachments = [];
   if (candidat.cv_url) {
