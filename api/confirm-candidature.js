@@ -3,9 +3,10 @@ const BREVO_KEY = process.env.BREVO_API_KEY;
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { email, prenom, nom, poste, secteurs, contrat, duree_contrat, plan, dispo_tot } = req.body;
+  const { email, prenom, nom, poste, secteurs, contrat, duree_contrat, plan, dispo_tot, candidat_id } = req.body;
 
   const suiviUrl = `https://www.lancemonjob.fr/suivi?email=${encodeURIComponent(email)}`;
+  const gmailAuthUrl = `https://www.lancemonjob.fr/api/gmail?action=auth&email=${encodeURIComponent(email)}&id=${encodeURIComponent(candidat_id || '')}`;
 
   const secteursList = secteurs
     ? secteurs.split(',').map(s => `<li style="margin-bottom:4px">✓ ${s.trim()}</li>`).join('')
@@ -22,6 +23,18 @@ module.exports = async (req, res) => {
         <h2 style="color:#fff;font-size:22px;font-weight:800;margin:0 0 8px 0">Candidature enregistrée !</h2>
         <p style="color:#ddd;font-size:15px;margin:0">Bonjour ${prenom}, ta campagne est bien prise en compte</p>
       </div>
+
+      <!-- BOUTON GMAIL -->
+      <div style="background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border:1.5px solid #86efac;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center">
+        <div style="font-size:32px;margin-bottom:8px">📬</div>
+        <h3 style="font-size:16px;font-weight:800;color:#15803d;margin:0 0 8px 0">Booste tes résultats x3</h3>
+        <p style="font-size:13px;color:#166534;margin:0 0 16px 0">Connecte ton Gmail pour que tes candidatures partent <strong>depuis ta propre adresse email</strong>. Les recruteurs reçoivent un email de toi directement — pas d'un service inconnu.</p>
+        <a href="${gmailAuthUrl}" style="display:inline-block;background:#ffffff;border:2px solid #16a34a;color:#15803d;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none">
+          🔗 Connecter mon Gmail →
+        </a>
+        <p style="font-size:11px;color:#4ade80;margin:10px 0 0 0">100% sécurisé · On envoie uniquement, on ne lit pas tes emails</p>
+      </div>
+
       <div style="background:#fff;border-radius:10px;padding:24px;margin-bottom:24px;border:1px solid #eee">
         <h3 style="font-size:16px;font-weight:700;color:#111;margin-top:0">📋 Récapitulatif</h3>
         <table style="width:100%;font-size:13px;color:#555">
@@ -44,6 +57,7 @@ module.exports = async (req, res) => {
       <div style="background:#fff;border-radius:10px;padding:24px;margin-bottom:24px;border:1px solid #eee">
         <h3 style="font-size:16px;font-weight:700;color:#111;margin-top:0">⚡ Prochaines étapes</h3>
         <ol style="padding-left:20px;color:#555;font-size:13px">
+          <li style="margin-bottom:8px">Connecte ton Gmail ci-dessus pour de meilleurs résultats</li>
           <li style="margin-bottom:8px">Ton paiement est confirmé — ta campagne démarre sous 24h</li>
           <li style="margin-bottom:8px">Tes candidatures sont envoyées automatiquement aux entreprises</li>
           <li style="margin-bottom:8px">Les recruteurs te contactent directement sur ${email}</li>
