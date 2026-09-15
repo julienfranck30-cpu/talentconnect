@@ -87,19 +87,10 @@
   </div>
 </nav>
 
-<div class="stats-bar">
-  <div class="stats-ticker">
-    <span>🔥 Aujourd'hui : <strong><span class="stat-live" id="stat-cand">247</span> candidatures envoyées</strong></span>
-    <span>✦ <strong><span class="stat-live" id="stat-ent">83</span> entreprises contactées</strong> cette semaine</span>
-    <span>🎯 <strong><span class="stat-live" id="stat-entretien">80</span> entretiens décrochés</strong> ce mois</span>
-  </div>
-</div>
-
 <section class="hero">
   <div class="noise"></div>
   <div class="glow-orb"></div>
   <div class="hero-inner">
-    <div class="hero-badge">✦ &nbsp;+500 candidats accompagnés · Réponse sous 5 jours</div>
     <h1 class="hero-title">L'IA qui <span class="grad">multiplie</span> tes<br>entretiens <span class="grad">d'embauche</span></h1>
     <p class="hero-sub">Jusqu'à 300 candidatures personnalisées envoyées automatiquement aux entreprises de ton secteur et de ta région.</p>
     <a href="formulaire.html" class="btn-primary-lg">Trouver mon job maintenant →</a>
@@ -110,20 +101,7 @@
         <div class="av" style="background:linear-gradient(135deg,#10B981,#22D3EE)">M</div>
         <div class="av" style="background:linear-gradient(135deg,#F59E0B,#A855F7)">L</div>
       </div>
-      <div class="proof-text"><span class="stars-sm">★★★★★</span> 4.8/5 · 124 avis Google vérifiés</div>
     </div>
-  </div>
-</section>
-
-<section class="logos-section">
-  <p class="logos-label">Nos candidats ont été recrutés chez</p>
-  <div class="logos-row">
-    <span class="logo-item">Bouygues</span>
-    <span class="logo-item">Decathlon</span>
-    <span class="logo-item">Schneider Electric</span>
-    <span class="logo-item">Groupe SEB</span>
-    <span class="logo-item">Michelin</span>
-    <span class="logo-item">Veolia</span>
   </div>
 </section>
 
@@ -263,7 +241,7 @@
     <div class="glow-orb2"></div>
     <p class="eyebrow">Prêt(e) ?</p>
     <h2 class="cta-title">Lance ta campagne<br><span class="grad">dès aujourd'hui</span></h2>
-    <p class="cta-sub">Rejoins +500 candidats qui ont déjà trouvé leur poste grâce à Lance Mon Job.</p>
+    <p class="cta-sub">Trouve ton poste grâce à Lance Mon Job.</p>
     <a href="formulaire.html" class="btn-primary-lg">Trouver mon job maintenant →</a>
   </div>
 </section>
@@ -307,21 +285,5 @@
   </div>
 </div>
 
-<script>
-function animateCounter(el, target, duration) {
-  let start = 0;
-  const step = target / (duration / 16);
-  const timer = setInterval(() => {
-    start += step;
-    if (start >= target) { el.textContent = target; clearInterval(timer); }
-    else el.textContent = Math.floor(start);
-  }, 16);
-}
-window.addEventListener('load', () => {
-  animateCounter(document.getElementById('stat-cand'), 247, 1500);
-  animateCounter(document.getElementById('stat-ent'), 83, 1200);
-  animateCounter(document.getElementById('stat-entretien'), 80, 800);
-});
-</script>
 </body>
 </html>
