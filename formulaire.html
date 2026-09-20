@@ -44,6 +44,10 @@
   .offres-option .opt-title { font-size: 14px; font-weight: 700; color: #e8e8e0; margin-bottom: 4px; }
   .offres-option .opt-desc { font-size: 12px; color: #888; line-height: 1.5; }
   .offres-badge { display: inline-block; background: linear-gradient(135deg,#A855F7,#22D3EE); color: #080612; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-left: 8px; vertical-align: middle; }
+  /* Case renonciation droit de rétractation (art. L221-28) */
+  .retract-row { display: flex; align-items: flex-start; gap: 12px; margin-top: 14px; max-width: 560px; cursor: pointer; }
+  .retract-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: #A855F7; flex-shrink: 0; margin-top: 2px; }
+  .retract-row span { font-size: 12px; color: #888; line-height: 1.5; }
 </style>
 </head>
 <body class="form-body">
@@ -338,6 +342,10 @@
     <label class="rgpd-row" style="margin-top:20px">
       <input type="checkbox" id="f-rgpd"/>
       <span>J'accepte le traitement de mes données personnelles (RGPD — 2 ans max). <span class="req">*</span></span>
+    </label>
+    <label class="retract-row">
+      <input type="checkbox" id="f-retractation"/>
+      <span>Je demande l'exécution immédiate du service avant la fin du délai de rétractation de 14 jours et je reconnais renoncer expressément à mon droit de rétractation une fois le service pleinement exécuté (art. L221-28 du Code de la consommation). <span class="req">*</span></span>
     </label>
     <div class="err" id="err-13"></div>
     <div class="nav-btns">
