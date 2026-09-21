@@ -274,6 +274,10 @@ if(document.getElementById('step-1')){
       err.textContent = 'Vous devez accepter la politique de données (RGPD).';
       return;
     }
+    if(!document.getElementById('f-retractation').checked){
+      err.textContent = 'Vous devez demander l\'exécution immédiate et renoncer au droit de rétractation pour lancer la campagne (art. L221-28).';
+      return;
+    }
 
     const btn = document.querySelector('#step-13 .btn-primary-lg');
     btn.disabled = true;
