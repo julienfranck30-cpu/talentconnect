@@ -427,7 +427,6 @@ function generateLettreFallback(candidat, company, secteur) {
 const { DOMAINES_PAR_SECTEUR, getCompaniesByRegion } = require('./companies');
 const { fetchOffresAdzuna } = require('./adzuna-jobs');
 const gmailModule = require('./gmail'); const sendViaGmail = gmailModule.sendViaGmail;
-const gmailModule = require('./gmail'); const sendViaGmail = gmailModule.sendViaGmail;
 
 async function findCompanies(secteur, ville, limit) {
   return getCompaniesByRegion(secteur, ville, limit);
@@ -526,21 +525,21 @@ async function sendCandidature(to, toName, company, secteur, candidat, lettreBas
   }
 
   try {
+    // Objet accrocheur et humain
+    const nomParts2 = (candidat.nom || '').trim().split(' ');
+    const prenomCourt = nomParts2[0] || candidat.nom;
+    const contratCourt = candidat.contrats
+      ? (candidat.contrats.toLowerCase().includes('alternance') ? 'Alternance'
+        : candidat.contrats.toLowerCase().includes('stage') ? 'Stage'
+        : candidat.contrats.toLowerCase().includes('cdi') ? 'CDI'
+        : candidat.contrats.toLowerCase().includes('cdd') ? 'CDD'
+        : 'Candidature')
+      : 'Candidature';
+    const dispoLabel = candidat.dispo_tot ? `disponible le ${candidat.dispo_tot}` : 'disponible rapidement';
     const body = {
       sender: { name: 'Lance Mon Job', email: 'support@lancemonjob.fr' },
       to: [{ email: to, name: toName || company }],
       replyTo: { email: candidat.email, name: candidat.nom },
-      // Objet accrocheur et humain
-      const nomParts2 = (candidat.nom || '').trim().split(' ');
-      const prenomCourt = nomParts2[0] || candidat.nom;
-      const contratCourt = candidat.contrats
-        ? (candidat.contrats.toLowerCase().includes('alternance') ? 'Alternance'
-          : candidat.contrats.toLowerCase().includes('stage') ? 'Stage'
-          : candidat.contrats.toLowerCase().includes('cdi') ? 'CDI'
-          : candidat.contrats.toLowerCase().includes('cdd') ? 'CDD'
-          : 'Candidature')
-        : 'Candidature';
-      const dispoLabel = candidat.dispo_tot ? `disponible le ${candidat.dispo_tot}` : 'disponible rapidement';
       subject: `${prenomCourt} ${nomParts2.slice(1).join(' ')} – ${candidat.poste} – ${contratCourt} – ${dispoLabel}`,
       htmlContent,
     };
