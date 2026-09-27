@@ -1,24 +1,39 @@
 // api/webhook.js
 const { createClient } = require('@supabase/supabase-js');
+const Stripe = require('stripe');
 
-const SUPABASE_URL    = process.env.SUPABASE_URL;
-const SUPABASE_SECRET = process.env.SUPABASE_SECRET_KEY;
-const BREVO_KEY       = process.env.BREVO_API_KEY;
+const SUPABASE_URL          = process.env.SUPABASE_URL;
+const SUPABASE_SECRET       = process.env.SUPABASE_SECRET_KEY;
+const BREVO_KEY             = process.env.BREVO_API_KEY;
+const STRIPE_SECRET_KEY     = process.env.STRIPE_SECRET_KEY;
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
+
+const stripe = Stripe(STRIPE_SECRET_KEY);
+
+const PLANS = {
+  '29€': { label: 'Starter', volume: 50, amount: 2900 },
+  '59€': { label: 'Pro', volume: 150, amount: 5900 },
+  '99€': { label: 'Max', volume: 300, amount: 9900 },
+};
+
+function matchPlan(candidatPlan) {
+  for (const [key, val] of Object.entries(PLANS)) {
+    if (candidatPlan?.includes(key)) return val;
+  }
+  return PLANS['29€'];
+}
+
+function readRawBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', (chunk) => chunks.push(chunk));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
 
 async function sendConfirmationEmail(candidat) {
-  const plans = {
-    '29€': { label: 'Starter', volume: 50 },
-    '59€': { label: 'Pro', volume: 150 },
-    '99€': { label: 'Max', volume: 300 },
-  };
-
-  let planInfo = { label: 'Starter', volume: 50 };
-  for (const [key, val] of Object.entries(plans)) {
-    if (candidat.plan && candidat.plan.includes(key)) {
-      planInfo = val;
-      break;
-    }
-  }
+  const planInfo = matchPlan(candidat.plan);
 
   const htmlContent = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#333;background:#fff">
@@ -87,48 +102,76 @@ async function sendConfirmationEmail(candidat) {
   }
 }
 
-module.exports = async (req, res) => {
+export const config = { api: { bodyParser: false } };
+
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const rawBody = await readRawBody(req);
+
   let event;
   try {
-    event = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-  } catch(e) {
-    return res.status(400).json({ error: 'Invalid JSON' });
+    event = stripe.webhooks.constructEvent(
+      rawBody,
+      req.headers['stripe-signature'],
+      STRIPE_WEBHOOK_SECRET
+    );
+  } catch (e) {
+    console.error('Stripe signature verification failed:', e.message);
+    return res.status(400).json({ error: 'Invalid signature' });
   }
 
   if (event.type !== 'checkout.session.completed') {
     return res.status(200).json({ received: true, ignored: true });
   }
 
-  const obj = event.data?.object;
-  const customerEmail =
-    obj?.customer_details?.email ||
-    obj?.customer_email ||
-    obj?.receipt_email ||
-    obj?.charges?.data?.[0]?.billing_details?.email;
-
-  if (!customerEmail) {
-    console.log('No email found in Stripe event');
-    return res.status(200).json({ received: true });
-  }
-
+  const session = event.data.object;
   const sb = createClient(SUPABASE_URL, SUPABASE_SECRET);
-  const { data: candidatures, error } = await sb
-    .from('candidatures')
-    .select('*')
-    .eq('email', customerEmail)
-    .order('created_at', { ascending: false })
-    .limit(1);
 
-  if (error || !candidatures?.length) {
-    console.error('Candidature not found for:', customerEmail);
-    return res.status(200).json({ received: true });
+  let candidat = null;
+
+  if (session.client_reference_id) {
+    const { data, error } = await sb
+      .from('candidatures')
+      .select('*')
+      .eq('id', session.client_reference_id)
+      .limit(1);
+    if (!error && data?.length) candidat = data[0];
+    if (!candidat) console.error('client_reference_id inconnu:', session.client_reference_id);
   }
 
-  const candidat = candidatures[0];
+  if (!candidat) {
+    const customerEmail =
+      session.customer_details?.email ||
+      session.customer_email ||
+      session.receipt_email;
+
+    if (!customerEmail) {
+      console.log('No client_reference_id nor email found in Stripe event');
+      return res.status(200).json({ received: true });
+    }
+
+    const { data, error } = await sb
+      .from('candidatures')
+      .select('*')
+      .eq('email', customerEmail)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (error || !data?.length) {
+      console.error('Candidature not found for:', customerEmail);
+      return res.status(200).json({ received: true });
+    }
+    candidat = data[0];
+  }
+
+  const expectedPlan = matchPlan(candidat.plan);
+  if (session.amount_total !== expectedPlan.amount) {
+    console.error(`Montant payé (${session.amount_total}) incohérent avec le plan "${candidat.plan}" (attendu ${expectedPlan.amount}) — dossier ${candidat.id}`);
+    return res.status(200).json({ received: true, mismatch: true });
+  }
 
   await sb.from('candidatures')
     .update({ statut: 'Payé' })
@@ -138,4 +181,4 @@ module.exports = async (req, res) => {
 
   console.log(`Paiement reçu pour ${candidat.nom} — confirmation envoyée`);
   return res.status(200).json({ received: true });
-};
+}

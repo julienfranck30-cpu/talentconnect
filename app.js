@@ -353,7 +353,8 @@ if(document.getElementById('step-1')){
 
       const stripeUrl = STRIPE_LINKS[formData.plan];
       const emailParam = encodeURIComponent(formData.email);
-      const finalUrl = `${stripeUrl}?prefilled_email=${emailParam}`;
+      const refParam = encodeURIComponent(data?.[0]?.id || '');
+      const finalUrl = `${stripeUrl}?prefilled_email=${emailParam}&client_reference_id=${refParam}`;
 
       document.getElementById('payment-btn-wrap').innerHTML = `
         <a href="${finalUrl}" class="btn-primary-lg" style="display:inline-block;text-decoration:none">

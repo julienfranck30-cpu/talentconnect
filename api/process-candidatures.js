@@ -8,6 +8,20 @@ const BREVO_KEY       = process.env.BREVO_API_KEY;
 
 const PLAN_VOLUMES = { '29€': 50, '59€': 150, '99€': 300 };
 
+// candidat.cv_url est soit un chemin dans le bucket privé 'cvs' (nouveaux dossiers),
+// soit encore une ancienne URL publique (dossiers créés avant le passage du bucket en privé).
+async function resolveCvUrl(cvUrl) {
+  if (!cvUrl) return null;
+  if (/^https?:\/\//i.test(cvUrl)) return cvUrl;
+  const sb = createClient(SUPABASE_URL, SUPABASE_SECRET);
+  const { data, error } = await sb.storage.from('cvs').createSignedUrl(cvUrl, 3600);
+  if (error) {
+    console.error('Signed URL error:', error.message);
+    return null;
+  }
+  return data.signedUrl;
+}
+
 function getPlanVolume(plan) {
   for (const [key, vol] of Object.entries(PLAN_VOLUMES)) {
     if (plan && plan.includes(key)) return vol;
@@ -474,13 +488,15 @@ async function sendCandidature(to, toName, company, secteur, candidat, lettreBas
       ${lettreFormatee}
     </div>`;
 
+  const cvUrl = await resolveCvUrl(candidat.cv_url);
+
   // ── GMAIL : Si le candidat a connecté son Gmail → envoie depuis sa boîte mail ──
   if (candidat.gmail_token && candidat.gmail_connected) {
     console.log(`Envoi via Gmail du candidat: ${candidat.email}`);
     let gmailAttachments = [];
-    if (candidat.cv_url) {
+    if (cvUrl) {
       try {
-        const cvRes = await fetch(candidat.cv_url);
+        const cvRes = await fetch(cvUrl);
         if (cvRes.ok) {
           const cvBuffer = await cvRes.arrayBuffer();
           if (cvBuffer.byteLength > 0) {
@@ -505,9 +521,9 @@ async function sendCandidature(to, toName, company, secteur, candidat, lettreBas
   // ────────────────────────────────────────────────────────────────────────────────
 
   let attachments = [];
-  if (candidat.cv_url) {
+  if (cvUrl) {
     try {
-      const cvRes = await fetch(candidat.cv_url);
+      const cvRes = await fetch(cvUrl);
       if (cvRes.ok) {
         const cvBuffer = await cvRes.arrayBuffer();
         if (cvBuffer.byteLength > 0) {
@@ -675,9 +691,10 @@ module.exports = async (req, res) => {
                 subject: subjectOffre,
                 htmlContent: htmlOffre,
               };
-              if (candidat.cv_url) {
+              const cvUrlOffre = await resolveCvUrl(candidat.cv_url);
+              if (cvUrlOffre) {
                 try {
-                  const cvRes = await fetch(candidat.cv_url);
+                  const cvRes = await fetch(cvUrlOffre);
                   if (cvRes.ok) {
                     const cvBuffer = await cvRes.arrayBuffer();
                     if (cvBuffer.byteLength > 0) {
