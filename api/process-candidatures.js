@@ -10,11 +10,30 @@ const PLAN_VOLUMES = { '29€': 50, '59€': 150, '99€': 300 };
 
 // candidat.cv_url est soit un chemin dans le bucket privé 'cvs' (nouveaux dossiers),
 // soit encore une ancienne URL publique (dossiers créés avant le passage du bucket en privé).
+// On en extrait le chemin dans les deux cas et on régénère systématiquement une URL
+// signée fraîche : ça évite toute dépendance d'ordre entre la bascule du bucket en privé
+// et une migration des lignes existantes.
+function extractCvPath(cvUrl) {
+  const publicPrefix = `${SUPABASE_URL}/storage/v1/object/public/cvs/`;
+  if (cvUrl.startsWith(publicPrefix)) {
+    return decodeURIComponent(cvUrl.slice(publicPrefix.length));
+  }
+  if (/^https?:\/\//i.test(cvUrl)) {
+    const match = cvUrl.match(/\/cvs\/([^/?]+)$/);
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+  return cvUrl;
+}
+
 async function resolveCvUrl(cvUrl) {
   if (!cvUrl) return null;
-  if (/^https?:\/\//i.test(cvUrl)) return cvUrl;
+  const cvPath = extractCvPath(cvUrl);
+  if (!cvPath) {
+    console.error('CV path introuvable dans cv_url:', cvUrl);
+    return null;
+  }
   const sb = createClient(SUPABASE_URL, SUPABASE_SECRET);
-  const { data, error } = await sb.storage.from('cvs').createSignedUrl(cvUrl, 3600);
+  const { data, error } = await sb.storage.from('cvs').createSignedUrl(cvPath, 3600);
   if (error) {
     console.error('Signed URL error:', error.message);
     return null;
