@@ -210,14 +210,9 @@ tr:hover td{background:rgba(168,85,247,0.04);cursor:pointer}
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = 'https://ihhqwukfkztwdhxfvsvf.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_AKWSkS_jE-R1PnMWSI408g_5QqV8iPJ';
-const ADMIN_USER = 'admin';
-const ADMIN_PASS = 'admin123';
-
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Authentification admin via serveur (pas de clé publique exposée)
+let authToken = null;
 let allData = [];
 let currentFilter = 'all';
 let currentSearch = '';
@@ -226,19 +221,31 @@ let currentId = null;
 // AUTH
 if(sessionStorage.getItem('lmj_admin')==='1') showDash();
 
-function doLogin(){
+async function doLogin(){
   const u = document.getElementById('l-user').value;
   const p = document.getElementById('l-pass').value;
-  if(u===ADMIN_USER && p===ADMIN_PASS){
-    sessionStorage.setItem('lmj_admin','1');
-    showDash();
-  } else {
+  try {
+    const res = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      authToken = data.token;
+      sessionStorage.setItem('lmj_admin','1');
+      showDash();
+    } else {
+      document.getElementById('l-err').style.display='block';
+    }
+  } catch(e) {
     document.getElementById('l-err').style.display='block';
   }
 }
 
 function doLogout(){
   sessionStorage.removeItem('lmj_admin');
+  authToken = null;
   document.getElementById('dashboard-screen').style.display='none';
   document.getElementById('login-screen').style.display='flex';
 }
@@ -255,14 +262,21 @@ async function loadAll(){
   await Promise.all([loadSupabase(), loadBrevo()]);
 }
 
-// SUPABASE DATA
+// SUPABASE DATA via API serveur
 async function loadSupabase(){
-  const { data, error } = await sb.from('candidatures').select('*').order('created_at',{ascending:false});
-  if(error){ console.error(error); return; }
-  allData = data || [];
-  renderStats(allData);
-  renderCharts(allData);
-  renderTable(allData);
+  try {
+    const res = await fetch('/api/admin/candidatures-list', {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    if (!res.ok) throw new Error('API error');
+    const result = await res.json();
+    allData = result.data || [];
+    renderStats(allData);
+    renderCharts(allData);
+    renderTable(allData);
+  } catch(e) {
+    console.error(e);
+  }
 }
 
 function renderStats(data){
@@ -502,7 +516,19 @@ function closeModal(){
 
 async function setStatut(statut){
   if(!currentId) return;
-  await sb.from('candidatures').update({statut}).eq('id',currentId);
+  try {
+    const res = await fetch('/api/admin/candidatures-update', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ id: currentId, statut })
+    });
+    if (!res.ok) throw new Error('API error');
+  } catch(e) {
+    console.error(e);
+  }
   closeModal();
   loadSupabase();
 }

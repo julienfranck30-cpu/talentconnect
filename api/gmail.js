@@ -3,6 +3,37 @@
 // Routes : ?action=auth | ?action=callback | utilisé en interne pour l'envoi
 
 const { createClient } = require('@supabase/supabase-js');
+const crypto = require('crypto');
+
+// ─── STATE SIGNING (HMAC + nonce + expiration) ───────────────────────────────
+
+const STATE_SECRET = process.env.OAUTH_STATE_SECRET || crypto.randomBytes(32).toString('hex');
+const STATE_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
+
+function signState(payload) {
+  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const sig = crypto.createHmac('sha256', STATE_SECRET).update(body).digest('base64url');
+  return `${body}.${sig}`;
+}
+
+function verifyState(signed) {
+  const dot = signed.lastIndexOf('.');
+  if (dot === -1) return null;
+  const body = signed.slice(0, dot);
+  const sig = signed.slice(dot + 1);
+  const expected = crypto.createHmac('sha256', STATE_SECRET).update(body).digest('base64url');
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  try {
+    const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
+    if (!payload.exp || Date.now() > payload.exp) return null;
+    if (!payload.nonce || !payload.email || !payload.id) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
 
@@ -73,7 +104,12 @@ module.exports = async (req, res) => {
     const { email, id } = req.query;
     if (!email || !id) return res.status(400).send('Email et ID requis');
 
-    const state = Buffer.from(JSON.stringify({ email, id })).toString('base64');
+    const state = signState({
+      email,
+      id,
+      nonce: crypto.randomBytes(16).toString('hex'),
+      exp: Date.now() + STATE_MAX_AGE_MS
+    });
     const scopes = [
       'https://www.googleapis.com/auth/gmail.send',
       'https://www.googleapis.com/auth/userinfo.email'
@@ -98,10 +134,8 @@ module.exports = async (req, res) => {
     if (error) return res.redirect('https://www.lancemonjob.fr?gmail_error=1');
     if (!code || !state) return res.status(400).send('Paramètres manquants');
 
-    let candidatInfo;
-    try {
-      candidatInfo = JSON.parse(Buffer.from(state, 'base64').toString('utf8'));
-    } catch(e) { return res.status(400).send('State invalide'); }
+    const candidatInfo = verifyState(state);
+    if (!candidatInfo) return res.status(400).send('State invalide ou expiré');
 
     const { email, id } = candidatInfo;
 

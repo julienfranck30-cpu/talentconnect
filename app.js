@@ -1,22 +1,11 @@
 /* ── Lance Mon Job V6 — 13 étapes ── */
 
-const SUPABASE_URL = 'https://ihhqwukfkztwdhxfvsvf.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_AKWSkS_jE-R1PnMWSI408g_5QqV8iPJ';
-
 const STRIPE_LINKS = {
   starter: 'https://buy.stripe.com/eVq8wO7eE1on47xaaldnW01',
   pro:     'https://buy.stripe.com/3cIaEW0Qg2sreMb4Q1dnW02',
   max:     'https://buy.stripe.com/9B614m42s9UT8nNgyJdnW03'
 };
 
-let sb;
-function getClient(){
-  if(!sb) sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  return sb;
-}
-
-const ADMIN_USER = 'admin';
-const ADMIN_PASS = 'admin123';
 const TOTAL_STEPS = 13;
 
 function fmtDate(iso){ return new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}); }
@@ -298,33 +287,38 @@ if(document.getElementById('step-1')){
     const planInfo = plans[formData.plan] || plans.pro;
 
     try {
-      const { data, error } = await getClient().from('candidatures').insert([{
-        nom:           formData.prenom + ' ' + formData.nom,
-        email:         formData.email,
-        tel:           formData.tel,
-        genre:         formData.genre || 'N',
-        poste:         formData.poste,
-        secteurs:      formData.secteurs,
-        ville:         formData.ville,
-        rayon:         formData.rayon,
-        contrats:      formData.contrat,
-        duree_contrat: formData.duree_contrat || null,
-        cv:            formData.cv,
-        cv_url:        formData.cvUrl || null,
-        cv_texte:      formData.cvTexte || null,
-        plan:          planInfo.label,
-        message:       formData.message,
-        offres_publiees: formData.offres_publiees || false,
-        statut:        'En attente paiement',
-        dispo_tot:     formData.dispo_tot || null,
-        dispo_tard:    formData.dispo_tard || null,
-        situation:     formData.situation || null,
-      }]).select();
+      const resp = await fetch('/api/candidatures-create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nom:           formData.prenom + ' ' + formData.nom,
+          email:         formData.email,
+          tel:           formData.tel,
+          genre:         formData.genre || 'N',
+          poste:         formData.poste,
+          secteurs:      formData.secteurs,
+          ville:         formData.ville,
+          rayon:         formData.rayon,
+          contrats:      formData.contrat,
+          duree_contrat: formData.duree_contrat || null,
+          cv:            formData.cv,
+          cv_url:        formData.cvUrl || null,
+          cv_texte:      formData.cvTexte || null,
+          plan:          planInfo.label,
+          message:       formData.message,
+          offres_publiees: formData.offres_publiees || false,
+          statut:        'En attente paiement',
+          dispo_tot:     formData.dispo_tot || null,
+          dispo_tard:    formData.dispo_tard || null,
+          situation:     formData.situation || null,
+        })
+      });
 
-      if(error) throw error;
+      const result = await resp.json();
+      if (!resp.ok) throw new Error(result.error || 'Erreur serveur');
 
       try {
-        const candidatId = data?.[0]?.id || '';
+        const candidatId = result.id || '';
         await fetch('/api/confirm-candidature', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -373,122 +367,4 @@ if(document.getElementById('step-1')){
   };
 }
 
-/* ════════════════════════════
-   ADMIN (admin.html)
-════════════════════════════ */
-if(document.getElementById('login-screen')){
 
-  let currentId = null;
-
-  if(sessionStorage.getItem('tc_admin')==='1') showDash();
-
-  window.doLogin = function(){
-    const u = document.getElementById('l-user').value;
-    const p = document.getElementById('l-pass').value;
-    if(u===ADMIN_USER && p===ADMIN_PASS){
-      sessionStorage.setItem('tc_admin','1');
-      showDash();
-    } else {
-      const e = document.getElementById('l-err');
-      e.textContent = 'Identifiants incorrects';
-      e.style.display = 'block';
-    }
-  };
-
-  window.doLogout = function(){
-    sessionStorage.removeItem('tc_admin');
-    document.getElementById('dashboard-screen').style.display='none';
-    document.getElementById('login-screen').style.display='flex';
-  };
-
-  window.clearAll = async function(){
-    if(!confirm('Effacer toutes les candidatures ?')) return;
-    await getClient().from('candidatures').delete().neq('id', 0);
-    renderDash();
-  };
-
-  async function showDash(){
-    document.getElementById('login-screen').style.display='none';
-    document.getElementById('dashboard-screen').style.display='block';
-    await renderDash();
-  }
-
-  async function renderDash(){
-    document.getElementById('table-body').innerHTML =
-      '<tr><td colspan="7" style="text-align:center;color:#555550;padding:2rem">Chargement...</td></tr>';
-
-    const { data, error } = await getClient()
-      .from('candidatures').select('*').order('created_at', { ascending: false });
-
-    if(error){
-      document.getElementById('table-body').innerHTML =
-        `<tr><td colspan="7" style="color:#F87171;padding:1rem">Erreur : ${error.message}</td></tr>`;
-      return;
-    }
-
-    const total   = data.length;
-    const attente = data.filter(c=>c.statut==='En attente'||c.statut==='En attente paiement').length;
-    const payes   = data.filter(c=>c.statut==='Payé').length;
-
-    document.getElementById('stats-row').innerHTML = `
-      <div class="stat-card"><div class="stat-label">Total</div><div class="stat-val">${total}</div></div>
-      <div class="stat-card"><div class="stat-label">En attente</div><div class="stat-val">${attente}</div></div>
-      <div class="stat-card"><div class="stat-label">Payés</div><div class="stat-val" style="color:#34D399">${payes}</div></div>`;
-
-    if(!data.length){
-      document.getElementById('table-wrap').style.display='none';
-      document.getElementById('empty-state').style.display='block';
-      return;
-    }
-    document.getElementById('table-wrap').style.display='block';
-    document.getElementById('empty-state').style.display='none';
-
-    document.getElementById('table-body').innerHTML = data.map(c=>`
-      <tr onclick="openDetail('${c.id}')">
-        <td><strong>${c.nom}</strong><br><span style="font-size:11px;color:#777770">${c.email}</span></td>
-        <td>${c.poste||'—'}</td>
-        <td style="color:#777770;font-size:11px">${c.secteurs||'—'}</td>
-        <td style="color:#777770">${c.ville||'—'}</td>
-        <td><span style="font-size:11px;color:#8B5CF6;font-weight:600">${c.plan||'—'}</span></td>
-        <td style="color:#777770">${fmtDate(c.created_at)}</td>
-        <td><span class="badge ${badgeCls(c.statut)}">${c.statut}</span></td>
-      </tr>`).join('');
-  }
-
-  window.openDetail = async function(id){
-    const { data } = await getClient().from('candidatures').select('*').eq('id', id).single();
-    if(!data) return;
-    currentId = id;
-    const genreLabel = data.genre === 'M' ? 'Masculin' : data.genre === 'F' ? 'Féminin' : 'Non précisé';
-    document.getElementById('m-nom').textContent   = data.nom;
-    document.getElementById('m-poste').textContent = data.poste||'—';
-    document.getElementById('m-msg').textContent   = data.message||'(aucun message)';
-    document.getElementById('m-fields').innerHTML = `
-      <div class="modal-field"><span class="field-key">Email</span><span class="field-val">${data.email}</span></div>
-      <div class="modal-field"><span class="field-key">Téléphone</span><span class="field-val">${data.tel||'—'}</span></div>
-      <div class="modal-field"><span class="field-key">Genre</span><span class="field-val">${genreLabel}</span></div>
-      <div class="modal-field"><span class="field-key">Situation</span><span class="field-val">${data.situation||'—'}</span></div>
-      <div class="modal-field"><span class="field-key">Secteurs</span><span class="field-val">${data.secteurs||'—'}</span></div>
-      <div class="modal-field"><span class="field-key">Contrat</span><span class="field-val">${data.contrats||'—'}</span></div>
-      <div class="modal-field"><span class="field-key">Durée</span><span class="field-val">${data.duree_contrat||'—'}</span></div>
-      <div class="modal-field"><span class="field-key">Zone</span><span class="field-val">${data.ville||'—'} · ${data.rayon||''}</span></div>
-      <div class="modal-field"><span class="field-key">Dispo à partir du</span><span class="field-val">${data.dispo_tot||'—'}</span></div>
-      <div class="modal-field"><span class="field-key">Dispo au plus tard</span><span class="field-val">${data.dispo_tard||'—'}</span></div>
-      <div class="modal-field"><span class="field-key">CV</span><span class="field-val">${data.cv||'Non joint'}</span></div>
-      <div class="modal-field"><span class="field-key">Offre</span><span class="field-val" style="color:#8B5CF6">${data.plan||'—'}</span></div>
-      <div class="modal-field"><span class="field-key">Statut</span><span class="field-val"><span class="badge ${badgeCls(data.statut)}">${data.statut}</span></span></div>`;
-    document.getElementById('modal-overlay').classList.add('open');
-  };
-
-  window.closeModal = function(){
-    document.getElementById('modal-overlay').classList.remove('open');
-    currentId = null;
-  };
-
-  window.setStatut = async function(statut){
-    if(!currentId) return;
-    await getClient().from('candidatures').update({ statut }).eq('id', currentId);
-    closeModal();
-    renderDash();
-  };
-}

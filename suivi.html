@@ -153,11 +153,8 @@
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = 'https://ihhqwukfkztwdhxfvsvf.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_AKWSkS_jE-R1PnMWSI408g_5QqV8iPJ';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Plus de clé publique exposée — tout passe par l'API serveur
 
 // Check URL param
 window.addEventListener('load', () => {
@@ -182,22 +179,18 @@ async function loadCampagne() {
   document.getElementById('login-section').style.display = 'none';
   document.getElementById('loading-section').style.display = 'block';
 
-  const { data, error } = await sb
-    .from('candidatures')
-    .select('*')
-    .eq('email', email)
-    .order('created_at', { ascending: false })
-    .limit(1);
+  const res = await fetch(`/api/suivi?email=${encodeURIComponent(email)}`);
+  const result = await res.json();
 
   document.getElementById('loading-section').style.display = 'none';
 
-  if (error || !data || !data.length) {
+  if (!res.ok || !result.data) {
     document.getElementById('login-section').style.display = 'block';
     errEl.textContent = 'Aucune campagne trouvée pour cet email. Vérifie l\'adresse utilisée lors de ton inscription.';
     return;
   }
 
-  const c = data[0];
+  const c = result.data;
   renderDashboard(c);
 }
 
