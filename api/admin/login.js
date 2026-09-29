@@ -3,16 +3,27 @@
 
 const crypto = require('crypto');
 
-const ADMIN_USER = process.env.ADMIN_USER || 'admin';
-const ADMIN_PASS = process.env.ADMIN_PASS || 'admin123';
+const ADMIN_USER = process.env.ADMIN_USER;
+const ADMIN_PASS = process.env.ADMIN_PASS;
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
 
-if (!ADMIN_SECRET) {
-  console.error('ERREUR : variable d\'environnement ADMIN_SECRET manquante.');
+// Pas de fallback : sans variables d'environnement configurées, l'endpoint est inerte.
+if (!ADMIN_USER || !ADMIN_PASS || !ADMIN_SECRET) {
+  console.error('ERREUR : ADMIN_USER, ADMIN_PASS et ADMIN_SECRET doivent être définis sur Vercel.');
+}
+
+function timingSafeEquals(a, b) {
+  const bufA = Buffer.from(String(a).padEnd(256, '0'));
+  const bufB = Buffer.from(String(b).padEnd(256, '0'));
+  return crypto.timingSafeEqual(bufA, bufB);
 }
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  if (!ADMIN_USER || !ADMIN_PASS || !ADMIN_SECRET) {
+    return res.status(503).json({ error: 'Authentification admin non configurée' });
+  }
 
   const { username, password } = req.body;
   if (!username || !password) {
@@ -20,14 +31,8 @@ module.exports = async (req, res) => {
   }
 
   // Comparaison timing-safe
-  const userMatch = crypto.timingSafeEqual(
-    Buffer.from(username.padEnd(256, '0')),
-    Buffer.from(ADMIN_USER.padEnd(256, '0'))
-  );
-  const passMatch = crypto.timingSafeEqual(
-    Buffer.from(password.padEnd(256, '0')),
-    Buffer.from(ADMIN_PASS.padEnd(256, '0'))
-  );
+  const userMatch = timingSafeEquals(username, ADMIN_USER);
+  const passMatch = timingSafeEquals(password, ADMIN_PASS);
 
   if (!userMatch || !passMatch) {
     return res.status(401).json({ error: 'Identifiants incorrects' });

@@ -16,6 +16,17 @@ const PLANS = {
   '99€': { label: 'Max', volume: 300, amount: 9900 },
 };
 
+// Échappement HTML : les données du candidat sont injectées dans des gabarits d'e-mail.
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function matchPlan(candidatPlan) {
   for (const [key, val] of Object.entries(PLANS)) {
     if (candidatPlan?.includes(key)) return val;
@@ -34,6 +45,13 @@ function readRawBody(req) {
 
 async function sendConfirmationEmail(candidat) {
   const planInfo = matchPlan(candidat.plan);
+  const nom = escapeHtml(candidat.nom);
+  const poste = escapeHtml(candidat.poste);
+  const secteurs = escapeHtml(candidat.secteurs);
+  const ville = escapeHtml(candidat.ville);
+  const rayon = escapeHtml(candidat.rayon);
+  const emailCandidat = escapeHtml(candidat.email);
+  const tel = escapeHtml(candidat.tel);
 
   const htmlContent = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#333;background:#fff">
@@ -41,16 +59,16 @@ async function sendConfirmationEmail(candidat) {
         <h1 style="color:#fff;font-size:24px;margin:0">✦ TalentConnect</h1>
       </div>
       <div style="padding:32px">
-        <h2 style="font-size:20px;margin-bottom:8px">Bonjour ${candidat.nom} 👋</h2>
+        <h2 style="font-size:20px;margin-bottom:8px">Bonjour ${nom} 👋</h2>
         <p style="color:#555;margin-bottom:24px">Ton paiement a bien été reçu. Ta campagne de candidatures spontanées est maintenant <strong>en cours de préparation</strong>.</p>
 
         <div style="background:#f9f9f9;border-radius:8px;padding:20px;margin-bottom:24px">
           <h3 style="margin:0 0 12px;font-size:15px;color:#333">📋 Récapitulatif de ta campagne</h3>
           <table style="width:100%;font-size:14px;color:#555">
             <tr><td style="padding:4px 0"><strong>Offre</strong></td><td>${planInfo.label} — ${planInfo.volume} candidatures</td></tr>
-            <tr><td style="padding:4px 0"><strong>Poste visé</strong></td><td>${candidat.poste || '—'}</td></tr>
-            <tr><td style="padding:4px 0"><strong>Secteurs</strong></td><td>${candidat.secteurs || '—'}</td></tr>
-            <tr><td style="padding:4px 0"><strong>Zone</strong></td><td>${candidat.ville || '—'} · ${candidat.rayon || ''}</td></tr>
+            <tr><td style="padding:4px 0"><strong>Poste visé</strong></td><td>${poste || '—'}</td></tr>
+            <tr><td style="padding:4px 0"><strong>Secteurs</strong></td><td>${secteurs || '—'}</td></tr>
+            <tr><td style="padding:4px 0"><strong>Zone</strong></td><td>${ville || '—'} · ${rayon || ''}</td></tr>
           </table>
         </div>
 
@@ -65,7 +83,7 @@ async function sendConfirmationEmail(candidat) {
           <li>Nos algorithmes identifient les entreprises cibles dans ta zone</li>
           <li>Une lettre de motivation personnalisée est générée pour chaque entreprise</li>
           <li>Les candidatures sont envoyées aux bons interlocuteurs RH</li>
-          <li>Les entreprises te contactent directement sur <strong>${candidat.email}</strong> ou <strong>${candidat.tel || 'ton téléphone'}</strong></li>
+          <li>Les entreprises te contactent directement sur <strong>${emailCandidat}</strong> ou <strong>${tel || 'ton téléphone'}</strong></li>
         </ol>
 
         <p style="font-size:13px;color:#888;margin-top:24px">
@@ -87,7 +105,7 @@ async function sendConfirmationEmail(candidat) {
       },
       body: JSON.stringify({
         sender: { name: 'TalentConnect', email: 'julienfranck30@gmail.com' },
-        to: [{ email: candidat.email, name: candidat.nom }],
+        to: [{ email: candidat.email, name: candidat.nom }],  // en-tête d'e-mail : ne pas échapper
         subject: `✦ Ta campagne est lancée — ${planInfo.volume} candidatures en cours d'envoi`,
         htmlContent,
       }),

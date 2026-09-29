@@ -1,8 +1,17 @@
 // api/brevo-stats.js
 const BREVO_KEY = process.env.BREVO_API_KEY;
+const CRON_SECRET = process.env.CRON_SECRET;
 
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // Authentification serveur↔serveur
+  const auth = req.headers.authorization;
+  if (!auth || auth !== `Bearer ${CRON_SECRET}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  // CORS restreint au domaine du site
+  res.setHeader('Access-Control-Allow-Origin', 'https://www.lancemonjob.fr');
+  res.setHeader('Access-Control-Allow-Methods', 'GET');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {

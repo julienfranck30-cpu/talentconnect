@@ -8,6 +8,17 @@ const STRIPE_LINKS = {
 
 const TOTAL_STEPS = 13;
 
+// Échappement HTML pour prévenir le XSS
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function fmtDate(iso){ return new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}); }
 function badgeCls(s){ return s==='Retenu'?'badge-retained':s==='Refusé'?'badge-rejected':'badge-pending'; }
 
@@ -211,17 +222,17 @@ if(document.getElementById('step-1')){
   function buildRecap(){
     const genreLabel = formData.genre === 'M' ? 'Masculin' : formData.genre === 'F' ? 'Féminin' : 'Non précisé';
     document.getElementById('recap-card').innerHTML = `
-      <strong>Candidat :</strong> ${formData.prenom} ${formData.nom}<br>
+      <strong>Candidat :</strong> ${escapeHtml(formData.prenom)} ${escapeHtml(formData.nom)}<br>
       <strong>Genre :</strong> ${genreLabel}<br>
-      <strong>Email :</strong> ${formData.email}<br>
-      <strong>Poste visé :</strong> ${formData.poste||'—'}<br>
-      <strong>Secteurs :</strong> ${formData.secteurs||'—'}<br>
-      <strong>Contrat :</strong> ${formData.contrat||'—'}<br>
-      ${formData.duree_contrat ? `<strong>Durée :</strong> ${formData.duree_contrat}<br>` : ''}
-      <strong>Zone :</strong> ${formData.ville||'—'} · ${formData.rayon}<br>
-      <strong>Disponible à partir du :</strong> ${formData.dispo_tot||'—'}<br>
-      ${formData.dispo_tard ? `<strong>Au plus tard :</strong> ${formData.dispo_tard}<br>` : ''}
-      <strong>CV :</strong> ${formData.cv||'Non joint'}`;
+      <strong>Email :</strong> ${escapeHtml(formData.email)}<br>
+      <strong>Poste visé :</strong> ${escapeHtml(formData.poste)||'—'}<br>
+      <strong>Secteurs :</strong> ${escapeHtml(formData.secteurs)||'—'}<br>
+      <strong>Contrat :</strong> ${escapeHtml(formData.contrat)||'—'}<br>
+      ${formData.duree_contrat ? `<strong>Durée :</strong> ${escapeHtml(formData.duree_contrat)}<br>` : ''}
+      <strong>Zone :</strong> ${escapeHtml(formData.ville)||'—'} · ${escapeHtml(formData.rayon)}<br>
+      <strong>Disponible à partir du :</strong> ${escapeHtml(formData.dispo_tot)||'—'}<br>
+      ${formData.dispo_tard ? `<strong>Au plus tard :</strong> ${escapeHtml(formData.dispo_tard)}<br>` : ''}
+      <strong>CV :</strong> ${escapeHtml(formData.cv)||'Non joint'}`;
   }
 
   window.selectPlan = function(el, plan){
@@ -317,28 +328,6 @@ if(document.getElementById('step-1')){
       const result = await resp.json();
       if (!resp.ok) throw new Error(result.error || 'Erreur serveur');
 
-      try {
-        const candidatId = result.id || '';
-        await fetch('/api/confirm-candidature', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email:         formData.email,
-            prenom:        formData.prenom,
-            nom:           formData.nom,
-            poste:         formData.poste,
-            secteurs:      formData.secteurs,
-            contrat:       formData.contrat,
-            duree_contrat: formData.duree_contrat || null,
-            plan:          planInfo.label,
-            dispo_tot:     formData.dispo_tot || null,
-            candidat_id:   candidatId
-          })
-        });
-      } catch(e) {
-        console.warn('Email confirmation non envoyé:', e.message);
-      }
-
       document.getElementById('step-13').classList.remove('active');
       document.getElementById('step-success').classList.add('active');
       document.getElementById('success-msg').textContent =
@@ -347,11 +336,11 @@ if(document.getElementById('step-1')){
 
       const stripeUrl = STRIPE_LINKS[formData.plan];
       const emailParam = encodeURIComponent(formData.email);
-      const refParam = encodeURIComponent(data?.[0]?.id || '');
+      const refParam = encodeURIComponent(result.id || '');
       const finalUrl = `${stripeUrl}?prefilled_email=${emailParam}&client_reference_id=${refParam}`;
 
       document.getElementById('payment-btn-wrap').innerHTML = `
-        <a href="${finalUrl}" class="btn-primary-lg" style="display:inline-block;text-decoration:none">
+        <a href="${escapeHtml(finalUrl)}" class="btn-primary-lg" style="display:inline-block;text-decoration:none">
           💳 &nbsp;Payer ${planInfo.price}€ maintenant →
         </a>
         <p style="font-size:11px;color:#555550;margin-top:10px">Paiement sécurisé · Stripe · CB, Apple Pay, Google Pay</p>`;

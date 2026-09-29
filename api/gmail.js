@@ -7,8 +7,14 @@ const crypto = require('crypto');
 
 // ─── STATE SIGNING (HMAC + nonce + expiration) ───────────────────────────────
 
-const STATE_SECRET = process.env.OAUTH_STATE_SECRET || crypto.randomBytes(32).toString('hex');
+const STATE_SECRET = process.env.OAUTH_STATE_SECRET;
 const STATE_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
+
+// Sans secret configuré, l'OAuth est refusé plutôt qu'accepter un état non signé
+// (un secret aléatoire régénéré à chaque cold start casserait le callback).
+if (!STATE_SECRET) {
+  console.error('ERREUR : OAUTH_STATE_SECRET doit être défini sur Vercel.');
+}
 
 function signState(payload) {
   const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
@@ -101,6 +107,7 @@ module.exports = async (req, res) => {
 
   // ── AUTH : redirige vers Google ──
   if (action === 'auth') {
+    if (!STATE_SECRET) return res.status(503).send('OAuth non configuré');
     const { email, id } = req.query;
     if (!email || !id) return res.status(400).send('Email et ID requis');
 
@@ -156,6 +163,22 @@ module.exports = async (req, res) => {
       if (!tokenData.access_token) {
         console.error('Token error:', tokenData);
         return res.redirect(`https://www.lancemonjob.fr/suivi?email=${encodeURIComponent(email)}&gmail_error=1`);
+      }
+
+      // Vérifie que le compte Google réellement autorisé correspond bien à l'e-mail
+      // du candidat : sans ce contrôle, un attaquant peut connecter SA boîte Gmail
+      // sur le dossier d'un tiers (et lire/écrire en son nom).
+      const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
+      });
+      if (!profileRes.ok) {
+        console.error('userinfo error:', profileRes.status);
+        return res.redirect(`https://www.lancemonjob.fr/suivi?email=${encodeURIComponent(email)}&gmail_error=1`);
+      }
+      const profile = await profileRes.json();
+      if (!profile.email || profile.email.toLowerCase() !== String(email).toLowerCase()) {
+        console.error(`Compte Google ${profile.email} refusé : ne correspond pas au candidat ${email}.`);
+        return res.redirect(`https://www.lancemonjob.fr/suivi?email=${encodeURIComponent(email)}&gmail_mismatch=1`);
       }
 
       const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SECRET_KEY);

@@ -218,6 +218,17 @@ let currentFilter = 'all';
 let currentSearch = '';
 let currentId = null;
 
+// Échappement HTML pour prévenir le XSS
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // AUTH
 if(sessionStorage.getItem('lmj_admin')==='1') showDash();
 
@@ -337,7 +348,7 @@ function renderCharts(data){
   const planColors = {Starter:'var(--c1)',Pro:'var(--v1)',Max:'#F59E0B'};
   document.getElementById('chart-plans').innerHTML = Object.entries(plans).map(([k,v])=>`
     <div class="bar-row">
-      <div class="bar-label">${k}</div>
+      <div class="bar-label">${escapeHtml(k)}</div>
       <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxPlan*100)}%;background:${planColors[k]}"></div></div>
       <div class="bar-count">${v}</div>
     </div>`).join('');
@@ -355,7 +366,7 @@ function renderCharts(data){
   const maxSect = topSecteurs[0]?.[1]||1;
   document.getElementById('chart-secteurs').innerHTML = topSecteurs.map(([k,v])=>`
     <div class="bar-row">
-      <div class="bar-label">${k}</div>
+      <div class="bar-label">${escapeHtml(k)}</div>
       <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxSect*100)}%"></div></div>
       <div class="bar-count">${v}</div>
     </div>`).join('') || '<p style="color:var(--muted);font-size:13px">Pas de données</p>';
@@ -395,14 +406,14 @@ function renderTable(data){
       </thead>
       <tbody>
         ${filtered.map(c=>`
-          <tr onclick="openDetail('${c.id}')">
-            <td><strong style="color:#e8e8e0">${c.nom||'—'}</strong><br><span style="font-size:11px">${c.email||''}</span></td>
-            <td>${c.poste||'—'}</td>
-            <td style="font-size:12px">${c.contrats||'—'}</td>
-            <td style="font-size:12px">${c.ville||'—'}</td>
-            <td><span style="font-size:11px;color:var(--v1);font-weight:700">${c.plan||'—'}</span></td>
+          <tr data-id="${escapeHtml(c.id)}" onclick="openDetail(this.dataset.id)">
+            <td><strong style="color:#e8e8e0">${escapeHtml(c.nom)||'—'}</strong><br><span style="font-size:11px">${escapeHtml(c.email)||''}</span></td>
+            <td>${escapeHtml(c.poste)||'—'}</td>
+            <td style="font-size:12px">${escapeHtml(c.contrats)||'—'}</td>
+            <td style="font-size:12px">${escapeHtml(c.ville)||'—'}</td>
+            <td><span style="font-size:11px;color:var(--v1);font-weight:700">${escapeHtml(c.plan)||'—'}</span></td>
             <td style="font-size:12px">${new Date(c.created_at).toLocaleDateString('fr-FR')}</td>
-            <td><span class="badge ${getBadgeClass(c.statut)}">${c.statut}</span></td>
+            <td><span class="badge ${getBadgeClass(c.statut)}">${escapeHtml(c.statut)}</span></td>
           </tr>`).join('')}
       </tbody>
     </table>`;
@@ -487,18 +498,18 @@ async function openDetail(id){
   const entreprises = c.entreprises_contactees ? `${c.entreprises_contactees.length} entreprises` : '—';
 
   document.getElementById('m-fields').innerHTML = [
-    ['Email', c.email||'—'],
-    ['Téléphone', c.tel||'—'],
+    ['Email', escapeHtml(c.email)||'—'],
+    ['Téléphone', escapeHtml(c.tel)||'—'],
     ['Genre', c.genre==='M'?'Masculin':c.genre==='F'?'Féminin':'Non précisé'],
-    ['Contrat', c.contrats||'—'],
-    ['Durée', c.duree_contrat||'—'],
-    ['Secteurs', c.secteurs||'—'],
-    ['Zone', `${c.ville||'—'} · ${c.rayon||''}`],
-    ['Disponible le', c.dispo_tot||'—'],
-    ['Offre', c.plan||'—'],
+    ['Contrat', escapeHtml(c.contrats)||'—'],
+    ['Durée', escapeHtml(c.duree_contrat)||'—'],
+    ['Secteurs', escapeHtml(c.secteurs)||'—'],
+    ['Zone', `${escapeHtml(c.ville)||'—'} · ${escapeHtml(c.rayon)||''}`],
+    ['Disponible le', escapeHtml(c.dispo_tot)||'—'],
+    ['Offre', escapeHtml(c.plan)||'—'],
     ['Emails envoyés', sent ? sent[1] : '—'],
     ['Entreprises contactées', entreprises],
-    ['Statut', c.statut||'—'],
+    ['Statut', escapeHtml(c.statut)||'—'],
     ['Date', new Date(c.created_at).toLocaleDateString('fr-FR')],
   ].map(([k,v])=>`
     <div class="modal-field">
