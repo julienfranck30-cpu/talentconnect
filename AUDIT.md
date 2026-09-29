@@ -6,6 +6,17 @@
 
 ---
 
+## Mises à jour depuis l'audit initial
+
+**27 septembre 2026** — commit [`7aba694`](https://github.com/julienfranck30-cpu/talentconnect/commit/7aba69421781aa1ef5570bf940c64dad0e4d5bf2) « Verify Stripe webhook signature and stop serving CVs from a public bucket (CON-64) » et travaux de suivi immédiats. Revue de code uniquement pour cette mise à jour — aucune nouvelle vérification dynamique en production.
+
+- **3.3 (webhook Stripe sans vérification de signature) — ✅ corrigé.** `stripe.webhooks.constructEvent` vérifie désormais `stripe-signature` sur le corps brut (body parser désactivé), `amount_total` est comparé au montant attendu du plan, et la session est rattachée au dossier via `client_reference_id` (propagé depuis `app.js` au moment de la redirection Stripe) plutôt que par recherche d'e-mail. La dépendance `stripe` a été ajoutée à `package.json`. **Nuance :** un repli sur la recherche par e-mail est conservé si `client_reference_id` est absent (compatibilité avec des liens de paiement déjà en circulation) — ce chemin reste un tout petit peu moins fiable mais n'est plus exploitable pour usurper un paiement, car le contrôle de montant s'applique dans les deux cas.
+- **3.7 (upload CV vers bucket public) — ✅ essentiellement corrigé.** Le bucket `cvs` est désormais privé. Les CV sont servis via des URLs signées à durée limitée (1 h), régénérées à la demande côté cron. Les noms de fichiers sont désormais des UUID (`cv_<uuid>.pdf`) au lieu d'un timestamp devinable. `maxFileSize` (5 Mo) et la vérification de la signature binaire du PDF (`%PDF-`) sont en place. **Reste non traité :** `/api/upload-cv` n'a toujours aucune authentification ni limitation de débit — voir 3.7.
+- **Risque de transition traité :** les lignes `candidatures.cv_url` créées avant la bascule du bucket contenaient encore l'ancienne URL publique complète (`getPublicUrl`) ; sans traitement, elles auraient cassé au premier `fetch()` dès le passage du bucket en privé. `resolveCvUrl` (`api/process-candidatures.js`) reconnaît désormais ce format, en extrait le chemin, et régénère systématiquement une URL signée avant chaque téléchargement — pour les deux formats, sans dépendre de l'ordre entre la bascule du bucket et une éventuelle migration de données. Un script de nettoyage non bloquant, `scripts/backfill-cv-paths.js` (dry-run par défaut, `--apply` pour écrire), normalise ces lignes en chemins nus.
+- **Non traité par ces commits :** 3.1 et 3.2 (lecture/écriture anonyme via la clé publique Supabase, RLS), 3.4 (`state` OAuth Gmail non signé, jetons en clair), 3.5, 3.6, 3.8, 3.9, 3.10, et l'intégralité des sections 4 à 8. Le plan d'action (§9) a été annoté en conséquence ; les autres sections reflètent toujours l'état constaté le 23 septembre 2026.
+
+---
+
 ## 1. Résumé exécutif
 
 La plateforme est **fonctionnelle sur le papier mais structurellement non sécurisée et sur-promise commercialement**. Trois constats dominent :
@@ -20,7 +31,7 @@ S'y ajoute un défaut d'exploitation révélé par l'historique : le cron d'envo
 
 | Domaine | État | Constats bloquants |
 |---|---|---|
-| Sécurité applicative | 🔴 Critique | 4 vulnérabilités critiques, 4 élevées, 2 moyennes |
+| Sécurité applicative | 🔴 Critique | 4 vulnérabilités critiques, 4 élevées, 2 moyennes — **2 corrigées depuis (3.3, 3.7), 8 toujours ouvertes** ¹ |
 | Conformité RGPD | 🔴 Critique | Fuite de données avérée, 4 sous-traitants non déclarés, pas de bandeau cookies |
 | Droit de la consommation | 🟠 Élevé | Volumes non livrables, fonctionnalités vendues non implémentées, mentions légales incomplètes |
 | Fiabilité / exploitation | 🔴 Critique | Timeout serverless quasi certain, aucun retry, aucune supervision |
@@ -28,6 +39,8 @@ S'y ajoute un défaut d'exploitation révélé par l'historique : le cron d'envo
 | Qualité du code | 🟠 Moyen | ~900 lignes mortes ou dupliquées, 0 test, 0 CI, 0 lockfile |
 | Ergonomie / accessibilité | 🟠 Moyen | Tunnel 13 étapes non sauvegardé, échecs silencieux, navigation clavier impossible |
 | SEO / contenu | 🟡 Faible | Index du blog en 404, pas de favicon, pas de `robots.txt` |
+
+¹ Voir « Mises à jour depuis l'audit initial » en tête de document.
 
 ---
 
@@ -37,7 +50,7 @@ S'y ajoute un défaut d'exploitation révélé par l'historique : le cron d'envo
 Navigateur (statique, pas de build)
   ├── index.html / blog / pages légales      → contenu marketing
   ├── formulaire.html + app.js               → tunnel 13 étapes
-  │      ├─ POST /api/upload-cv              → Supabase Storage (bucket PUBLIC) + extraction texte
+  │      ├─ POST /api/upload-cv              → Supabase Storage (bucket privé depuis le 27/09/2026, URL signée) + extraction texte
   │      ├─ INSERT candidatures              → Supabase REST avec clé publique (RLS inopérante)
   │      ├─ POST /api/confirm-candidature    → e-mail Brevo
   │      └─ redirection Stripe Payment Link
@@ -45,7 +58,7 @@ Navigateur (statique, pas de build)
   └── admin.html                             → identifiants en dur dans le JS client
 
 Fonctions Vercel (Node, CommonJS/ESM mélangés)
-  ├── /api/webhook               ← Stripe (signature NON vérifiée) → statut « Payé »
+  ├── /api/webhook               ← Stripe (signature vérifiée depuis le 27/09/2026) → statut « Payé »
   ├── /api/gmail                 ← OAuth Google (state NON signé), stockage du refresh token en clair
   ├── /api/process-candidatures  ← cron quotidien 08:00, endpoint PUBLIC
   │      ├─ Anthropic Claude (rédaction de la lettre, 1 appel/candidat)
@@ -90,6 +103,8 @@ L'interface d'administration ([admin.html:505](admin.html#L505)) et l'ancien pan
 *(Non testé en production : je n'ai effectué aucune écriture. La lecture ouverte est confirmée, l'écriture est démontrée par le fonctionnement même de l'admin en production.)*
 
 ### 3.3 🔴 CRITIQUE — Webhook Stripe sans vérification de signature
+
+> **✅ Corrigé le 27/09/2026** (commit `7aba694`, CON-64) — voir « Mises à jour depuis l'audit initial » en tête de document.
 
 [api/webhook.js:90-136](api/webhook.js#L90) : le corps de la requête est parsé en JSON et exploité tel quel. Aucun appel à `stripe.webhooks.constructEvent`, aucune dépendance `stripe` dans `package.json`, aucun `STRIPE_WEBHOOK_SECRET`.
 
@@ -138,13 +153,15 @@ Un attaquant dispose ainsi d'une plateforme de phishing signée par votre domain
 
 ### 3.7 🟠 ÉLEVÉ — Upload de fichiers non authentifié vers un bucket public
 
-[api/upload-cv.js](api/upload-cv.js) :
-- Aucune authentification, aucune limite de débit → n'importe qui peut remplir votre stockage.
-- **Aucun contrôle de taille** alors que l'interface annonce « PDF · 5 Mo max » ([formulaire.html:265](formulaire.html#L265)) ; `formidable` est instancié sans `maxFileSize`.
-- Validation du type par l'extension du nom (`endsWith('.pdf')`), pas par le contenu → tout fichier renommé `.pdf` est accepté, stocké et servi publiquement depuis votre domaine Supabase avec `Content-Type: application/pdf`.
-- [api/upload-cv.js:46](api/upload-cv.js#L46) : `getPublicUrl` sur un bucket **confirmé public** pendant cet audit (une requête anonyme sur `/storage/v1/object/public/cvs/<inexistant>` répond `NoSuchKey` et non « bucket introuvable »). Les CV sont donc accessibles sans authentification, et les noms `cv_<timestamp>.pdf` sont énumérables — d'autant plus que `created_at` est lisible anonymement.
+> **✅ Essentiellement corrigé le 27/09/2026** (commit `7aba694`, CON-64) — bucket privé, URLs signées, `maxFileSize`, vérification `%PDF-` et noms UUID sont en place. **Reste ouvert :** aucune authentification ni limitation de débit sur l'endpoint (premier point ci-dessous). Voir « Mises à jour depuis l'audit initial » en tête de document.
 
-**Correction :** bucket privé + URLs signées à durée limitée, `maxFileSize: 5 * 1024 * 1024`, vérification de la signature PDF (`%PDF-`), noms non devinables (UUID), suppression à l'expiration.
+[api/upload-cv.js](api/upload-cv.js) :
+- Aucune authentification, aucune limite de débit → n'importe qui peut remplir votre stockage. *(toujours vrai)*
+- ~~**Aucun contrôle de taille** alors que l'interface annonce « PDF · 5 Mo max » ([formulaire.html:265](formulaire.html#L265)) ; `formidable` est instancié sans `maxFileSize`.~~ *(corrigé — `maxFileSize: 5 * 1024 * 1024` désormais passé à `IncomingForm`)*
+- ~~Validation du type par l'extension du nom (`endsWith('.pdf')`), pas par le contenu → tout fichier renommé `.pdf` est accepté~~ *(corrigé — la signature binaire `%PDF-` est vérifiée avant upload)*
+- ~~[api/upload-cv.js:46] : `getPublicUrl` sur un bucket **confirmé public**… noms `cv_<timestamp>.pdf` énumérables~~ *(corrigé — bucket `cvs` privé, noms `cv_<uuid>.pdf` non devinables, servis via `createSignedUrl` à durée limitée)*
+
+**Correction restante :** authentifier l'appel (session ou jeton lié au dossier en cours de création) et limiter le débit par IP.
 
 ### 3.8 🟠 ÉLEVÉ — Interface d'administration sans authentification réelle
 
@@ -400,8 +417,8 @@ Aucune validation n'existe côté serveur : la table est alimentée directement 
 |---|---|---|
 | 1 | Activer RLS sur `candidatures` (aucun accès `anon`), faire tourner la clé publiée, basculer toutes les lectures/écritures derrière des fonctions serverless | 3.1, 3.2 |
 | 2 | **Révoquer tous les jetons Gmail existants**, chiffrer le champ, signer le `state` OAuth (HMAC + nonce + expiration), vérifier la correspondance du compte Google | 3.4 |
-| 3 | Rendre le bucket `cvs` privé, passer aux URLs signées, ajouter `maxFileSize` et la vérification de la signature PDF | 3.7 |
-| 4 | Vérifier la signature du webhook Stripe, contrôler le montant vs le plan, lier par `client_reference_id` | 3.3 |
+| 3 | ~~Rendre le bucket `cvs` privé, passer aux URLs signées, ajouter `maxFileSize` et la vérification de la signature PDF~~ — ✅ fait le 27/09/2026 (commit `7aba694`) ; reste : authentification + limitation de débit sur `/api/upload-cv` | 3.7 |
+| 4 | ~~Vérifier la signature du webhook Stripe, contrôler le montant vs le plan, lier par `client_reference_id`~~ — ✅ fait le 27/09/2026 (commit `7aba694`) | 3.3 |
 | 5 | Protéger `/api/process-candidatures`, `/api/confirm-candidature` et `/api/brevo-stats` (secret + limitation de débit), supprimer `api/api/` et `api/candidatures.js` | 3.5, 3.6, 6.1 |
 | 6 | Remplacer l'authentification admin côté client par une authentification serveur | 3.8 |
 | 7 | Notifier la CNIL (art. 33), consigner l'incident, évaluer l'information des personnes | 4.1 |
@@ -442,10 +459,10 @@ Aucune validation n'existe côté serveur : la table est alimentée directement 
 
 | Fichier | Lignes | Rôle | État |
 |---|---|---|---|
-| `api/process-candidatures.js` | 804 | Moteur d'envoi (cron) | 🔴 Endpoint public, timeout probable, plafond de volume |
+| `api/process-candidatures.js` | 840 | Moteur d'envoi (cron) | 🔴 Endpoint public, timeout probable, plafond de volume |
 | `api/companies.js` | 782 | Base de 680 entreprises, 18 secteurs | 🟡 19 doublons, en-tête mensonger (« 1500+ ») |
 | `admin.html` | 529 | Tableau de bord admin | 🔴 Identifiants en dur, XSS |
-| `app.js` | 493 | Tunnel + admin historique | 🔴 Secrets exposés ; l. 374-493 mortes |
+| `app.js` | 494 | Tunnel + admin historique | 🔴 Secrets exposés ; l. 374-493 mortes |
 | `formulaire.html` | 377 | Tunnel 13 étapes | 🟠 Accessibilité, validation |
 | `suivi.html` | 292 | Suivi candidat | 🔴 Accès sans authentification, bug d'affichage |
 | `index.html` | 289 | Page d'accueil | 🟠 Allégations non étayées |
@@ -453,18 +470,19 @@ Aucune validation n'existe côté serveur : la table est alimentée directement 
 | `blog/*.html` | 1 211 | 6 articles SEO | 🟢 Corrects (1 seul avec OG) |
 | `blog.html` | 154 | Index du blog | 🔴 Inaccessible (404) + chemins cassés |
 | `api/gmail.js` | 146 | OAuth + envoi Gmail | 🔴 `state` non signé, jetons en clair |
-| `api/webhook.js` | 141 | Webhook Stripe | 🔴 Signature non vérifiée, marque obsolète |
+| `api/webhook.js` | 184 | Webhook Stripe | 🟢 Signature vérifiée (27/09/2026, `7aba694`) ; marque obsolète et expéditeur Gmail personnel toujours présents (5.4.3) |
 | `confidentialite.html` | 125 | Politique de confidentialité | 🟠 Sous-traitants manquants |
 | `api/adzuna-jobs.js` | 118 | Offres publiées | 🟠 Domaines inventés |
 | `api/api/confirm-fin-campagne.js` | 107 | — | ⚫ Mort |
 | `api/confirm-candidature.js` | 96 | E-mail de confirmation | 🟠 Relais ouvert, injection HTML |
 | `api/api/confirm-candidature.js` | 91 | — | ⚫ Mort + relais ouvert |
 | `mentions-legales.html` | 82 | Mentions légales | 🟠 Incomplètes |
-| `api/upload-cv.js` | 71 | Upload CV | 🔴 Non authentifié, bucket public |
+| `api/upload-cv.js` | 85 | Upload CV | 🟠 Bucket privé + signature PDF + `maxFileSize` (27/09/2026, `7aba694`) ; toujours non authentifié, sans limite de débit |
+| `scripts/backfill-cv-paths.js` | 112 | Nettoyage ponctuel `cv_url` legacy → chemin nu | 🟢 Script de suivi (27/09/2026), non bloquant, dry-run par défaut |
 | `cgv.html` | 60 | CGV/CGU | 🟠 Incomplètes, incohérences |
 | `api/brevo-stats.js` | 36 | Statistiques e-mailing | 🟠 Public, CORS `*` |
 | `vercel.json` | 15 | Routage + cron | 🟠 Route `/blog` cassée, pas de `maxDuration` |
-| `package.json` | 10 | Dépendances | 🟡 `cloudinary` inutilisé, pas de lockfile |
+| `package.json` | 11 | Dépendances | 🟡 `cloudinary` inutilisé, pas de lockfile ; `stripe` ajouté le 27/09/2026 |
 | `api/candidatures.js` | 4 | — | ⚫ Mort |
 
 > `api/companies.js` et `api/adzuna-jobs.js` sont de simples modules, mais Vercel les expose malgré tout comme routes HTTP (`/api/companies`, `/api/adzuna-jobs`) : les appeler renvoie une erreur 500 puisqu'ils n'exportent pas de handler. À déplacer hors de `api/` (par ex. `lib/`).

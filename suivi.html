@@ -6,13 +6,6 @@
 <title>Lance Mon Job — Suivi de ma campagne</title>
 <link rel="canonical" href="https://www.lancemonjob.fr/suivi"/>
 <meta name="description" content="Suivez l'avancement de votre campagne de candidatures spontanées Lance Mon Job."/>
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-BMKHRFJ914"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-BMKHRFJ914');
-</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="style.css"/>
@@ -58,6 +51,7 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   @media(max-width:600px) { .info-grid { grid-template-columns: 1fr; } }
 </style>
+<script src="cookies-consent.js"></script>
 </head>
 <body>
 
@@ -153,11 +147,19 @@
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = 'https://ihhqwukfkztwdhxfvsvf.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_AKWSkS_jE-R1PnMWSI408g_5QqV8iPJ';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Plus de clé publique exposée — tout passe par l'API serveur
+
+// Échappement HTML pour prévenir le XSS
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 // Check URL param
 window.addEventListener('load', () => {
@@ -182,22 +184,18 @@ async function loadCampagne() {
   document.getElementById('login-section').style.display = 'none';
   document.getElementById('loading-section').style.display = 'block';
 
-  const { data, error } = await sb
-    .from('candidatures')
-    .select('*')
-    .eq('email', email)
-    .order('created_at', { ascending: false })
-    .limit(1);
+  const res = await fetch(`/api/suivi?email=${encodeURIComponent(email)}`);
+  const result = await res.json();
 
   document.getElementById('loading-section').style.display = 'none';
 
-  if (error || !data || !data.length) {
+  if (!res.ok || !result.data) {
     document.getElementById('login-section').style.display = 'block';
     errEl.textContent = 'Aucune campagne trouvée pour cet email. Vérifie l\'adresse utilisée lors de ton inscription.';
     return;
   }
 
-  const c = data[0];
+  const c = result.data;
   renderDashboard(c);
 }
 
@@ -206,7 +204,7 @@ function renderDashboard(c) {
 
   const nomParts = (c.nom || '').trim().split(' ');
   const prenom = nomParts[0] || c.nom;
-  document.getElementById('dash-subtitle').textContent = `Bonjour ${prenom} ! Voici le suivi de ta campagne.`;
+  document.getElementById('dash-subtitle').textContent = `Bonjour ${escapeHtml(prenom)} ! Voici le suivi de ta campagne.`;
 
   // Statut
   const statutEl = document.getElementById('dash-statut');
@@ -245,13 +243,13 @@ function renderDashboard(c) {
 
   // Infos
   const infos = [
-    { key: 'Poste visé', val: c.poste || '—' },
-    { key: 'Contrat', val: c.contrats || '—' },
-    { key: 'Durée', val: c.duree_contrat || '—' },
-    { key: 'Zone', val: c.ville || '—' },
-    { key: 'Secteurs', val: c.secteurs || '—' },
-    { key: 'Offre', val: c.plan || '—' },
-    { key: 'Disponible le', val: c.dispo_tot || '—' },
+    { key: 'Poste visé', val: escapeHtml(c.poste) || '—' },
+    { key: 'Contrat', val: escapeHtml(c.contrats) || '—' },
+    { key: 'Durée', val: escapeHtml(c.duree_contrat) || '—' },
+    { key: 'Zone', val: escapeHtml(c.ville) || '—' },
+    { key: 'Secteurs', val: escapeHtml(c.secteurs) || '—' },
+    { key: 'Offre', val: escapeHtml(c.plan) || '—' },
+    { key: 'Disponible le', val: escapeHtml(c.dispo_tot) || '—' },
     { key: 'Date de création', val: new Date(c.created_at).toLocaleDateString('fr-FR') },
   ];
 
@@ -267,8 +265,8 @@ function renderDashboard(c) {
     document.getElementById('dash-entreprises').innerHTML = c.entreprises_contactees.map(e => `
       <div class="entreprise-item">
         <div>
-          <div class="entreprise-name">${e.name}</div>
-          <div class="entreprise-secteur">${e.secteur || ''}</div>
+          <div class="entreprise-name">${escapeHtml(e.name)}</div>
+          <div class="entreprise-secteur">${escapeHtml(e.secteur || '')}</div>
         </div>
         <div class="entreprise-check">✓</div>
       </div>`).join('');

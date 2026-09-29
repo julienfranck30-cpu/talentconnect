@@ -3,6 +3,43 @@
 // Routes : ?action=auth | ?action=callback | utilisé en interne pour l'envoi
 
 const { createClient } = require('@supabase/supabase-js');
+const crypto = require('crypto');
+
+// ─── STATE SIGNING (HMAC + nonce + expiration) ───────────────────────────────
+
+const STATE_SECRET = process.env.OAUTH_STATE_SECRET;
+const STATE_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
+
+// Sans secret configuré, l'OAuth est refusé plutôt qu'accepter un état non signé
+// (un secret aléatoire régénéré à chaque cold start casserait le callback).
+if (!STATE_SECRET) {
+  console.error('ERREUR : OAUTH_STATE_SECRET doit être défini sur Vercel.');
+}
+
+function signState(payload) {
+  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const sig = crypto.createHmac('sha256', STATE_SECRET).update(body).digest('base64url');
+  return `${body}.${sig}`;
+}
+
+function verifyState(signed) {
+  const dot = signed.lastIndexOf('.');
+  if (dot === -1) return null;
+  const body = signed.slice(0, dot);
+  const sig = signed.slice(dot + 1);
+  const expected = crypto.createHmac('sha256', STATE_SECRET).update(body).digest('base64url');
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  try {
+    const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
+    if (!payload.exp || Date.now() > payload.exp) return null;
+    if (!payload.nonce || !payload.email || !payload.id) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
 
@@ -70,10 +107,16 @@ module.exports = async (req, res) => {
 
   // ── AUTH : redirige vers Google ──
   if (action === 'auth') {
+    if (!STATE_SECRET) return res.status(503).send('OAuth non configuré');
     const { email, id } = req.query;
     if (!email || !id) return res.status(400).send('Email et ID requis');
 
-    const state = Buffer.from(JSON.stringify({ email, id })).toString('base64');
+    const state = signState({
+      email,
+      id,
+      nonce: crypto.randomBytes(16).toString('hex'),
+      exp: Date.now() + STATE_MAX_AGE_MS
+    });
     const scopes = [
       'https://www.googleapis.com/auth/gmail.send',
       'https://www.googleapis.com/auth/userinfo.email'
@@ -98,10 +141,8 @@ module.exports = async (req, res) => {
     if (error) return res.redirect('https://www.lancemonjob.fr?gmail_error=1');
     if (!code || !state) return res.status(400).send('Paramètres manquants');
 
-    let candidatInfo;
-    try {
-      candidatInfo = JSON.parse(Buffer.from(state, 'base64').toString('utf8'));
-    } catch(e) { return res.status(400).send('State invalide'); }
+    const candidatInfo = verifyState(state);
+    if (!candidatInfo) return res.status(400).send('State invalide ou expiré');
 
     const { email, id } = candidatInfo;
 
@@ -122,6 +163,22 @@ module.exports = async (req, res) => {
       if (!tokenData.access_token) {
         console.error('Token error:', tokenData);
         return res.redirect(`https://www.lancemonjob.fr/suivi?email=${encodeURIComponent(email)}&gmail_error=1`);
+      }
+
+      // Vérifie que le compte Google réellement autorisé correspond bien à l'e-mail
+      // du candidat : sans ce contrôle, un attaquant peut connecter SA boîte Gmail
+      // sur le dossier d'un tiers (et lire/écrire en son nom).
+      const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
+      });
+      if (!profileRes.ok) {
+        console.error('userinfo error:', profileRes.status);
+        return res.redirect(`https://www.lancemonjob.fr/suivi?email=${encodeURIComponent(email)}&gmail_error=1`);
+      }
+      const profile = await profileRes.json();
+      if (!profile.email || profile.email.toLowerCase() !== String(email).toLowerCase()) {
+        console.error(`Compte Google ${profile.email} refusé : ne correspond pas au candidat ${email}.`);
+        return res.redirect(`https://www.lancemonjob.fr/suivi?email=${encodeURIComponent(email)}&gmail_mismatch=1`);
       }
 
       const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SECRET_KEY);

@@ -210,35 +210,53 @@ tr:hover td{background:rgba(168,85,247,0.04);cursor:pointer}
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = 'https://ihhqwukfkztwdhxfvsvf.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_AKWSkS_jE-R1PnMWSI408g_5QqV8iPJ';
-const ADMIN_USER = 'admin';
-const ADMIN_PASS = 'admin123';
-
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Authentification admin via serveur (pas de clé publique exposée)
+let authToken = null;
 let allData = [];
 let currentFilter = 'all';
 let currentSearch = '';
 let currentId = null;
 
+// Échappement HTML pour prévenir le XSS
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // AUTH
 if(sessionStorage.getItem('lmj_admin')==='1') showDash();
 
-function doLogin(){
+async function doLogin(){
   const u = document.getElementById('l-user').value;
   const p = document.getElementById('l-pass').value;
-  if(u===ADMIN_USER && p===ADMIN_PASS){
-    sessionStorage.setItem('lmj_admin','1');
-    showDash();
-  } else {
+  try {
+    const res = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      authToken = data.token;
+      sessionStorage.setItem('lmj_admin','1');
+      showDash();
+    } else {
+      document.getElementById('l-err').style.display='block';
+    }
+  } catch(e) {
     document.getElementById('l-err').style.display='block';
   }
 }
 
 function doLogout(){
   sessionStorage.removeItem('lmj_admin');
+  authToken = null;
   document.getElementById('dashboard-screen').style.display='none';
   document.getElementById('login-screen').style.display='flex';
 }
@@ -255,14 +273,21 @@ async function loadAll(){
   await Promise.all([loadSupabase(), loadBrevo()]);
 }
 
-// SUPABASE DATA
+// SUPABASE DATA via API serveur
 async function loadSupabase(){
-  const { data, error } = await sb.from('candidatures').select('*').order('created_at',{ascending:false});
-  if(error){ console.error(error); return; }
-  allData = data || [];
-  renderStats(allData);
-  renderCharts(allData);
-  renderTable(allData);
+  try {
+    const res = await fetch('/api/admin/candidatures-list', {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    if (!res.ok) throw new Error('API error');
+    const result = await res.json();
+    allData = result.data || [];
+    renderStats(allData);
+    renderCharts(allData);
+    renderTable(allData);
+  } catch(e) {
+    console.error(e);
+  }
 }
 
 function renderStats(data){
@@ -323,7 +348,7 @@ function renderCharts(data){
   const planColors = {Starter:'var(--c1)',Pro:'var(--v1)',Max:'#F59E0B'};
   document.getElementById('chart-plans').innerHTML = Object.entries(plans).map(([k,v])=>`
     <div class="bar-row">
-      <div class="bar-label">${k}</div>
+      <div class="bar-label">${escapeHtml(k)}</div>
       <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxPlan*100)}%;background:${planColors[k]}"></div></div>
       <div class="bar-count">${v}</div>
     </div>`).join('');
@@ -341,7 +366,7 @@ function renderCharts(data){
   const maxSect = topSecteurs[0]?.[1]||1;
   document.getElementById('chart-secteurs').innerHTML = topSecteurs.map(([k,v])=>`
     <div class="bar-row">
-      <div class="bar-label">${k}</div>
+      <div class="bar-label">${escapeHtml(k)}</div>
       <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxSect*100)}%"></div></div>
       <div class="bar-count">${v}</div>
     </div>`).join('') || '<p style="color:var(--muted);font-size:13px">Pas de données</p>';
@@ -381,14 +406,14 @@ function renderTable(data){
       </thead>
       <tbody>
         ${filtered.map(c=>`
-          <tr onclick="openDetail('${c.id}')">
-            <td><strong style="color:#e8e8e0">${c.nom||'—'}</strong><br><span style="font-size:11px">${c.email||''}</span></td>
-            <td>${c.poste||'—'}</td>
-            <td style="font-size:12px">${c.contrats||'—'}</td>
-            <td style="font-size:12px">${c.ville||'—'}</td>
-            <td><span style="font-size:11px;color:var(--v1);font-weight:700">${c.plan||'—'}</span></td>
+          <tr data-id="${escapeHtml(c.id)}" onclick="openDetail(this.dataset.id)">
+            <td><strong style="color:#e8e8e0">${escapeHtml(c.nom)||'—'}</strong><br><span style="font-size:11px">${escapeHtml(c.email)||''}</span></td>
+            <td>${escapeHtml(c.poste)||'—'}</td>
+            <td style="font-size:12px">${escapeHtml(c.contrats)||'—'}</td>
+            <td style="font-size:12px">${escapeHtml(c.ville)||'—'}</td>
+            <td><span style="font-size:11px;color:var(--v1);font-weight:700">${escapeHtml(c.plan)||'—'}</span></td>
             <td style="font-size:12px">${new Date(c.created_at).toLocaleDateString('fr-FR')}</td>
-            <td><span class="badge ${getBadgeClass(c.statut)}">${c.statut}</span></td>
+            <td><span class="badge ${getBadgeClass(c.statut)}">${escapeHtml(c.statut)}</span></td>
           </tr>`).join('')}
       </tbody>
     </table>`;
@@ -473,18 +498,18 @@ async function openDetail(id){
   const entreprises = c.entreprises_contactees ? `${c.entreprises_contactees.length} entreprises` : '—';
 
   document.getElementById('m-fields').innerHTML = [
-    ['Email', c.email||'—'],
-    ['Téléphone', c.tel||'—'],
+    ['Email', escapeHtml(c.email)||'—'],
+    ['Téléphone', escapeHtml(c.tel)||'—'],
     ['Genre', c.genre==='M'?'Masculin':c.genre==='F'?'Féminin':'Non précisé'],
-    ['Contrat', c.contrats||'—'],
-    ['Durée', c.duree_contrat||'—'],
-    ['Secteurs', c.secteurs||'—'],
-    ['Zone', `${c.ville||'—'} · ${c.rayon||''}`],
-    ['Disponible le', c.dispo_tot||'—'],
-    ['Offre', c.plan||'—'],
+    ['Contrat', escapeHtml(c.contrats)||'—'],
+    ['Durée', escapeHtml(c.duree_contrat)||'—'],
+    ['Secteurs', escapeHtml(c.secteurs)||'—'],
+    ['Zone', `${escapeHtml(c.ville)||'—'} · ${escapeHtml(c.rayon)||''}`],
+    ['Disponible le', escapeHtml(c.dispo_tot)||'—'],
+    ['Offre', escapeHtml(c.plan)||'—'],
     ['Emails envoyés', sent ? sent[1] : '—'],
     ['Entreprises contactées', entreprises],
-    ['Statut', c.statut||'—'],
+    ['Statut', escapeHtml(c.statut)||'—'],
     ['Date', new Date(c.created_at).toLocaleDateString('fr-FR')],
   ].map(([k,v])=>`
     <div class="modal-field">
@@ -502,7 +527,19 @@ function closeModal(){
 
 async function setStatut(statut){
   if(!currentId) return;
-  await sb.from('candidatures').update({statut}).eq('id',currentId);
+  try {
+    const res = await fetch('/api/admin/candidatures-update', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ id: currentId, statut })
+    });
+    if (!res.ok) throw new Error('API error');
+  } catch(e) {
+    console.error(e);
+  }
   closeModal();
   loadSupabase();
 }
