@@ -55,7 +55,11 @@ Ajouter dans le projet Vercel (`talentconnect-gold`) → Settings → Environmen
 | `OAUTH_STATE_SECRET` | **à ajouter** | signature HMAC du `state` OAuth |
 | `HUNTER_API_KEY` | existe | recherche d'emails |
 | `ANTHROPIC_API_KEY` | existe | génération des lettres |
+| `ADZUNA_APP_ID` / `ADZUNA_APP_KEY` | **à vérifier** | réponses aux offres publiées (`api/adzuna-jobs.js`) |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | existent | OAuth Gmail |
+
+> La liste complète, avec l'origine de chaque clé, est dans `.env.example` (racine).
+> Les 16 variables ont été recoupées avec le code : aucune n'est oubliée, aucune n'est superflue.
 
 Générer les secrets :
 
