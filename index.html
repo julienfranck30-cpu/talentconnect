@@ -1,289 +1,36 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Lance Mon Job — Trouve ton job grâce à l'IA</title>
-<link rel="canonical" href="https://www.lancemonjob.fr/"/>
-<meta name="description" content="Lance Mon Job envoie automatiquement jusqu'à 300 candidatures personnalisées aux entreprises de ton secteur. Trouve ton job plus vite grâce à l'IA."/>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-BMKHRFJ914"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-BMKHRFJ914');
-</script>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="style.css"/>
-<style>
-.stats-bar{background:rgba(168,85,247,0.08);border-top:.5px solid var(--border);border-bottom:.5px solid var(--border);padding:1rem 2rem}
-.stats-ticker{display:flex;gap:3rem;align-items:center;justify-content:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
-.stats-ticker strong{color:var(--text);font-weight:700}
-.stat-live{font-weight:800;font-size:15px;background:linear-gradient(135deg,var(--v1),var(--c1));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.testimonials-section{max-width:960px;margin:0 auto;padding:5rem 1.5rem;text-align:center}
-.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:2.5rem}
-.testi-card{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rlg);padding:1.5rem;text-align:left}
-.testi-stars{color:var(--c1);font-size:13px;margin-bottom:10px}
-.testi-text{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:1rem;font-style:italic}
-.testi-author{display:flex;align-items:center;gap:10px}
-.testi-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#080612;flex-shrink:0}
-.testi-name{font-size:13px;font-weight:600;color:var(--text)}
-.testi-job{font-size:11px;color:var(--muted)}
-.pricing-section{max-width:900px;margin:0 auto;padding:5rem 1.5rem;text-align:center}
-.pricing-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:2.5rem}
-.pricing-card{background:var(--bg2);border:.5px solid var(--border2);border-radius:var(--rlg);padding:2rem 1.5rem;position:relative;transition:border-color .2s}
-.pricing-card:hover{border-color:var(--v1)}
-.pricing-card.popular{border-color:var(--v1);background:rgba(168,85,247,0.06)}
-.popular-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--v1),var(--c1));color:#080612;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;white-space:nowrap}
-.price-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--muted);margin-bottom:8px}
-.price-amount{font-family:'Syne',sans-serif;font-size:42px;font-weight:800;margin-bottom:4px}
-.price-amount span{font-size:18px;font-weight:400;color:var(--muted)}
-.price-desc{font-size:12px;color:var(--muted);margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:.5px solid var(--border)}
-.price-features{list-style:none;text-align:left;display:flex;flex-direction:column;gap:8px;margin-bottom:1.5rem}
-.price-features li{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
-.price-features li::before{content:'✓';color:var(--c1);font-weight:700;flex-shrink:0}
-.price-btn{display:block;width:100%;padding:11px;border-radius:var(--r);font-size:13px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;font-family:'Manrope',sans-serif;transition:all .15s;border:.5px solid var(--border2);background:transparent;color:var(--text)}
-.price-btn:hover{border-color:var(--v1)}
-.price-btn.primary{background:linear-gradient(135deg,var(--v1),var(--c1));border:none;color:#080612}
-.price-btn.primary:hover{opacity:.88}
-.faq-section{max-width:680px;margin:0 auto;padding:5rem 1.5rem;text-align:center}
-.faq-list{margin-top:2.5rem;text-align:left}
-.faq-item{border:.5px solid var(--border);border-radius:var(--rlg);margin-bottom:10px;cursor:pointer;overflow:hidden;transition:border-color .15s}
-.faq-item:hover{border-color:var(--v1)}
-.faq-q{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;font-size:14px;font-weight:600}
-.faq-arrow{color:var(--muted);transition:transform .2s}
-.faq-item.open .faq-arrow{transform:rotate(180deg)}
-.faq-a{display:none;padding:0 20px 16px;font-size:13px;color:var(--muted);line-height:1.7}
-.faq-item.open .faq-a{display:block}
-.contact-section{max-width:600px;margin:0 auto;padding:5rem 1.5rem;text-align:center}
-.contact-box{background:var(--bg2);border:.5px solid var(--border2);border-radius:var(--rlg);padding:2rem;text-align:left;margin-top:2rem}
-.footer-full{border-top:.5px solid var(--border);padding:3rem 2rem 2rem;max-width:1100px;margin:0 auto}
-.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:2rem;margin-bottom:2.5rem}
-.footer-brand p{font-size:12px;color:var(--muted);line-height:1.7;max-width:240px;margin-top:10px}
-.footer-socials{display:flex;gap:10px;margin-top:14px}
-.social-btn{width:34px;height:34px;border-radius:50%;border:.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--muted);text-decoration:none;transition:all .15s;font-weight:700}
-.social-btn:hover{border-color:var(--v1);color:var(--text)}
-.footer-col h4{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px}
-.footer-col a{display:block;font-size:13px;color:var(--muted);text-decoration:none;margin-bottom:8px;transition:color .15s}
-.footer-col a:hover{color:var(--text)}
-.footer-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:1.5rem;border-top:.5px solid var(--border);font-size:12px;color:var(--muted)}
-.footer-bottom a{color:var(--muted);text-decoration:none}
-@media(max-width:700px){.testi-grid,.pricing-cards{grid-template-columns:1fr}.footer-grid{grid-template-columns:1fr 1fr}.stats-ticker{gap:1rem}}
-@media(max-width:480px){.footer-grid{grid-template-columns:1fr}}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lance Mon Job</title>
+  <meta name="robots" content="noindex" />
+  <style>
+    :root { --bg:#0f0f12; --fg:#f4f4f5; --muted:#a1a1aa; --accent:#8b5cf6; }
+    * { box-sizing: border-box; }
+    body {
+      margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+      background:var(--bg); color:var(--fg);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      padding:24px; line-height:1.6;
+    }
+    .card { max-width:520px; text-align:center; }
+    .logo { font-size:28px; font-weight:800; margin-bottom:24px; }
+    .logo span { color:var(--accent); }
+    h1 { font-size:22px; margin:0 0 12px; }
+    p { color:var(--muted); margin:0 0 16px; font-size:16px; }
+    a { color:var(--accent); text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    .foot { margin-top:28px; font-size:13px; color:#71717a; }
+  </style>
 </head>
 <body>
-
-<nav class="nav">
-  <div class="nav-logo"><span class="star">✦</span> Lance Mon Job</div>
-  <div class="nav-right">
-    <a href="#offres" class="nav-link">Tarifs</a>
-    <a href="#faq" class="nav-link">FAQ</a>
-    <a href="#contact" class="nav-link">Contact</a>
-    <a href="/blog/candidature-spontanee" class="nav-link">Blog</a>
-    <a href="formulaire.html" class="btn-cta">Trouver mon job →</a>
-  </div>
-</nav>
-
-<section class="hero">
-  <div class="noise"></div>
-  <div class="glow-orb"></div>
-  <div class="hero-inner">
-    <h1 class="hero-title">L'IA qui <span class="grad">multiplie</span> tes<br>entretiens <span class="grad">d'embauche</span></h1>
-    <p class="hero-sub">Jusqu'à 300 candidatures personnalisées envoyées automatiquement aux entreprises de ton secteur et de ta région.</p>
-    <a href="formulaire.html" class="btn-primary-lg">Trouver mon job maintenant →</a>
-    <div class="proof-row">
-      <div class="avatars">
-        <div class="av" style="background:linear-gradient(135deg,#A855F7,#22D3EE)">S</div>
-        <div class="av" style="background:linear-gradient(135deg,#22D3EE,#6366F1)">K</div>
-        <div class="av" style="background:linear-gradient(135deg,#10B981,#22D3EE)">M</div>
-        <div class="av" style="background:linear-gradient(135deg,#F59E0B,#A855F7)">L</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="how-section">
-  <p class="eyebrow">Le processus</p>
-  <h2 class="section-title">Simple. Rapide. <span class="grad">Efficace.</span></h2>
-  <div class="steps-grid">
-    <div class="step"><div class="step-n grad">01</div><h3>Crée ton profil</h3><p>Poste visé, zone géo, secteur, CV. 3 minutes chrono.</p></div>
-    <div class="step"><div class="step-n grad">02</div><h3>L'IA cible les entreprises</h3><p>On identifie automatiquement les PME et ETI qui recrutent dans ton domaine.</p></div>
-    <div class="step"><div class="step-n grad">03</div><h3>Tes candidatures partent</h3><p>Jusqu'à 300 candidatures personnalisées envoyées automatiquement avec ton CV.</p></div>
-    <div class="step"><div class="step-n grad">04</div><h3>Tu décroches des entretiens</h3><p>Les entreprises te rappellent directement. Tu n'as plus qu'à te préparer.</p></div>
-  </div>
-</section>
-
-<section class="testimonials-section">
-  <p class="eyebrow">Ils témoignent</p>
-  <h2 class="section-title">Ils ont trouvé leur poste <span class="grad">grâce à nous</span></h2>
-  <div class="testi-grid">
-    <div class="testi-card">
-      <div class="testi-stars">★★★★★</div>
-      <p class="testi-text">"J'ai envoyé 150 candidatures en une journée. Une semaine plus tard j'avais 4 entretiens. Incroyable."</p>
-      <div class="testi-author">
-        <div class="testi-av" style="background:linear-gradient(135deg,#A855F7,#22D3EE)">SM</div>
-        <div><div class="testi-name">Sophie M.</div><div class="testi-job">Acheteuse · Lyon</div></div>
-      </div>
-    </div>
-    <div class="testi-card">
-      <div class="testi-stars">★★★★★</div>
-      <p class="testi-text">"Je cherchais depuis 3 mois. Avec Lance Mon Job j'ai eu une offre en 10 jours. Le service est vraiment efficace."</p>
-      <div class="testi-author">
-        <div class="testi-av" style="background:linear-gradient(135deg,#22D3EE,#10B981)">KB</div>
-        <div><div class="testi-name">Karim B.</div><div class="testi-job">Commercial · Paris</div></div>
-      </div>
-    </div>
-    <div class="testi-card">
-      <div class="testi-stars">★★★★★</div>
-      <p class="testi-text">"Le gain de temps est phénoménal. Plus besoin d'envoyer des candidatures une par une. Je recommande à 100%."</p>
-      <div class="testi-author">
-        <div class="testi-av" style="background:linear-gradient(135deg,#F59E0B,#A855F7)">AL</div>
-        <div><div class="testi-name">Amandine L.</div><div class="testi-job">Responsable RH · Bordeaux</div></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="pricing-section" id="offres">
-  <p class="eyebrow">Tarifs</p>
-  <h2 class="section-title">Choisis ton offre, <span class="grad">paiement unique</span></h2>
-  <p style="font-size:14px;color:var(--muted);margin-top:-1.5rem">Pas d'abonnement. Tu paies une fois, on envoie tes candidatures.</p>
-  <div class="pricing-cards">
-    <div class="pricing-card">
-      <div class="price-name">Starter</div>
-      <div class="price-amount">29<span>€</span></div>
-      <div class="price-desc">50 candidatures ciblées</div>
-      <ul class="price-features">
-        <li>Ciblage IA des entreprises</li>
-        <li>CV + lettre personnalisée</li>
-        <li>Rapport d'envoi complet</li>
-        <li>Support email</li>
-      </ul>
-      <a href="formulaire.html" class="price-btn">Commencer →</a>
-    </div>
-    <div class="pricing-card popular">
-      <div class="popular-badge">⚡ Le plus populaire</div>
-      <div class="price-name">Pro</div>
-      <div class="price-amount">59<span>€</span></div>
-      <div class="price-desc">150 candidatures ciblées</div>
-      <ul class="price-features">
-        <li>Tout Starter inclus</li>
-        <li>Relance de campagne sur demande</li>
-        <li>Suivi en temps réel</li>
-        <li>Priorité de traitement</li>
-      </ul>
-      <a href="formulaire.html" class="price-btn primary">Trouver mon job →</a>
-    </div>
-    <div class="pricing-card">
-      <div class="price-name">Max</div>
-      <div class="price-amount">99<span>€</span></div>
-      <div class="price-desc">300 candidatures ciblées</div>
-      <ul class="price-features">
-        <li>Tout Pro inclus</li>
-        <li>Appel coaching 30 min</li>
-        <li>Garantie entretien*</li>
-        <li>Support prioritaire</li>
-      </ul>
-      <a href="formulaire.html" class="price-btn">Commencer →</a>
-    </div>
-  </div>
-  <p style="font-size:11px;color:var(--hint);margin-top:1rem">*Garantie entretien : si aucun entretien sous 30 jours, on relance gratuitement.</p>
-</section>
-
-<section class="faq-section" id="faq">
-  <p class="eyebrow">FAQ</p>
-  <h2 class="section-title">Questions <span class="grad">fréquentes</span></h2>
-  <div class="faq-list">
-    <div class="faq-item" onclick="this.classList.toggle('open')">
-      <div class="faq-q">C'est un abonnement ou un paiement unique ? <span class="faq-arrow">↓</span></div>
-      <div class="faq-a">Paiement unique. Tu paies une fois et on envoie tes candidatures. Pas d'abonnement, pas de renouvellement automatique.</div>
-    </div>
-    <div class="faq-item" onclick="this.classList.toggle('open')">
-      <div class="faq-q">Comment l'IA trouve-t-elle les entreprises ? <span class="faq-arrow">↓</span></div>
-      <div class="faq-a">On utilise des bases de données professionnelles pour trouver les contacts RH et direction des entreprises de ton secteur dans ta zone géographique.</div>
-    </div>
-    <div class="faq-item" onclick="this.classList.toggle('open')">
-      <div class="faq-q">Mon CV est-il envoyé en pièce jointe ? <span class="faq-arrow">↓</span></div>
-      <div class="faq-a">Oui. Ton CV PDF est joint à chaque email. La lettre de motivation est personnalisée automatiquement selon ton profil.</div>
-    </div>
-    <div class="faq-item" onclick="this.classList.toggle('open')">
-      <div class="faq-q">Dans quel délai les candidatures sont-elles envoyées ? <span class="faq-arrow">↓</span></div>
-      <div class="faq-a">Les candidatures sont envoyées dans les 24h après validation de ton paiement.</div>
-    </div>
-    <div class="faq-item" onclick="this.classList.toggle('open')">
-      <div class="faq-q">Mes données personnelles sont-elles protégées ? <span class="faq-arrow">↓</span></div>
-      <div class="faq-a">Oui. Conformément au RGPD, tes données sont stockées de manière sécurisée et conservées maximum 2 ans. Elles ne sont jamais revendues à des tiers.</div>
-    </div>
-    <div class="faq-item" onclick="this.classList.toggle('open')">
-      <div class="faq-q">Ça fonctionne pour tous les secteurs ? <span class="faq-arrow">↓</span></div>
-      <div class="faq-a">On couvre 18 secteurs : Distribution, Industrie, Automobile, BTP, Logistique, Agroalimentaire, Retail, Services B2B, Tech, Santé, Finance, Immobilier, Hôtellerie, Éducation, Énergie, RH, Conseil et Médias.</div>
-    </div>
-  </div>
-</section>
-
-<section class="contact-section" id="contact">
-  <p class="eyebrow">Support</p>
-  <h2 class="section-title">On est là <span class="grad">pour toi</span></h2>
-  <div class="contact-box">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
-      <div><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Email</div><a href="mailto:support@lancemonjob.fr" style="font-size:14px;color:var(--c1);text-decoration:none">support@lancemonjob.fr</a></div>
-      <div><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Délai de réponse</div><span style="font-size:14px;color:var(--text)">Sous 24h ouvrées</span></div>
-      <div><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Horaires</div><span style="font-size:14px;color:var(--text)">Lun–Ven · 9h–18h</span></div>
-    </div>
-  </div>
-</section>
-
-<section class="cta-section">
-  <div class="cta-box">
-    <div class="glow-orb2"></div>
-    <p class="eyebrow">Prêt(e) ?</p>
-    <h2 class="cta-title">Lance ta campagne<br><span class="grad">dès aujourd'hui</span></h2>
-    <p class="cta-sub">Trouve ton poste grâce à Lance Mon Job.</p>
-    <a href="formulaire.html" class="btn-primary-lg">Trouver mon job maintenant →</a>
-  </div>
-</section>
-
-<div class="footer-full">
-  <div class="footer-grid">
-    <div class="footer-brand">
-      <div class="nav-logo"><span class="star">✦</span> Lance Mon Job</div>
-      <p>La plateforme IA qui envoie vos candidatures spontanées aux entreprises de votre secteur.</p>
-      <div class="footer-socials">
-        <a href="#" class="social-btn">in</a>
-        <a href="#" class="social-btn">X</a>
-        <a href="#" class="social-btn">f</a>
-        <a href="#" class="social-btn">ig</a>
-      </div>
-    </div>
-    <div class="footer-col">
-      <h4>Produit</h4>
-      <a href="formulaire.html">Déposer ma candidature</a>
-      <a href="#offres">Tarifs</a>
-      <a href="#faq">FAQ</a>
-      <a href="#contact">Contact</a>
-    </div>
-    <div class="footer-col">
-      <h4>Ressources</h4>
-      <a href="/blog/candidature-spontanee">Comment rédiger une candidature</a>
-      <a href="/blog/trouver-alternance">Trouver une alternance</a>
-      <a href="/blog/exemple-lettre-motivation">Exemples de lettres</a>
-      <a href="/blog/relance-candidature">Relancer une candidature</a>
-    </div>
-    <div class="footer-col">
-      <h4>Légal</h4>
-      <a href="mentions-legales.html">Mentions légales</a>
-      <a href="cgv.html">CGV / CGU</a>
-      <a href="confidentialite.html">Confidentialité</a>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <span>© 2026 Lance Mon Job · Tous droits réservés</span>
-    <span>Fait avec ✦ en France 🇫🇷</span>
-  </div>
-</div>
-
+  <main class="card">
+    <div class="logo">✦ Lance Mon <span>Job</span></div>
+    <h1>Le site est en cours de refonte</h1>
+    <p>Lance Mon Job revient bientôt, avec une nouvelle version. Le service n'accepte pas de nouvelle commande pour le moment.</p>
+    <p>Une question&nbsp;? Écrivez-nous à <a href="mailto:contact@lancemonjob.fr">contact@lancemonjob.fr</a>.</p>
+    <div class="foot">© Lance Mon Job — Données traitées conformément au RGPD.</div>
+  </main>
 </body>
 </html>
